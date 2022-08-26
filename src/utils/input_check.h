@@ -1,0 +1,124 @@
+#pragma once
+
+#include <string>
+#include <map>
+#include <memory>
+
+#include "http_util.h"
+
+
+
+/** 
+    nameless_carpool 软件本地调用的格式说明
+    
+    nameless_carpool \
+        --debug                               \   关键字, 用于区分数据当做网络数据还是当做本地数据
+        --help                                \   关键字, 包含此参数时候 , 其他参数被忽略
+        --method=get,post,put,delete ···      \   http method
+        --header={key:value, key1:value1 ···} \   http header
+        --function=httpUrl                    \   http url
+        --body={anyjsondata}                  \   http body
+
+    只接受 utf-8 编码的数据 , 几个参数顺序不分先后
+
+
+ */
+namespace nameless_carpool {
+  
+  using namespace std;
+
+  /** 参数前缀 */
+  inline const wstring paramPrefix = L"--";
+  inline const wstring helpInfo = L"\n"
+          "\n    nameless_carpool 软件本地调用的格式说明"
+          "\n    "
+          "\n    nameless_carpool \\"
+          "\n        --debug                               \\   关键字, 用于区分数据当做网络数据还是当做本地数据"
+          "\n        --help                                \\   关键字, 包含此参数时候 , 其他参数被忽略"
+          "\n        --method=get,post,put,delete ···      \\   http method"
+          "\n        --header={key:value, key1:value1 ···} \\   http header"
+          "\n        --function=httpUrl                    \\   http url"
+          "\n        --body={anyjsondata}                  \\   http body"
+          "\n"
+          "\n    只接受 utf-8 编码的数据 , 几个参数顺序不分先后"
+          "\n"
+          "\n"
+          "\n    help : 入参中只要包含了 `help` 就会打印本说明 , 且忽略其他入参 . "
+          "\n"
+          "\n    debug : 只有包含 `debug` 才被当做一次性的调试调用 "
+          "\n            不包含 `debug` 参数 , 其他参数将被忽略 , 进入网络阻塞等待下一个网络呼叫 . "
+          "\n";
+
+  struct InputData {
+    string charset = {nullptr};
+    string header = {nullptr};
+    string method = {nullptr};
+    string function = {nullptr};
+    string body = {nullptr};
+  };
+
+  /* 入参变量枚举 , 与 inputParamMap 结合定义常量 */
+  enum InputParamEnum {
+    debug    =  8,
+    help     =  9,
+    header   = 10,
+    method   = 11,
+    function = 12,
+    body     = 13,
+  };
+
+  struct {
+    const wstring debug     = L"debug";
+    const wstring help      = L"help";
+    const wstring header    = L"header";
+    const wstring method    = L"method";
+    const wstring function  = L"function";
+    const wstring body      = L"body";
+
+
+    const map<InputParamEnum, wstring> inputParamToName = {
+      {InputParamEnum::debug    ,  debug     },
+      {InputParamEnum::help     ,  help      },
+      {InputParamEnum::header   ,  header    },
+      {InputParamEnum::method   ,  method    },
+      {InputParamEnum::function ,  function  },
+      {InputParamEnum::body     ,  body      },
+    };
+    
+    const map<wstring, InputParamEnum> inputParamFromName = {
+      {debug    ,  InputParamEnum::debug    },
+      {help     ,  InputParamEnum::help     },
+      {header   ,  InputParamEnum::header   },
+      {method   ,  InputParamEnum::method   },
+      {function ,  InputParamEnum::function },
+      {body     ,  InputParamEnum::body     },
+    };
+
+    public:
+      wstring getName(InputParamEnum inputEnum) {
+        return inputParamToName.at(inputEnum);
+      }
+      
+      
+      shared_ptr<InputParamEnum> getEnum(wstring name) {
+        transform(name.begin(), name.end(), name.begin(), ::tolower);
+        if(inputParamFromName.count(name) > 0) {
+          return make_shared<InputParamEnum>(inputParamFromName.at(name));
+        } else {
+          return nullptr;
+        }
+      }
+
+
+  } inputParam;
+
+  /* 是否包含 debug 入参 */
+  bool contentDebugParam(int argc, char **argv);
+
+  /** 接受参数 , 将参数填充到 httpRequest 
+      return true,  HttpRequest 填充有意义 , HttpResponse 的填充有意义(含异常信息)
+             false, HttpRequest   无意义  , 可以直接将 HttpResponse 输出 */
+  bool accept(int argc, char **argv,                                  /* 输入 */
+              HttpRequest &requestRead, HttpResponse& reponseInflate  /* 输出 */);
+}
+
