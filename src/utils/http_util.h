@@ -32,29 +32,29 @@ namespace nameless_carpool {
   };
 
   struct {
-    const map<HttpStatusEnum, const wstring> name = {
-      {HttpStatusEnum::success,             L"success"            },
-      {HttpStatusEnum::requestHelp,         L"requestHelp"        },
-      {HttpStatusEnum::unknowErr,           L"unknowErr"          },
-      {HttpStatusEnum::parsingFailed,       L"parsingFailed"      },
-      {HttpStatusEnum::wrongFormat,         L"wrongFormat"        },
-      {HttpStatusEnum::argDefineMultiple,   L"argDefineMultiple"  },
+    const map<HttpStatusEnum, const string> name = {
+      {HttpStatusEnum::success,             "success"            },
+      {HttpStatusEnum::requestHelp,         "requestHelp"        },
+      {HttpStatusEnum::unknowErr,           "unknowErr"          },
+      {HttpStatusEnum::parsingFailed,       "parsingFailed"      },
+      {HttpStatusEnum::wrongFormat,         "wrongFormat"        },
+      {HttpStatusEnum::argDefineMultiple,   "argDefineMultiple"  },
     };
 
-    const map<HttpStatusEnum, const wstring> desc = {
-      {HttpStatusEnum::success,             L"解析完成"                   },
-      {HttpStatusEnum::requestHelp,         L"查看帮助信息"                },
-      {HttpStatusEnum::unknowErr,           L"未知错误, 需要进一步跟进"      },
-      {HttpStatusEnum::parsingFailed,       L"服务端异常 , 解析失败"        },
-      {HttpStatusEnum::wrongFormat,         L"入参错误 , 入参格式错误"      },
-      {HttpStatusEnum::argDefineMultiple,   L"入参错误 , 属性多次定义"      },
+    const map<HttpStatusEnum, const string> desc = {
+      {HttpStatusEnum::success,             "解析完成"                   },
+      {HttpStatusEnum::requestHelp,         "查看帮助信息"                },
+      {HttpStatusEnum::unknowErr,           "未知错误, 需要进一步跟进"      },
+      {HttpStatusEnum::parsingFailed,       "服务端异常 , 解析失败"        },
+      {HttpStatusEnum::wrongFormat,         "入参错误 , 入参格式错误"      },
+      {HttpStatusEnum::argDefineMultiple,   "入参错误 , 属性多次定义"      },
     };
 
-    wstring getStatusName(HttpStatusEnum statusEnum) {
+    string getStatusName(HttpStatusEnum statusEnum) {
       return name.at(statusEnum);
     }
 
-    wstring getStatusDesc(HttpStatusEnum statusEnum) {
+    string getStatusDesc(HttpStatusEnum statusEnum) {
       return desc.at(statusEnum);
     }
 
@@ -117,14 +117,14 @@ namespace nameless_carpool {
 
 
   struct HttpContent {
-    map<wstring, wstring> headers;
-    wstring body = L"";
+    map<string, string> headers;
+    string body = "";
 
-    HttpContent& addHeader(wstring key, wstring val) {
+    HttpContent& addHeader(string key, string val) {
       headers.insert({key, val});
       return *this;
     }
-    HttpContent& setBody(wstring str) {
+    HttpContent& setBody(string str) {
       body = str;
       return *this;
     }
@@ -136,13 +136,13 @@ namespace nameless_carpool {
   };
 
   struct HttpRequest : public HttpContent {
-    wstring method;
-    wstring function;
-    HttpRequest& setMethod(wstring str) {
+    string method;
+    string function;
+    HttpRequest& setMethod(string str) {
       method = str;
       return *this;
     }
-    HttpRequest& setFunction(wstring str) {
+    HttpRequest& setFunction(string str) {
       function = str;
       return *this;
     }
@@ -151,23 +151,23 @@ namespace nameless_carpool {
     HttpRequest& initByNet(FCGX_Request &request) {
       char **envp = request.envp;
       for (int index = 0; *envp; index++, envp++) {
-        // wstring env = utfMbsrtowcs(*envp);
-        wstring env = utfMbsrtowcs(*envp);
+        // string env = utfMbsrtowcs(*envp);
+        string env = *envp;
         int equalIndex = env.find('=');
-        wstring key = env.substr(0, equalIndex);
-        if(key == L"REQUEST_METHOD") {
+        string key = env.substr(0, equalIndex);
+        if(key == "REQUEST_METHOD") {
           this->method = env.substr(equalIndex + 1);
-        } else if(key == L"REQUEST_URI") {
+        } else if(key == "REQUEST_URI") {
           this->function = env.substr(equalIndex + 1);
         } else {
-          wstring prefix = env.substr(0, 5);
-          if(prefix == L"HTTP_") {
-            wstring value = env.substr(equalIndex+1);
+          string prefix = env.substr(0, 5);
+          if(prefix == "HTTP_") {
+            string value = env.substr(equalIndex+1);
             this->addHeader(key, value);
           }
         }
       }
-      this->body = fcgxStreamReadw(request.in);
+      this->body = fcgxStreamRead(request.in);
       return *this;
     }
     virtual HttpRequest& clear() override {
@@ -184,8 +184,8 @@ namespace nameless_carpool {
 
     HttpResponse() {
       headers = {
-        {L"Content-type", L"text/plain; charset=utf-8"},
-        {L"PID"         , std::to_wstring(getpid())   },
+        {"Content-type", "text/plain; charset=utf-8"},
+        {"PID"         , std::to_string(getpid())   },
       };
     }
 
@@ -194,19 +194,19 @@ namespace nameless_carpool {
       return *this;
     }
 
-    wstring toWstring() {
-      wstringstream ss;
+    string toString() {
+      stringstream ss;
 
       /* 状态码 */   {
         ss << "Status: " << status << endl;
       }
       /* header */  {
-        for (map<wstring, wstring>::iterator headerIterator = headers.begin();
+        for (map<string, string>::iterator headerIterator = headers.begin();
             headerIterator != headers.end();
             headerIterator++) {
 
-          wstring key = headerIterator->first;
-          wstring val = headerIterator->second;
+          string key = headerIterator->first;
+          string val = headerIterator->second;
           ss << key << ": " << val << endl;
         }
         ss << endl;
@@ -214,16 +214,16 @@ namespace nameless_carpool {
       /* body */    {
         ss << body ;
       }
-      wstring result = ss.str();
-      ss.str(L"");
+      string result = ss.str();
+      ss.str("");
       ss.clear();
 
       return result;
     }
 
-    string toString() {
-      wstring wstr = toWstring();
-      string result = utfWcstombs(wstr.c_str());
+    wstring toWString() {
+      string str = toString();
+      wstring result = utfMbsrtowcs(str.c_str());
       return result;
     }
 

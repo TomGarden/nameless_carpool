@@ -17,9 +17,9 @@ namespace nameless_carpool {
   using namespace std;
 
   bool contentDebugParam(int argc, char **argv) {
-    wstring debugParamStr = paramPrefix + inputParam.getName(InputParamEnum::debug);
+    string debugParamStr = paramPrefix + inputParam.getName(InputParamEnum::debug);
     for (int index = 1; index < argc; index++) {
-      wstring arg = utfMbsrtowcs(argv[index]);
+      string arg = argv[index];
       if(arg.compare(debugParamStr) == 0) {
         return true;
       }
@@ -32,29 +32,29 @@ namespace nameless_carpool {
               HttpRequest& requestInflate, HttpResponse& responseInflate) {
 
     HttpStatusEnum forLoopStatus = HttpStatusEnum::success; /* 跳出 for 循环的识别标识 */
-    wstring stopLoopAppendMsg;   /* 停止循环并附加信息 */
+    string stopLoopAppendMsg;   /* 停止循环并附加信息 */
 
     for (int index = 1; index < argc; index++) {
       
-      wstring arg = utfMbsrtowcs(argv[index]);
+      string arg = argv[index];
 
       if(arg.size() < 0) {
         forLoopStatus = HttpStatusEnum::parsingFailed;
-        stopLoopAppendMsg = L"存在空属性";
+        stopLoopAppendMsg = "存在空属性";
         break;
       }
 
       int rightStartFlag = arg.compare(0,2, paramPrefix);
       if(rightStartFlag != 0) { /* 字符串非 -- 打头 , 被认为是格式异常 */
         forLoopStatus = HttpStatusEnum::wrongFormat;
-        stopLoopAppendMsg = L"属性只接受 '--' 开始的字符串";
+        stopLoopAppendMsg = "属性只接受 '--' 开始的字符串";
         break;
       }
 
       auto equalFlagIndex = arg.find_first_of('=');
       if(equalFlagIndex == string::npos) {
 
-        wstring param = arg.substr(2); /* 纯参数名 */
+        string param = arg.substr(2); /* 纯参数名 */
         
         shared_ptr<InputParamEnum> inputParamPtr = inputParam.getEnum(param);
         if(inputParamPtr == nullptr) {
@@ -71,7 +71,7 @@ namespace nameless_carpool {
           }
           default :                     {
             forLoopStatus = HttpStatusEnum::wrongFormat;
-            stopLoopAppendMsg = L"未知入参2:" + param;
+            stopLoopAppendMsg = "未知入参2:" + param;
           }
         }
 
@@ -81,11 +81,11 @@ namespace nameless_carpool {
 
       } 
 
-      wstring param = arg.substr(2, equalFlagIndex - 2);
+      string param = arg.substr(2, equalFlagIndex - 2);
       shared_ptr<InputParamEnum> inputParamPtr = inputParam.getEnum(param);
       if(inputParamPtr == nullptr) {
         forLoopStatus = HttpStatusEnum::wrongFormat;
-        stopLoopAppendMsg = L"未知入参3:" + param;
+        stopLoopAppendMsg = "未知入参3:" + param;
       } else switch(*inputParamPtr) {
         case InputParamEnum::header     : {
           LOG(FATAL) << "json to map , 然后做进一步判断" << endl;
@@ -96,7 +96,7 @@ namespace nameless_carpool {
             requestInflate.method = arg.substr(equalFlagIndex+1);
           } else {
             forLoopStatus = HttpStatusEnum::argDefineMultiple;
-            stopLoopAppendMsg = L"method";
+            stopLoopAppendMsg = "method";
           }
           break;
         }
@@ -105,7 +105,7 @@ namespace nameless_carpool {
             requestInflate.function = arg.substr(equalFlagIndex+1);
           } else {
             forLoopStatus = HttpStatusEnum::argDefineMultiple;
-            stopLoopAppendMsg = L"function";
+            stopLoopAppendMsg = "function";
           }
           break;
         }
@@ -114,14 +114,14 @@ namespace nameless_carpool {
             requestInflate.body = arg.substr(equalFlagIndex+1);
           } else {
             forLoopStatus = HttpStatusEnum::argDefineMultiple;
-            stopLoopAppendMsg = L"body";
+            stopLoopAppendMsg = "body";
           }
           break;
         }
 
         default                         : {
           forLoopStatus = HttpStatusEnum::wrongFormat;
-          stopLoopAppendMsg = L"未知异常, 参数字段:" + param;
+          stopLoopAppendMsg = "未知异常, 参数字段:" + param;
           break;
         }
       }
@@ -134,7 +134,7 @@ namespace nameless_carpool {
     if(forLoopStatus != HttpStatusEnum::success) {
       responseInflate.setStatus(static_cast<int>(forLoopStatus));
       if(!stopLoopAppendMsg.empty()) {
-        responseInflate.setBody(L"(ResponseBody) 应该转换为 Json 还没来得及\n" 
+        responseInflate.setBody("(ResponseBody) 应该转换为 Json 还没来得及\n" 
                               + stopLoopAppendMsg);
       }
                      

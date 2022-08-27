@@ -11,7 +11,7 @@ namespace nameless_carpool {
 
 
   /* 如果这个函数 在 main 函数中调用, 这个 progressNmae = argv[0] */
-  void initGlog(const char* progressName) {
+  inline void initGlog(const char* progressName) {
 
     /* 将日志信息打印到 stderr , 而不是日志文件 ; 默认值 false */
     //FLAGS_logtostderr = false;
@@ -41,7 +41,7 @@ namespace nameless_carpool {
 
   }
 
-  void gLogFlushAllLogFiles() {
+  inline void gLogFlushAllLogFiles() {
     FlushLogFiles(google::INFO);
     FlushLogFiles(google::WARNING);
     FlushLogFiles(google::ERROR);
@@ -49,7 +49,7 @@ namespace nameless_carpool {
   }
 
   /* https://github.com/boostorg/stacktrace */
-  string getStackTrace() {
+  inline string getStackTrace() {
     using namespace boost::stacktrace;
     return to_string(stacktrace());
   }

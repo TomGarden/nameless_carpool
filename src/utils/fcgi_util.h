@@ -5,6 +5,8 @@
 #include "tom_string_utils.h"
 
 #include <string>
+#include <sstream>
+
 
 namespace nameless_carpool {
 
@@ -34,7 +36,7 @@ namespace nameless_carpool {
 
   inline wstring fcgxStreamReadw(FCGX_Stream *stream) {
     string str = fcgxStreamRead(stream);
-    return utfMbsrtowcs(str.c_str());
+    return utfMbsrtowcs(str);
   }
 
   

@@ -4,7 +4,7 @@
 #include <map>
 #include <memory>
 
-#include "http_util.h"
+#include "all_include.h"
 
 
 
@@ -28,8 +28,8 @@ namespace nameless_carpool {
   using namespace std;
 
   /** 参数前缀 */
-  inline const wstring paramPrefix = L"--";
-  inline const wstring helpInfo = L"\n"
+  inline const string paramPrefix = "--";
+  inline const string helpInfo = "\n"
           "\n    nameless_carpool 软件本地调用的格式说明"
           "\n    "
           "\n    nameless_carpool \\"
@@ -68,15 +68,15 @@ namespace nameless_carpool {
   };
 
   struct {
-    const wstring debug     = L"debug";
-    const wstring help      = L"help";
-    const wstring header    = L"header";
-    const wstring method    = L"method";
-    const wstring function  = L"function";
-    const wstring body      = L"body";
+    const string debug     = "debug";
+    const string help      = "help";
+    const string header    = "header";
+    const string method    = "method";
+    const string function  = "function";
+    const string body      = "body";
 
 
-    const map<InputParamEnum, wstring> inputParamToName = {
+    const map<InputParamEnum, string> inputParamToName = {
       {InputParamEnum::debug    ,  debug     },
       {InputParamEnum::help     ,  help      },
       {InputParamEnum::header   ,  header    },
@@ -85,7 +85,7 @@ namespace nameless_carpool {
       {InputParamEnum::body     ,  body      },
     };
     
-    const map<wstring, InputParamEnum> inputParamFromName = {
+    const map<string, InputParamEnum> inputParamFromName = {
       {debug    ,  InputParamEnum::debug    },
       {help     ,  InputParamEnum::help     },
       {header   ,  InputParamEnum::header   },
@@ -95,12 +95,12 @@ namespace nameless_carpool {
     };
 
     public:
-      wstring getName(InputParamEnum inputEnum) {
+      string getName(InputParamEnum inputEnum) {
         return inputParamToName.at(inputEnum);
       }
       
       
-      shared_ptr<InputParamEnum> getEnum(wstring name) {
+      shared_ptr<InputParamEnum> getEnum(string name) {
         transform(name.begin(), name.end(), name.begin(), ::tolower);
         if(inputParamFromName.count(name) > 0) {
           return make_shared<InputParamEnum>(inputParamFromName.at(name));

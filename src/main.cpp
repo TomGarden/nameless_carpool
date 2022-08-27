@@ -1,7 +1,6 @@
 
 #include <typeinfo>
 #include "model/user.h"
-#include "json/model/user_json.cpp"
 #include "../libs/nlohmann_json_3.10.5/json.hpp"
 #include "utils/all_include.h"
 
@@ -68,23 +67,23 @@ void optNetData(int argc, char **argv) {
       { /* 只获取我们关心的数据 HttpRequest */
         char **envp = request.envp;
         for (int index = 0; *envp; index++, envp++) {
-          // wstring env = utfMbsrtowcs(*envp);
-          wstring env = utfMbsrtowcs(*envp);
+          // string env = utfMbsrtowcs(*envp);
+          string env = *envp;
           int equalIndex = env.find('=');
-          wstring key = env.substr(0, equalIndex);
-          if(key == L"REQUEST_METHOD") {
+          string key = env.substr(0, equalIndex);
+          if(key == "REQUEST_METHOD") {
             httpRequest.method = env.substr(equalIndex + 1);
-          } else if(key == L"REQUEST_URI") {
+          } else if(key == "REQUEST_URI") {
             httpRequest.function = env.substr(equalIndex + 1);
           } else {
-            wstring prefix = env.substr(0, 5);
-            if(prefix == L"HTTP_") {
-              wstring value = env.substr(equalIndex+1);
+            string prefix = env.substr(0, 5);
+            if(prefix == "HTTP_") {
+              string value = env.substr(equalIndex+1);
               httpRequest.addHeader(key, value);
             }
           }
         }
-        httpRequest.body = fcgxStreamReadw(request.in);
+        httpRequest.body = fcgxStreamRead(request.in);
       }
 
       HttpResponse httpResponse;
