@@ -4,7 +4,7 @@
 #include <map>
 #include <memory>
 
-#include "all_include.h"
+#include "http_util.h"
 
 
 
@@ -58,7 +58,7 @@ namespace nameless_carpool {
   };
 
   /* 入参变量枚举 , 与 inputParamMap 结合定义常量 */
-  enum InputParamEnum {
+  enum class InputParamEnum {
     debug    =  8,
     help     =  9,
     header   = 10,
@@ -67,7 +67,7 @@ namespace nameless_carpool {
     body     = 13,
   };
 
-  struct {
+  struct InputParam {
     const string debug     = "debug";
     const string help      = "help";
     const string header    = "header";
@@ -110,15 +110,17 @@ namespace nameless_carpool {
       }
 
 
-  } inputParam;
+  };
+  extern InputParam inputParam;
 
   /* 是否包含 debug 入参 */
-  bool contentDebugParam(int argc, char **argv);
+  extern bool contentDebugParam(int argc, char **argv);
 
   /** 接受参数 , 将参数填充到 httpRequest 
       return true,  HttpRequest 填充有意义 , HttpResponse 的填充有意义(含异常信息)
              false, HttpRequest   无意义  , 可以直接将 HttpResponse 输出 */
-  bool accept(int argc, char **argv,                                  /* 输入 */
-              HttpRequest &requestRead, HttpResponse& reponseInflate  /* 输出 */);
+  extern bool accept(
+    int argc, char **argv,                                  /* 输入 */
+    HttpRequest& requestRead, HttpResponse& reponseInflate  /* 输出 */);
 }
 

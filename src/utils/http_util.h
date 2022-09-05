@@ -14,16 +14,28 @@
 #include "tom_string_utils.h"
 #include "fcgi_util.h"
 #include "glog/logging.h"
+#include "json/include_json.h"
+#include "../model/response_body.h"
+
+extern int flag;
 
 namespace nameless_carpool {
 
 
   using namespace std;
 
-
+  /* 状态码一般信息参考 : https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Status 
+     > 信息响应 (100–199)
+     > 成功响应 (200–299)
+     > 重定向消息 (300–399)
+     > 客户端错误响应 (400–499)
+     > 服务端错误响应 (500–599)
+  */
   enum class HttpStatusEnum {
     success             = 200 ,
 
+    badRequest          = 400 ,
+    requestUndefined    = 404 ,
     requestHelp         = 500 ,
     unknowErr           = 501 ,
     parsingFailed       = 502 ,
@@ -31,9 +43,11 @@ namespace nameless_carpool {
     argDefineMultiple   = 504 ,
   };
 
-  struct {
+  struct HttpStatus {
     const map<HttpStatusEnum, const string> name = {
       {HttpStatusEnum::success,             "success"            },
+      {HttpStatusEnum::badRequest,          "badRequest"         },
+      {HttpStatusEnum::requestUndefined,    "requestUndefined"   },
       {HttpStatusEnum::requestHelp,         "requestHelp"        },
       {HttpStatusEnum::unknowErr,           "unknowErr"          },
       {HttpStatusEnum::parsingFailed,       "parsingFailed"      },
@@ -42,24 +56,26 @@ namespace nameless_carpool {
     };
 
     const map<HttpStatusEnum, const string> desc = {
-      {HttpStatusEnum::success,             "解析完成"                   },
-      {HttpStatusEnum::requestHelp,         "查看帮助信息"                },
-      {HttpStatusEnum::unknowErr,           "未知错误, 需要进一步跟进"      },
-      {HttpStatusEnum::parsingFailed,       "服务端异常 , 解析失败"        },
-      {HttpStatusEnum::wrongFormat,         "入参错误 , 入参格式错误"      },
-      {HttpStatusEnum::argDefineMultiple,   "入参错误 , 属性多次定义"      },
+      {HttpStatusEnum::success,             "解析完成"                                                                                                          },
+      {HttpStatusEnum::badRequest,          "Bad Request : 被认为是客户端错误（例如，错误的请求语法、无效的请求消息帧或欺骗性的请求路由），服务器无法或不会处理请求。"             },
+      {HttpStatusEnum::requestUndefined,    "404 请求未定义"                                                                                                    },
+      {HttpStatusEnum::requestHelp,         "查看帮助信息"                                                                                                        },
+      {HttpStatusEnum::unknowErr,           "未知错误, 需要进一步跟进"                                                                                             },
+      {HttpStatusEnum::parsingFailed,       "服务端异常 , 解析失败"                                                                                                },
+      {HttpStatusEnum::wrongFormat,         "入参错误 , 入参格式错误"                                                                                             },
+      {HttpStatusEnum::argDefineMultiple,   "入参错误 , 属性多次定义"                                                                                             },
     };
 
-    string getStatusName(HttpStatusEnum statusEnum) {
+    string getName(HttpStatusEnum statusEnum) {
       return name.at(statusEnum);
     }
 
-    string getStatusDesc(HttpStatusEnum statusEnum) {
+    string getDesc(HttpStatusEnum statusEnum) {
       return desc.at(statusEnum);
     }
 
-  } httpStatusUtil;
-
+  } ;
+  extern HttpStatus httpStatus;
 
   enum class HttpMethodEnum {
     /* https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Methods */
@@ -74,7 +90,7 @@ namespace nameless_carpool {
     PATCH,       // PATCH 方法用于对资源应用部分修改。
   };
 
-  class {
+  struct HttpMethodUtil {
 
     const map<string, HttpMethodEnum> httpMethodFromName = {
       { "GET"      ,   HttpMethodEnum::GET     },
@@ -113,8 +129,17 @@ namespace nameless_carpool {
       return httpMethodToName.at(methodEnum);
     }
 
-  } httpMethodUtil ;
+  };
+  extern HttpMethodUtil httpMethodUtil;
 
+  struct MediaType {
+    /* 常见 media type https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types */
+
+    const string json = "application/json";
+    const string txt  = "text/plain";
+
+  };
+  extern MediaType mediaType;
 
   struct HttpContent {
     map<string, string> headers;
@@ -133,11 +158,15 @@ namespace nameless_carpool {
       body.clear();
       return *this;
     }
+    
+    // NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpContent, headers, body);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpContent, headers, body)
   };
 
   struct HttpRequest : public HttpContent {
     string method;
     string function;
+
     HttpRequest& setMethod(string str) {
       method = str;
       return *this;
@@ -176,16 +205,24 @@ namespace nameless_carpool {
       function.clear();
       return *this;
     }
+    /* 获取 method + uri 字符串 */
+    string methodUri() const {
+      string upperMethod = method;
+      std::transform(upperMethod.begin(), upperMethod.end(),upperMethod.begin(), ::toupper);
+      return upperMethod + function;
+    }
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpRequest, headers, body, method, function)
   };
 
   struct HttpResponse : public HttpContent {
-
+    
     int status = -1;
 
     HttpResponse() {
       headers = {
-        {"Content-type", "text/plain; charset=utf-8"},
-        {"PID"         , std::to_string(getpid())   },
+        {"Content-type", mediaType.json + "; charset=utf-8"},
+        {"PID"         , std::to_string(getpid())          },
       };
     }
 
@@ -198,7 +235,9 @@ namespace nameless_carpool {
       stringstream ss;
 
       /* 状态码 */   {
-        ss << "Status: " << status << endl;
+        if(status >= 0) {
+          ss << "Status: " << status << endl;
+        }
       }
       /* header */  {
         for (map<string, string>::iterator headerIterator = headers.begin();
@@ -232,6 +271,22 @@ namespace nameless_carpool {
       status = -1;
       return *this;
     }
+  
+    /* 初始化请求错误返回信息 */
+    void initByInlegalRequest(string internalMsg = "", string externalMsg = "") {
+      HttpStatusEnum statusEnum = HttpStatusEnum::badRequest;
+      status = static_cast<int>(statusEnum);
+      Json jsonBody = ResponseBody {
+        status,
+        "",
+        httpStatus.getDesc(statusEnum),
+        internalMsg,
+        externalMsg
+      };
+      body = jsonBody.dump(2);
+    }
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpResponse, headers, body, status)
   };
 
 }

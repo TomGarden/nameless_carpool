@@ -1,8 +1,11 @@
 
 #include <typeinfo>
 #include "model/user.h"
-#include "../libs/nlohmann_json_3.10.5/json.hpp"
-#include "utils/all_include.h"
+#include "utils/input_check.h"
+#include "utils/log_utils.h"
+#include "utils/tom_string_utils.h"
+#include "utils/http_util.h"
+#include "net/api.h"
 
 #include <locale>
 #include <codecvt>
@@ -17,8 +20,8 @@ using namespace nameless_carpool;
 using namespace google;
 
 
-void optData(const HttpRequest& requestInput, HttpResponse& responseOutput) {
-  
+void optRequest(const HttpRequest& requestInput, HttpResponse& responseOutput) {
+  Api::optRequest(requestInput, responseOutput);
 }
 
 /* 操作本地数据 , 
@@ -28,18 +31,30 @@ void optLocaleData(int argc, char **argv) {
 
   HttpRequest httpRequest;
   HttpResponse httpResponse;
-  bool optRequest = accept(argc, argv, httpRequest, httpResponse);
+  bool operateRequest = accept(argc, argv, httpRequest, httpResponse);
 
-  if(optRequest) {
-    optData(httpRequest, httpResponse.clear());
-    LOG(FATAL) << "暂未实现此逻辑" << endl;
-  } else {
-    LOG(ERROR) << endl 
-               << httpResponse.toString() 
+  Json jsonRequest = httpRequest;
+  LOG(INFO) << jsonRequest.dump(2) << endl;
+
+  if(operateRequest) {
+    optRequest(httpRequest, httpResponse.clear());
+    LOG(INFO) << endl 
+              << Json(httpResponse).dump(2) 
+              << endl << endl << endl;
+  } else switch(httpResponse.status) {
+    case static_cast<int>(HttpStatusEnum::requestHelp): {
+      LOG(INFO) << endl 
+              << httpResponse.body 
+              << endl << endl << endl;
+      break;
+    }
+    default :   {
+    LOG(FATAL) << endl 
+               << "未知异常需要手动校验"
                << endl << endl << endl;
-  }
-
-}
+    }
+  }/* switch end & else end */
+}/* optLocaleData */
 
 /* 操作网络数据 */
 void optNetData(int argc, char **argv) {
@@ -87,7 +102,8 @@ void optNetData(int argc, char **argv) {
       }
 
       HttpResponse httpResponse;
-      optData(httpRequest, httpResponse);
+      
+      optRequest(httpRequest, httpResponse);
 
       // httpResponse.addHeader(L"testKey",L"testValue")
       //             .setBody(L"{ 123, wc_uid, wc_number}");
@@ -122,7 +138,7 @@ spawn-fcgi  \
 */
 int main(int argc, char ** argv) {
 
-  setlocale(LC_CTYPE, "C.UTF-8"); //必须在 initGlog 之前设置完成
+  setlocale(LC_CTYPE, tom_utils::defLocalStr); //必须在 initGlog 之前设置完成
   initGlog(argv[0]);
 
   for (int i = 0; i < argc; i++) {

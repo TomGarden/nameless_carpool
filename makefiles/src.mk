@@ -32,12 +32,23 @@ src_model = src/model
 
 src_utils = src/utils
 	tom_string_utils_in = $(pro_dir)/$(src_utils)/tom_string_utils.cpp 
-	tom_string_utils_o = $(build_dir)/$(src_utils)/tom_string_utils.o 
-	input_check_in = $(pro_dir)/$(src_utils)/input_check.cpp
-	input_check_o = $(build_dir)/$(src_utils)/input_check.o 
+	tom_string_utils_o 	= $(build_dir)/$(src_utils)/tom_string_utils.o 
+	input_check_in 		 	= $(pro_dir)/$(src_utils)/input_check.cpp
+	input_check_o 			= $(build_dir)/$(src_utils)/input_check.o 
+	http_util_in 				= $(pro_dir)/$(src_utils)/http_util.cpp
+	http_util_o 				= $(build_dir)/$(src_utils)/http_util.o
+	common_in 				= $(pro_dir)/$(src_utils)/common.cpp
+	common_o 				= $(build_dir)/$(src_utils)/common.o
 
+src_net = src/net
+	api_in = $(pro_dir)/$(src_net)/api.cpp
+	api_o = $(build_dir)/$(src_net)/api.o
+	src_net_api = $(src_net)/api
+		authenticate_in = $(pro_dir)/$(src_net_api)/authenticate.cpp
+		authenticate_o = $(build_dir)/$(src_net_api)/authenticate.o
 
-objects = $(tom_string_utils_o)	$(input_check_o) $(fcgio_o)\
+objects = $(tom_string_utils_o) $(http_util_o)	$(input_check_o) $(fcgio_o) $(common_o) \
+					$(api_o) $(authenticate_o) \
 					$(main_o)                                
 
 # -I 用于指定搜索头文件的路径
@@ -69,9 +80,11 @@ all : try_create_all_dependent_dir					\
 
 
 try_create_all_dependent_dir :      
->		$(call create_dir,$(build_dir)/$(src))
->		$(call create_dir,$(build_dir)/$(src_model))
->		$(call create_dir,$(build_dir)/$(src_utils))
+>	$(call create_dir,$(build_dir)/$(src))
+>	$(call create_dir,$(build_dir)/$(src_model))
+>	$(call create_dir,$(build_dir)/$(src_utils))
+>	$(call create_dir,$(build_dir)/$(src_net))
+>		$(call create_dir,$(build_dir)/$(src_net_api))
 
 
 $(protram_output_dir)/execute.run : $(objects)
@@ -86,8 +99,20 @@ $(tom_string_utils_o) : $(tom_string_utils_in)
 $(input_check_o) : $(input_check_in)
 >		$(g++) $(input_check_in) -o $(input_check_o)
 
+$(http_util_o) : $(http_util_in)
+>		$(g++) $(http_util_in) -o $(http_util_o)
+
+$(common_o) : $(common_in)
+>		$(g++) $(common_in) -o $(common_o)
+
 # $(user_o) : $(user_in)
 # >		$(g++) $(user_in) -o $(user_o)
+
+$(api_o) : $(api_in)
+>		$(g++) $(api_in) -o $(api_o)
+
+$(authenticate_o) : $(authenticate_in)
+>		$(g++) $(authenticate_in) -o $(authenticate_o)
 
 $(main_o) : $(main_in)
 >		$(g++) $(main_in) -o $(main_o) 
@@ -101,9 +126,9 @@ clean :
 # 执行编译结果
 run :
 >		$(protram_output_dir)/execute.run \
-			--debug													\
-			--header={one:1,two:"2"} 				\
+			--help													\
+			--header='{"one":1,"two":"2"}' 	\
 			--method=POST										\
 			--function=/api/功能细节				 \
-			--body={msg:"消息内容"}
+			--body='{msg:"消息内容"}'
 

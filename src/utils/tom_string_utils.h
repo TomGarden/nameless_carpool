@@ -116,11 +116,11 @@ namespace tom_utils {
   extern const char *defLocalStr;
 
   /** UTF8 'char*' convert to 'wstring' */
-  wstring utfMbsrtowcs(const char *input, const char *localeStr = defLocalStr);
-  wstring utfMbsrtowcs(string input,      const char *localeStr = defLocalStr);
+  extern wstring utfMbsrtowcs(const char *input, const char *localeStr = defLocalStr);
+  extern wstring utfMbsrtowcs(string input,      const char *localeStr = defLocalStr);
 
-  string utfWcstombs(const wchar_t *input, const char *localeStr = defLocalStr);
-  string utfWcstombs(wstring input,        const char *localeStr = defLocalStr);
+  extern string utfWcstombs(const wchar_t *input, const char *localeStr = defLocalStr);
+  extern string utfWcstombs(wstring input,        const char *localeStr = defLocalStr);
   
   /** 测试函数 */
   void test();
