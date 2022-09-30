@@ -3,26 +3,71 @@
 #include "user.h"
 #include "mysql_db.h"
 #include <string>
+#include <iostream>
+#include <optional>
+#include <typeinfo>
+#include <cxxabi.h>
+#include <map>
+
 
 
 
 using namespace src_test;
-
-int main2() {
-  DateTime dateTime;
-  dateTime.test_time_t();
-  dateTime.test_cpp_time();
-
-  WcUser wcUser = { 123, "wc_uid", "wc_number"};
-  Json json = Json(wcUser);
-  std::cout << json.dump() << std::endl;
-
-  MysqlDb mysqlDb;
-  mysqlDb.tryMysql();
+using namespace std;
 
 
-  std::cout << "\n\n\n" <<std::endl;
+int main() {
+
+  int     status;
+  char   *realname;
+
+  // exception classes not in <stdexcept>, thrown by the implementation
+  // instead of the user
+  std::bad_exception  e;
+  realname = abi::__cxa_demangle(e.what(), 0, 0, &status);
+  std::cout << e.what() << "\t=> " << realname << "\t: " << status << '\n';
+  free(realname);
+
+
+  // typeid
+  map<int,map<string, double>>          u;
+  const std::type_info  &ti = typeid(u);
+
+  realname = abi::__cxa_demangle(ti.name(), 0, 0, &status);
+  std::cout << ti.name() << "\t=> " << realname << "\t: " << status << '\n';
+  free(realname);
+
   return 0;
+
+
+  // DateTime dateTime;
+  // dateTime.test_time_t();
+  // dateTime.test_cpp_time();
+  // dateTime.test_cpp_time2();
+  // uint64_t flag = 10'000'000'000ull;
+  // std::cout << "flag:" << flag << std::endl;
+
+
+  // WcUser wcUser = { 123, "wc_uid", "wc_number"};
+  // Json json = Json(wcUser);
+  // std::cout << json.dump() << std::endl;
+
+  // MysqlDb mysqlDb;
+  // mysqlDb.tryMysql();
+
+
+  // std::cout << "\n\n\n" <<std::endl;
+
+  // optional<string> flag;
+  // const type_info& typeInfo = typeid(flag);
+  // cout << typeid(flag).name() << endl;
+  // if(typeInfo == typeid(optional<int>)){
+  //   cout << "success" << endl;
+  // } else {typeInfo.before()
+  //   cout << "failed" << endl;
+  // }
+
+  // return 0;
 }
 
 using namespace std;
@@ -63,7 +108,7 @@ struct Test {
   string strTwo = "string two [22222]";
 };
 
-int main() {
+int main2() {
   Test test;
 
   test.printIntVal();

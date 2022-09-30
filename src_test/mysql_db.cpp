@@ -12,7 +12,7 @@ void src_test::MysqlDb::tryMysql()
   Client client(
       SessionOption::USER, "root",
       SessionOption::PWD, "root",
-      SessionOption::HOST, "172.17.0.3",
+      SessionOption::HOST, "172.17.0.4",
       SessionOption::PORT, 33060,
       SessionOption::DB, "nameless_carpool");
   Session session = client.getSession();
@@ -67,12 +67,16 @@ void src_test::MysqlDb::tryMysql()
       Table table = tableVector[i];
       std::string tableName = table.getName();
 
+      // SqlStatement sqlStatement = session.sql(
+      //   "SELECT * FROM nameless_carpool."+tableName);
       SqlStatement sqlStatement = session.sql(
-        "SELECT id,name,DATE_FORMAT(register_time,'%Y-%m-%d %H:%i:%S.%f') as register_time FROM nameless_carpool.user");
+        "SELECT id, DATE_FORMAT(`vc_update_time`,'%Y-%m-%d %H:%i:%S.%f') AS `vc_update_time` FROM nameless_carpool.telephone");
+        // "SELECT id, `vc_update_time` FROM nameless_carpool.telephone");
       SqlResult sqlResult = sqlStatement.execute();
 
       //RowResult sqlResult = table.select("*").execute();
-
+      cout << tableName << '(' << sqlResult.count() << ')' << endl;
+      
       const Columns &columns = sqlResult.getColumns();
       col_count_t columnCount = sqlResult.getColumnCount();
 
@@ -156,7 +160,7 @@ void src_test::MysqlDb::tryMysql2() {
                                       //.bind(defSchemeName + '.' + tableName);
 
       SqlStatement sqlStatement = session.sql(
-        "SELECT id,name,DATE_FORMAT(register_time,'%Y-%m-%d %H:%i:%S.%f') as register_time FROM nameless_carpool.user");
+        "SELECT id, DATE_FORMAT(vc_update_time,'%Y-%m-%d %H:%i:%S.%f') AS vc_update_time FROM nameless_carpool.telephone");
       SqlResult sqlResult = sqlStatement.execute();
 
       const Columns &columns = sqlResult.getColumns();
@@ -191,8 +195,8 @@ void src_test::MysqlDb::tryMysql2() {
 std::string src_test::MysqlDb::value2Str(Value value) {
   Value::Type type = value.getType();
   switch (type) {
-    case Value::Type::ARRAY:      return bytes2Str(value.getRawBytes());
-    case Value::Type::DOCUMENT:   return bytes2Str(value.getRawBytes());
+    case Value::Type::ARRAY:      return "Value::Type::ARRAY"/* bytes2Str(value.getRawBytes()) */;
+    case Value::Type::DOCUMENT:   return "Value::Type::DOCUMENT"/* bytes2Str(value.getRawBytes()) */;
     case Value::Type::VNULL:      return "Value::Type::VNULL";
     
     default: { 
@@ -205,11 +209,11 @@ std::string src_test::MysqlDb::value2Str(Value value) {
         case common::Value::BOOL:     return to_string(value.get<bool>());
         case common::Value::STRING:   return value.get<std::string>();
         case common::Value::USTRING:  return value.get<mysqlx::string>();
-        case common::Value::RAW:      return bytes2Str(value.getRawBytes());
-        case common::Value::EXPR:     return bytes2Str(value.getRawBytes());
-        case common::Value::JSON:     return bytes2Str(value.getRawBytes());
+        case common::Value::RAW:      return "common::Value::RAW"/* bytes2Str(value.getRawBytes()) */;
+        case common::Value::EXPR:     return "common::Value::EXPR"/* bytes2Str(value.getRawBytes()) */;
+        case common::Value::JSON:     return "common::Value::JSON"/* bytes2Str(value.getRawBytes()) */;
         
-        default:                      return bytes2Str(value.getRawBytes());
+        default:                      return "default" /* bytes2Str(value.getRawBytes()) */;
       }
     }
   }
@@ -219,7 +223,9 @@ std::string src_test::MysqlDb::value2Str(Value value) {
 
 
 std::string src_test::MysqlDb::bytes2Str(mysqlx::bytes bytesObj) {
-  // const byte* charP = bytesObj.begin();
-  // std::string result = std::string(charP);
+
+  // auto charP = bytesObj.begin();
+  //mysqlx::abi2::r0::common::byte *charP = bytesObj.begin();
+  //std::string result = std::string(charP);
   return "未知";
 }

@@ -1,17 +1,29 @@
 
 #include <typeinfo>
-#include "model/user.h"
-#include "utils/input_check.h"
-#include "utils/log_utils.h"
-#include "utils/tom_string_utils.h"
-#include "utils/http_util.h"
-#include "net/api.h"
-
 #include <locale>
 #include <codecvt>
 #include <iostream>
 #include <clocale>
 #include <cwchar>
+#include <fstream>
+#include <any>
+
+#include <boost/version.hpp>
+
+
+#include "db/model/user_info.h"
+#include "utils/input_check.h"
+#include "utils/json/include_json.h"
+#include "utils/log_utils.h"
+#include "utils/tom_string_utils.h"
+#include "utils/http_util.h"
+#include "utils/linux_os.h"
+#include "utils/common.h"
+#include "net/api.h"
+#include "net/api/authenticate_m.h"
+
+#include "db/sql/db_manager.h"
+
 
 
 
@@ -33,27 +45,12 @@ void optLocaleData(int argc, char **argv) {
   HttpResponse httpResponse;
   bool operateRequest = accept(argc, argv, httpRequest, httpResponse);
 
-  Json jsonRequest = httpRequest;
-  LOG(INFO) << jsonRequest.dump(2) << endl;
+  httpRequest.printSelf();
 
   if(operateRequest) {
     optRequest(httpRequest, httpResponse.clear());
-    LOG(INFO) << endl 
-              << Json(httpResponse).dump(2) 
-              << endl << endl << endl;
-  } else switch(httpResponse.status) {
-    case static_cast<int>(HttpStatusEnum::requestHelp): {
-      LOG(INFO) << endl 
-              << httpResponse.body 
-              << endl << endl << endl;
-      break;
-    }
-    default :   {
-    LOG(FATAL) << endl 
-               << "未知异常需要手动校验"
-               << endl << endl << endl;
-    }
-  }/* switch end & else end */
+  } 
+  httpResponse.printSelf();
 }/* optLocaleData */
 
 /* 操作网络数据 */
@@ -65,19 +62,25 @@ void optNetData(int argc, char **argv) {
   while (FCGX_Accept_r(&request) == 0) {
     try {
 
-      { /* 打印从 nginx 读取大的所有内容 */
-        LOG(INFO) << "requestId : " << request.requestId << endl;
-        LOG(INFO) << "role : " << request.role << endl;
+
+      string requestIn;
+      { /* 打印从 nginx 读取到的部分内容 */
+        logInfo << "requestId : " << request.requestId << endl;
+        logInfo << "role : " << request.role << endl;
         char **envp = request.envp;
         for (int index = 0; *envp; index++, envp++) {
-          LOG(INFO) << "[" << index << "]\t" << *envp << endl;
+          logInfo << "[" << index << "]\t" << *envp << endl;
         }
-        LOG(INFO) << "request.in : " << fcgxStreamRead(request.in) << endl;
-        LOG(INFO) << "request.out : " << fcgxStreamRead(request.out) << endl;
-        LOG(INFO) << "request.err : " << fcgxStreamRead(request.err) << endl;
+
+               requestIn  = fcgxStreamRead(request.in);
+        string requestOut = fcgxStreamRead(request.out);
+        string requestErr = fcgxStreamRead(request.err);
+        logInfo << "request.in : " << requestIn << endl;
+        logInfo << "request.out : " << requestOut << endl;
+        logInfo << "request.err : " << requestErr << endl;
       }
 
-
+      HttpResponse httpResponse;
       HttpRequest httpRequest;
       { /* 只获取我们关心的数据 HttpRequest */
         char **envp = request.envp;
@@ -89,7 +92,7 @@ void optNetData(int argc, char **argv) {
           if(key == "REQUEST_METHOD") {
             httpRequest.method = env.substr(equalIndex + 1);
           } else if(key == "REQUEST_URI") {
-            httpRequest.function = env.substr(equalIndex + 1);
+            httpRequest.uri = env.substr(equalIndex + 1);
           } else {
             string prefix = env.substr(0, 5);
             if(prefix == "HTTP_") {
@@ -98,28 +101,34 @@ void optNetData(int argc, char **argv) {
             }
           }
         }
-        httpRequest.body = fcgxStreamRead(request.in);
+
+        /* 排除入参非法的可能性 */
+        try {
+          httpRequest.setBody(requestIn);
+        } catch (const Json::exception& jsonException) {
+          logError << jsonException.what() << endl;
+          httpResponse.initResponse(HttpStatusEnum::badRequest, HttpResponse::BODY_FORMAT_ERR);
+        }
+
+        httpRequest.printSelf();
       }
 
-      HttpResponse httpResponse;
-      
-      optRequest(httpRequest, httpResponse);
-
-      // httpResponse.addHeader(L"testKey",L"testValue")
-      //             .setBody(L"{ 123, wc_uid, wc_number}");
+      if(httpResponse.isEmpty()) {
+        optRequest(httpRequest, httpResponse);
+      }
 
       string strResponse = httpResponse.toString();
-      const char *response = strResponse.c_str();
 
-      LOG(INFO) << "返回值输出2 : \n" << response << endl;
+      FCGX_FPrintF(request.out, strResponse.c_str());
 
-      FCGX_FPrintF(request.out, response);
+      httpResponse.printSelf();
+      logInfo << endl << strResponse << endl;
 
     } catch (const exception & except) {
-      LOG(ERROR) << "程序异常:" << except.what() << "\n" << getStackTrace() << endl;
+      logError << "程序异常:" << except.what() << "\n" << getStackTrace() << endl;
     }
 
-    gLogFlushAllLogFiles();
+    logFlush();
     FCGX_Finish_r(&request);
 
   }
@@ -142,7 +151,7 @@ int main(int argc, char ** argv) {
   initGlog(argv[0]);
 
   for (int i = 0; i < argc; i++) {
-    LOG(INFO) << argv[i] << endl;
+    logInfo << argv[i] << endl;
   }
 
   bool isDebug = contentDebugParam(argc, argv);

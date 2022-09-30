@@ -1,0 +1,122 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, 
+  // visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+
+    /* 用于代码编译运行的 */
+    {
+      "name": "nameless_debug",
+      "type": "cppdbg",
+      "request": "launch",
+      "preLaunchTask": "build_nameless_src_by_make",
+      "program": "${workspaceFolder}/build_src/execute.run",
+      "args": [
+                "--input_file"
+              ],		
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+          {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          },
+          {
+              "description":  "Set Disassembly Flavor to Intel",
+              "text": "-gdb-set disassembly-flavor intel",
+              "ignoreFailures": true
+          }
+      ]
+    },
+
+    /* 用于 在 有 dumpfile 的情况下 用造成 异常的代码复现异常场景的。 */
+    {
+      "name": "nameless_core_dump_file_debug",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build_src/execute.run",
+      "coreDumpPath": "${workspaceFolder}/tmp_dir/run_path/core_execute.run_2245_1661226040",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+          {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          },
+          {
+              "description":  "Set Disassembly Flavor to Intel",
+              "text": "-gdb-set disassembly-flavor intel",
+              "ignoreFailures": true
+          }
+      ]
+    },
+
+
+
+    /* 用于测试代码编译运行的 */
+    {
+      "name": "nameless_test_debug",
+      "type": "cppdbg",
+      "request": "launch",
+      "preLaunchTask": "build_nameless_src_test_by_make",
+      "program": "${workspaceFolder}/build_src_test/execute.run",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+          {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          },
+          {
+              "description":  "Set Disassembly Flavor to Intel",
+              "text": "-gdb-set disassembly-flavor intel",
+              "ignoreFailures": true
+          }
+      ]
+    },
+
+    /* 用于 在 有 dumpfile 的情况下 用造成 异常的代码复现异常场景的。 */
+    {
+      "name": "nameless_test_core_dump_file_debug",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build_src_test/execute.run",
+      "coreDumpPath": "${workspaceFolder}/build_src_test/core_execute.run_391878_1657165513",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+          {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          },
+          {
+              "description":  "Set Disassembly Flavor to Intel",
+              "text": "-gdb-set disassembly-flavor intel",
+              "ignoreFailures": true
+          }
+      ]
+    }
+
+  ]
+}

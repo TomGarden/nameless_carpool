@@ -16,7 +16,7 @@
         --help                                \   关键字, 包含此参数时候 , 其他参数被忽略
         --method=get,post,put,delete ···      \   http method
         --header={key:value, key1:value1 ···} \   http header
-        --function=httpUrl                    \   http url
+        --uri=httpUri                    \   http uri
         --body={anyjsondata}                  \   http body
 
     只接受 utf-8 编码的数据 , 几个参数顺序不分先后
@@ -29,25 +29,6 @@ namespace nameless_carpool {
 
   /** 参数前缀 */
   inline const string paramPrefix = "--";
-  inline const string helpInfo = "\n"
-          "\n    nameless_carpool 软件本地调用的格式说明"
-          "\n    "
-          "\n    nameless_carpool \\"
-          "\n        --debug                               \\   关键字, 用于区分数据当做网络数据还是当做本地数据"
-          "\n        --help                                \\   关键字, 包含此参数时候 , 其他参数被忽略"
-          "\n        --method=get,post,put,delete ···      \\   http method"
-          "\n        --header={key:value, key1:value1 ···} \\   http header"
-          "\n        --function=httpUrl                    \\   http url"
-          "\n        --body={anyjsondata}                  \\   http body"
-          "\n"
-          "\n    只接受 utf-8 编码的数据 , 几个参数顺序不分先后"
-          "\n"
-          "\n"
-          "\n    help : 入参中只要包含了 `help` 就会打印本说明 , 且忽略其他入参 . "
-          "\n"
-          "\n    debug : 只有包含 `debug` 才被当做一次性的调试调用 "
-          "\n            不包含 `debug` 参数 , 其他参数将被忽略 , 进入网络阻塞等待下一个网络呼叫 . "
-          "\n";
 
   struct InputData {
     string charset = {nullptr};
@@ -59,39 +40,43 @@ namespace nameless_carpool {
 
   /* 入参变量枚举 , 与 inputParamMap 结合定义常量 */
   enum class InputParamEnum {
-    debug    =  8,
-    help     =  9,
-    header   = 10,
-    method   = 11,
-    function = 12,
-    body     = 13,
+    inputFile     =  7,
+    debug         =  8,
+    help          =  9,
+    header        = 10,
+    method        = 11,
+    uri           = 12,
+    body          = 13,
   };
 
   struct InputParam {
+    const string inputFile = "input_file";
     const string debug     = "debug";
     const string help      = "help";
     const string header    = "header";
     const string method    = "method";
-    const string function  = "function";
+    const string uri       = "uri";
     const string body      = "body";
 
 
     const map<InputParamEnum, string> inputParamToName = {
-      {InputParamEnum::debug    ,  debug     },
-      {InputParamEnum::help     ,  help      },
-      {InputParamEnum::header   ,  header    },
-      {InputParamEnum::method   ,  method    },
-      {InputParamEnum::function ,  function  },
-      {InputParamEnum::body     ,  body      },
+      {InputParamEnum::inputFile    ,  inputFile      },
+      {InputParamEnum::debug        ,  debug          },
+      {InputParamEnum::help         ,  help           },
+      {InputParamEnum::header       ,  header         },
+      {InputParamEnum::method       ,  method         },
+      {InputParamEnum::uri          ,  uri       },
+      {InputParamEnum::body         ,  body           },
     };
     
     const map<string, InputParamEnum> inputParamFromName = {
-      {debug    ,  InputParamEnum::debug    },
-      {help     ,  InputParamEnum::help     },
-      {header   ,  InputParamEnum::header   },
-      {method   ,  InputParamEnum::method   },
-      {function ,  InputParamEnum::function },
-      {body     ,  InputParamEnum::body     },
+      {inputFile      ,  InputParamEnum::inputFile    },
+      {debug          ,  InputParamEnum::debug        },
+      {help           ,  InputParamEnum::help         },
+      {header         ,  InputParamEnum::header       },
+      {method         ,  InputParamEnum::method       },
+      {uri            ,  InputParamEnum::uri     },
+      {body           ,  InputParamEnum::body         },
     };
 
     public:
@@ -122,5 +107,10 @@ namespace nameless_carpool {
   extern bool accept(
     int argc, char **argv,                                  /* 输入 */
     HttpRequest& requestRead, HttpResponse& reponseInflate  /* 输出 */);
+
+  /* 从 filePath 读取文本放到 result 中
+     @return true, 读取过程中没有错误 
+             false,读取过程中有错误*/
+  extern bool readStrFromFile(const string filePath, string& result);
 }
 

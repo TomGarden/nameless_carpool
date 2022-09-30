@@ -2,7 +2,6 @@
 #pragma once
 
 #include "api/authenticate.h"
-// #include "../utils/all_include.h"
 #include "../utils/http_util.h"
 
 namespace nameless_carpool {

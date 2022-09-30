@@ -1,7 +1,6 @@
 
 #include "api.h"
-#include "../model/response_body.h"
-// #include "../utils/all_include.h"
+#include "../net/model/response_body.h"
 #include "../utils/http_util.h"
 
 namespace nameless_carpool {
@@ -11,7 +10,9 @@ namespace nameless_carpool {
 
     if(methodUri.compare(AuthApi::loginUri) == 0) {
       AuthApi::login(requestInput, responseOutput);
-    } 
+    } else if(methodUri.compare(AuthApi::requestVertifyCodeUri) == 0) {
+      AuthApi::requestVC(requestInput, responseOutput);
+    }
     else {
       Api::unknownRequest(requestInput, responseOutput);
     }
@@ -26,6 +27,6 @@ namespace nameless_carpool {
     bodyObj.status = responseOutput.status;
     bodyObj.internalMsg = statusName + " : " + statusDesc;
     
-    responseOutput.body = Json(bodyObj).dump();
+    responseOutput.setBody(bodyObj);
   }
 }

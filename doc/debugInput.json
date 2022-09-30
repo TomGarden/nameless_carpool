@@ -1,0 +1,11 @@
+{
+  "method"   : "POST",
+  "headers"  : {
+    "time_zone":-8,
+    "headerTwo":"two"
+  },     
+  "uri"      :  "/fcgi_test/nameless_carpool/request_vertify_code",
+  "body"     : {
+    "phone":"15912341234"
+  }
+}

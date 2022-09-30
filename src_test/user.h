@@ -32,24 +32,30 @@ namespace src_test
     int user_id;
     std::string wc_uid;
     std::string wc_number;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(WcUser          ,
+                                   user_id,
+                                   wc_uid,
+                                   wc_number
+    );
   };
 
 
-  void to_json(Json &json, const WcUser &obj)
-  {
-    json = Json{
-        {"user_id", obj.user_id},
-        {"wc_uid", obj.wc_uid},
-        {"wc_number", obj.wc_number}
-      };
-  }
+  // void to_json(Json &json, const WcUser &obj)
+  // {
+  //   json = Json{
+  //       {"user_id", *obj.user_id},
+  //       {"wc_uid", *obj.wc_uid},
+  //       {"wc_number", *obj.wc_number}
+  //     };
+  // }
 
-  void from_json(const Json &json, WcUser &obj)
-  {
-    json.at("user_id").get_to(obj.user_id);
-    json.at("wc_uid").get_to(obj.wc_uid);
-    json.at("wc_number").get_to(obj.wc_number);
-  }
+  // void from_json(const Json &json, WcUser &obj)
+  // {
+  //   json.at("user_id").get_to(*obj.user_id);
+  //   json.at("wc_uid").get_to(*obj.wc_uid);
+  //   json.at("wc_number").get_to(*obj.wc_number);
+  // }
 }
 
 #endif

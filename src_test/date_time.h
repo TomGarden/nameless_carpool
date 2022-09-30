@@ -18,6 +18,8 @@ namespace src_test {
       /** cpp 的时间 api */
       void test_cpp_time();
 
+      void test_cpp_time2();
+
   };
 }
 

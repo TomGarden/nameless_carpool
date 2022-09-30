@@ -8,7 +8,7 @@
 
 
 .RECIPEPREFIX = ># 标定命令行前缀,默认命令行前缀是 tab 字符，更改为 ‘>’
-g++ = g++ -g -std=c++11
+g++ = g++ -g -std=c++20
 g++Unlink = $(g++) -c
 
 make_file_path = $(dir $(word 1,$(MAKEFILE_LIST)))

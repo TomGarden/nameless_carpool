@@ -58,10 +58,7 @@ namespace tom_utils {
 
   //       +1 的动作是为了把 空字符也计数
   //    */
-  //   int str_length = {
-  //       std::snprintf(nullptr, 0, format,
-  //                     convert_string_to_charp(std::forward<Args>(args))...) +
-  //       1};
+  //   int str_length = { std::snprintf(nullptr, 0, format, convert_string_to_charp(std::forward<Args>(args))...) + 1 };
   //   //int str_length = {std::snprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1};
   //   if(str_length < 0) {
   //     throw std::runtime_error("格式化字符串失败① errnum = " + errno);

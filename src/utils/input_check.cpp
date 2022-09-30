@@ -1,11 +1,15 @@
 #include <iostream>
 #include <cstring>
 #include <algorithm>
+#include <fstream>
+#include <ios>
 
 #include "input_check.h"
-#include "../model/response_body.h"
+#include "../net/model/response_body.h"
 #include "http_util.h"
 #include "fcgi_util.h"
+#include "common.h"
+#include "log_utils.h"
 
 namespace nameless_carpool {
 
@@ -17,10 +21,12 @@ namespace nameless_carpool {
   bool contentDebugParam(int argc, char **argv) {
     string debugParamStr = paramPrefix + inputParam.getName(InputParamEnum::debug);
     string helpParamStr = paramPrefix + inputParam.getName(InputParamEnum::help);
+    string fileParamStr = paramPrefix + inputParam.getName(InputParamEnum::inputFile);
     for (int index = 1; index < argc; index++) {
       string arg = argv[index];
       if(arg.compare(debugParamStr) == 0 || 
-         arg.compare(helpParamStr) == 0     ) {
+         arg.compare(helpParamStr) == 0  ||
+         arg.compare(fileParamStr) == 0     ) {
         return true;
       } 
     }
@@ -61,18 +67,48 @@ namespace nameless_carpool {
           forLoopStatus = HttpStatusEnum::wrongFormat;
           stopLoopAppendMsg = "未知入参1:" + key;
         } else switch(*inputParamPtr) {
-          case InputParamEnum::debug  : {
+          case InputParamEnum::debug      : {
             /* empty */
             continue;
           }
-          case InputParamEnum::help   : {
+          case InputParamEnum::help       : {
             forLoopStatus = HttpStatusEnum::requestHelp;
-            responseInflate.setBody(helpInfo);
+            string helpInfo;
+            Common::getContent(helpInfo, "nameless_carpool.software.usage.txt", "意外: 读取帮助信息失败");
+            responseInflate.initResponse(HttpStatusEnum::success, helpInfo);
+            break;
+          }
+          case InputParamEnum::inputFile  : {
+            string debugInfo;
+            bool success = Common::getContent(debugInfo, "debugInput.json", "意外: 读取入参文件失败");
+            
+            if(success) {
+              if(requestInflate.isEmpty()) {
+                try{
+                  Json json = Json::parse(debugInfo);
+                  json.get_to<HttpRequest>(requestInflate);
+                } catch (const Json::exception& jsonException) {
+                  logDebug << '[' << jsonException.id << ']' << jsonException.what() << endl; 
+                  forLoopStatus = HttpStatusEnum::badRequest;
+                  stopLoopAppendMsg = "请求配置文件内 , json 格式解析失败";
+                }
+                
+              } else {
+                forLoopStatus = HttpStatusEnum::wrongFormat;
+                stopLoopAppendMsg = inputParam.getName(InputParamEnum::inputFile) + "应该单独使用";
+              }
+
+            } else {
+              forLoopStatus = HttpStatusEnum::unknowErr;
+              stopLoopAppendMsg = "需要近一半探查 inputFile 入参解析异常";
+            }
+            
             break;
           }
           default :                     {
             forLoopStatus = HttpStatusEnum::wrongFormat;
             stopLoopAppendMsg = "未知入参2:" + key;
+            break;
           }
         }
 
@@ -91,6 +127,10 @@ namespace nameless_carpool {
         string value = kvStr.substr(equalFlagIndex + 1);
 
         switch(*keyEnumPtr) {
+          case InputParamEnum::inputFile  : {
+            
+            break;
+          }
           case InputParamEnum::header     : {
             if(requestInflate.headers.empty()) {
               Json  jsonHeader = Json::parse(value);
@@ -121,18 +161,27 @@ namespace nameless_carpool {
             }
             break;
           }
-          case InputParamEnum::function   : {
-            if(requestInflate.function.empty()) {
-              requestInflate.function = kvStr.substr(equalFlagIndex+1);
+          case InputParamEnum::uri   : {
+            if(requestInflate.uri.empty()) {
+              requestInflate.uri = kvStr.substr(equalFlagIndex+1);
             } else {
               forLoopStatus = HttpStatusEnum::argDefineMultiple;
-              stopLoopAppendMsg = "function";
+              stopLoopAppendMsg = "uri";
             }
             break;
           }
           case InputParamEnum::body       : {
             if(requestInflate.body.empty()) {
-              requestInflate.body = kvStr.substr(equalFlagIndex+1);
+              try{
+                Json jsonBody = kvStr.substr(equalFlagIndex+1);
+                requestInflate.setBody(jsonBody);
+              } catch (const Json::exception& jsonException) {
+                logError << jsonException.what() << endl;
+                forLoopStatus = HttpStatusEnum::badRequest;
+                stopLoopAppendMsg.append("请求体解析失败")
+                                 .append("\n")
+                                 .append(jsonException.what());
+              }
             } else {
               forLoopStatus = HttpStatusEnum::argDefineMultiple;
               stopLoopAppendMsg = "body";
@@ -155,8 +204,7 @@ namespace nameless_carpool {
     if(forLoopStatus != HttpStatusEnum::success) {
       responseInflate.setStatus(static_cast<int>(forLoopStatus));
       if(!stopLoopAppendMsg.empty()) {
-        responseInflate.setBody("(ResponseBody) 应该转换为 Json 还没来得及\n" 
-                              + stopLoopAppendMsg);
+        responseInflate.initResponse(forLoopStatus, stopLoopAppendMsg);
       }
                      
       return false;
@@ -165,5 +213,26 @@ namespace nameless_carpool {
     }
 
   }
+
+
+  bool readStrFromFile(const string filePath, string& result) {
+    ifstream helpTxtFs(filePath) ;
+    string line;
+
+    bool good = true;
+
+    while(helpTxtFs.good()) {
+      getline(helpTxtFs, line);
+      if(helpTxtFs.good() || helpTxtFs.eof()) {
+        result.append(line).append("\n");
+      } else {
+        good = false;
+      }
+    }
+
+    helpTxtFs.close();
+    return good;
+  }
+
 }
 

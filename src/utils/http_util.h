@@ -10,12 +10,14 @@
 #include <string>
 #include <cmath>
 #include <ios>
+#include <any>
 
 #include "tom_string_utils.h"
 #include "fcgi_util.h"
+#include "log_utils.h"
 #include "glog/logging.h"
 #include "json/include_json.h"
-#include "../model/response_body.h"
+#include "../net/model/response_body.h"
 
 extern int flag;
 
@@ -141,16 +143,28 @@ namespace nameless_carpool {
   };
   extern MediaType mediaType;
 
+  struct HttpHeaderNames {
+    const string timeZone = "time_zone";
+    const string contentType = "Content-type";
+    const string pid = "PID";
+  };
+  extern HttpHeaderNames httpHeaderNames;
+
   struct HttpContent {
-    map<string, string> headers;
-    string body = "";
+    //map<string, string> headers;
+    Json headers;
+    Json body;
 
     HttpContent& addHeader(string key, string val) {
-      headers.insert({key, val});
+      headers.push_back({key, val});
+      return *this;
+    }
+    HttpContent& setBody(Json jsonBody) {
+      body = jsonBody;
       return *this;
     }
     HttpContent& setBody(string str) {
-      body = str;
+      body = Json::parse(str);
       return *this;
     }
     virtual HttpContent& clear() {
@@ -158,21 +172,27 @@ namespace nameless_carpool {
       body.clear();
       return *this;
     }
-    
-    // NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpContent, headers, body);
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpContent, headers, body)
+    virtual bool isEmpty() {
+      return headers.empty() && body.empty();
+    }
+    virtual void printSelf() {
+      /* empty */
+    }
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpContent, headers, body);
+    // NLOHMANN_DEFINE_NORMAL_TYPE_INTRUSIVE(HttpContent, headers, body);
   };
 
-  struct HttpRequest : public HttpContent {
+  struct HttpRequest : virtual HttpContent {
     string method;
-    string function;
+    string uri;
 
     HttpRequest& setMethod(string str) {
       method = str;
       return *this;
     }
-    HttpRequest& setFunction(string str) {
-      function = str;
+    HttpRequest& setUri(string str) {
+      uri = str;
       return *this;
     }
     /* 从 FCGX_Request 初始化 HttpRequest 
@@ -187,7 +207,7 @@ namespace nameless_carpool {
         if(key == "REQUEST_METHOD") {
           this->method = env.substr(equalIndex + 1);
         } else if(key == "REQUEST_URI") {
-          this->function = env.substr(equalIndex + 1);
+          this->uri = env.substr(equalIndex + 1);
         } else {
           string prefix = env.substr(0, 5);
           if(prefix == "HTTP_") {
@@ -202,36 +222,50 @@ namespace nameless_carpool {
     virtual HttpRequest& clear() override {
       HttpContent::clear();
       method.clear();
-      function.clear();
+      uri.clear();
       return *this;
     }
     /* 获取 method + uri 字符串 */
     string methodUri() const {
       string upperMethod = method;
       std::transform(upperMethod.begin(), upperMethod.end(),upperMethod.begin(), ::toupper);
-      return upperMethod + function;
+      return upperMethod + uri;
+    }
+    virtual bool isEmpty() override {
+      return HttpContent::isEmpty() && method.empty() && uri.empty();
+    }
+    virtual void printSelf() override {
+      HttpContent::printSelf();
+      logInfo << "****************   Request ↓↓↓  ***************" << endl 
+              << Json(*this).dump(2) << endl;
     }
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpRequest, headers, body, method, function)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpRequest, 
+    // NLOHMANN_DEFINE_NORMAL_TYPE_INTRUSIVE(HttpRequest, 
+                                          method, 
+                                          uri,
+                                          headers, 
+                                          body);
   };
 
-  struct HttpResponse : public HttpContent {
-    
-    int status = -1;
+  struct HttpResponse : virtual HttpContent {
 
-    HttpResponse() {
-      headers = {
-        {"Content-type", mediaType.json + "; charset=utf-8"},
-        {"PID"         , std::to_string(getpid())          },
-      };
-    }
+    static const string BODY_FORMAT_ERR ;
+    static const string HEADER_MISS_ERR ;
+
+    int status = -1;
 
     HttpResponse& setStatus(int statusEnum) {
       this->status = statusEnum;
       return *this;
     }
 
-    string toString() {
+    HttpResponse& setStatus(const HttpStatusEnum& enumStatus) {
+      this->status = static_cast<int>(enumStatus);
+      return *this;
+    }
+
+    string toString(bool withDefHeader = true) {
       stringstream ss;
 
       /* 状态码 */   {
@@ -240,18 +274,18 @@ namespace nameless_carpool {
         }
       }
       /* header */  {
-        for (map<string, string>::iterator headerIterator = headers.begin();
-            headerIterator != headers.end();
-            headerIterator++) {
-
-          string key = headerIterator->first;
-          string val = headerIterator->second;
-          ss << key << ": " << val << endl;
+        Json headersTmp = headers; /* 拷贝赋值 */
+        if(withDefHeader) {
+          headersTmp[httpHeaderNames.contentType] = mediaType.json + "; charset=utf-8";
+          headersTmp[httpHeaderNames.pid] = std::to_string(getpid());
         }
+
+        ss << "Headers: " << headersTmp.dump(2);
+
         ss << endl;
       }
       /* body */    {
-        ss << body ;
+        ss << body.dump(2) ;
       }
       string result = ss.str();
       ss.str("");
@@ -272,21 +306,50 @@ namespace nameless_carpool {
       return *this;
     }
   
+    virtual bool isEmpty() override {
+      return HttpContent::isEmpty() && (status == -1) ;
+    }
+    virtual void printSelf() override {
+      HttpContent::printSelf();
+      switch(static_cast<HttpStatusEnum>(status)) {
+        case HttpStatusEnum::success      : 
+        case HttpStatusEnum::requestHelp  : {
+          logInfo << "****************   Response [" << status << "] ↑↑↑  ***************" << endl 
+                  << Json(*this).dump(2) << endl;
+          break;
+        }
+        default: {
+          logInfo << "****************   Response [" << status << "] ×××  ***************" << endl 
+                  << Json(*this).dump(2) << endl;
+          break;
+        }
+      }
+    }
+
+    void initForRequestBodyFormatError(const string& internalMsg = BODY_FORMAT_ERR, 
+                                       const string& externalMsg = "") {
+      initResponse(HttpStatusEnum::badRequest, internalMsg, externalMsg);
+    }
+
     /* 初始化请求错误返回信息 */
-    void initByInlegalRequest(string internalMsg = "", string externalMsg = "") {
-      HttpStatusEnum statusEnum = HttpStatusEnum::badRequest;
+    void initResponse(const HttpStatusEnum& statusEnum, 
+                      const string& internalMsg = "", 
+                      const string& externalMsg = "") {
       status = static_cast<int>(statusEnum);
-      Json jsonBody = ResponseBody {
+      body = ResponseBody {
         status,
         "",
         httpStatus.getDesc(statusEnum),
         internalMsg,
         externalMsg
       };
-      body = jsonBody.dump(2);
     }
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpResponse, headers, body, status)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpResponse, 
+    // NLOHMANN_DEFINE_CHECK_TYPE_INTRUSIVE(HttpResponse, 
+                                   status, 
+                                   headers, 
+                                   body );
   };
 
 }

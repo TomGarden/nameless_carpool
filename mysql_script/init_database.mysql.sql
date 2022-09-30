@@ -1,7 +1,7 @@
 
 /* 说明信息 ：
     在数据库中查看一个表的创建信息 ： SHOW CREATE TABLE db_name.table_name \G 
-
+    删除数据库 
 */
 
 
@@ -13,16 +13,17 @@ USE `nameless_carpool` ;
 
 CREATE TABLE IF NOT EXISTS `user` (
   `id`                  INTEGER           NOT NULL  AUTO_INCREMENT  COMMENT '主键 id 自增',
+  `id_card_num`         VARCHAR(255)          NULL                  COMMENT '身份证号',
   `name`                VARCHAR(255)      NOT NULL                  COMMENT '姓名',
-  `gender`              TINYINT               NULL                  COMMENT '性别',
+  `gender`              TINYINT(1)            NULL                  COMMENT '性别 : 0女 ; 1男',
   `birth_date`          DATETIME(6)           NULL                  COMMENT '生日',
   `birth_date_tz`       TINYINT               NULL                  COMMENT '时区',
-  `register_time`       DATETIME(6)       NOT NULL                  COMMENT '注册时间',
-  `register_time_tz`    TINYINT           NOT NULL                  COMMENT '时区',
+  `create_time`         DATETIME(6)       NOT NULL                  COMMENT '注册时间',
+  `create_time_tz`      TINYINT           NOT NULL                  COMMENT '时区',
   `update_time`         DATETIME(6)       NOT NULL                  COMMENT '更新时间',
   `update_time_tz`      TINYINT           NOT NULL                  COMMENT '时区',
-  `unregister_time`     DATETIME(6)           NULL                  COMMENT '注销时间',
-  `unregister_time_tz`  TINYINT               NULL                  COMMENT '时区',
+  `del_time`            DATETIME(6)           NULL                  COMMENT '注销时间',
+  `del_time_tz`         TINYINT               NULL                  COMMENT '时区',
 
   PRIMARY KEY (`id`)
 ) COMMENT '用户基础信息';
@@ -55,24 +56,64 @@ CREATE TABLE IF NOT EXISTS `wc_user` (
 
 
 CREATE TABLE IF NOT EXISTS `telephone` (
-  `id`                  INTEGER             NOT NULL  AUTO_INCREMENT  COMMENT '主键 id 自增',
-  `number`              VARCHAR(255)            NULL                  COMMENT '手机号',
-  `desc`                VARCHAR(255)            NULL                  COMMENT '描述信息',
+  `id`                  INTEGER             NOT NULL  AUTO_INCREMENT                COMMENT '主键 id 自增',
+  `number`              VARCHAR(99)             NULL                                COMMENT '手机号',
+  `vertify_code`        VARCHAR(20)             NULL                                COMMENT '验证码',
+  `vc_update_time`      DATETIME(6)             NULL                                COMMENT '验证码更新时间',
+  `vc_update_time_tz`   TINYINT                 NULL                                COMMENT '时区',
   
-  `create_time`         DATETIME(6)         NOT NULL                  COMMENT '创建时间',
-  `create_time_tz`      TINYINT             NOT NULL                  COMMENT '时区',
-  `update_time`         DATETIME(6)         NOT NULL                  COMMENT '更新时间',
-  `update_time_tz`      TINYINT             NOT NULL                  COMMENT '时区',
-  `del_time`            DATETIME(6)             NULL                  COMMENT '删除时间',
-  `del_time_tz`         TINYINT                 NULL                  COMMENT '时区',
+  `create_time`         DATETIME(6)         NOT NULL                                COMMENT '创建时间',
+  `create_time_tz`      TINYINT             NOT NULL                                COMMENT '时区',
+  `update_time`         DATETIME(6)         NOT NULL                                COMMENT '更新时间',
+  `update_time_tz`      TINYINT             NOT NULL                                COMMENT '时区',
+  `del_time`            DATETIME(6)             NULL                                COMMENT '删除时间',
+  `del_time_tz`         TINYINT                 NULL                                COMMENT '时区',
 
   PRIMARY KEY (`id`)
 ) COMMENT '手机号';
+INSERT INTO `nameless_carpool`.`telephone` (
+                  `id`                  ,
+                  `number`              ,
+                  `vertify_code`        ,
+                  `vc_update_time`      ,
+                  `vc_update_time_tz`   ,
+                  `create_time`         ,
+                  `create_time_tz`      ,
+                  `update_time`         ,
+                  `update_time_tz`      ,
+                  `del_time`            ,
+                  `del_time_tz`         )
+            VALUES (
+                  NULL            ,
+                  '17611261931'   ,
+                  'vertify_code'  ,
+                  '1663578159'    ,
+                  '8'             ,
+                  '1663578159'    ,
+                  '8'             ,
+                  '1663578159'    ,
+                  '8'             ,
+                  NULL            ,
+                  NULL            )
+                  ;
 
 
 CREATE TABLE IF NOT EXISTS `user_tel` (
-  `user_id`             INTEGER             NOT NULL                COMMENT '外键:用户基础信息 id',
-  `telephone_id`        INTEGER             NOT NULL                COMMENT '外键 手机号 id ',
+  `user_id`             INTEGER             NOT NULL                                COMMENT '外键:用户基础信息 id',
+  `telephone_id`        INTEGER             NOT NULL                                COMMENT '外键 手机号 id ',
+  `desc`                VARCHAR(255)            NULL                                COMMENT '描述信息',
+  `flag`                VARCHAR(8)              NULL                                COMMENT '标识符 , 8 位二进制数 , 不同的用户对同一个手机号的标示可能是不同的
+                                                                                              0000 0001 第一位: 表示可用于登录 , 
+                                                                                              0000 0010 第二位: 表示在自己的数据中 , 这个号码作为联系人出现过
+                                                                                                        其他位: 待用 , 有需要时再填充
+                                                                                              ',
+
+  `create_time`         DATETIME(6)         NOT NULL                                COMMENT '创建时间',
+  `create_time_tz`      TINYINT             NOT NULL                                COMMENT '时区',
+  `update_time`         DATETIME(6)         NOT NULL                                COMMENT '更新时间',
+  `update_time_tz`      TINYINT             NOT NULL                                COMMENT '时区',
+  `del_time`            DATETIME(6)             NULL                                COMMENT '删除时间',
+  `del_time_tz`         TINYINT                 NULL                                COMMENT '时区',
 
   FOREIGN KEY (`user_id`)       REFERENCES `user`(`id`)       ON UPDATE CASCADE  ON DELETE RESTRICT ,
   FOREIGN KEY (`telephone_id`)  REFERENCES `telephone`(`id`)  ON UPDATE CASCADE  ON DELETE RESTRICT ,
@@ -243,7 +284,7 @@ CREATE TABLE IF NOT EXISTS `find_customers` (
 
 CREATE TABLE IF NOT EXISTS `car_bind_customers` (
   `find_car_id`                   INTEGER             NOT NULL                  COMMENT '既是主键,又是外键',
-  `find_customers_id`                INTEGER             NOT NULL                  COMMENT '既是主键,又是外键',
+  `find_customers_id`             INTEGER             NOT NULL                  COMMENT '既是主键,又是外键',
   `car_request`                   TINYINT                 NULL                  COMMENT '车主发起绑定',
   `car_response`                  TINYINT                 NULL                  COMMENT '车主相应绑定',
   `customers_request`             TINYINT                 NULL                  COMMENT '乘客发起绑定',
