@@ -13,7 +13,7 @@ namespace nameless_carpool {
     return dbProxy;
   }
 
-  bool DbProxy::requestVertifyCode(const string& phoneNumber, int8_t timeZone,
+  bool DbProxy::requestVertifyCode(const string& phoneNumber, const string& timeZone,
                                    string& internalMsg, string& externalMsg) {
 
     const vector<Telephone>& telVector = DbManager::getInstance().queryTelephone(phoneNumber);
@@ -27,7 +27,7 @@ namespace nameless_carpool {
     } else if(telVector.size() < 1) {
 
       Telephone telObj; {
-        string timeStemp = Common::Date::newInstance(timeZone).formatStr6();
+        string timeStemp = Common::Date::newInstance(timeZone).formatStr<std::chrono::microseconds>();
 
         telObj.number = phoneNumber;
         telObj.vertify_code = to_string(Common::Number::randomInt(100000,999999));
@@ -62,7 +62,7 @@ namespace nameless_carpool {
       if(updateVC) {
         curTel.vertify_code = to_string(Common::Number::randomInt(100000,999999));
       }
-      curTel.update_time    = curTel.vc_update_time    = Common::Date::newInstance(timeZone).formatStr6();
+      curTel.update_time    = curTel.vc_update_time    = Common::Date::newInstance(timeZone).formatStr<std::chrono::microseconds>();
       curTel.update_time_tz = curTel.vc_update_time_tz = timeZone;
       
       DbManager::getInstance().updateTelephone(curTel);

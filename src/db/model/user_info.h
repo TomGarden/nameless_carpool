@@ -30,7 +30,7 @@ namespace nameless_carpool {
     optional<string>    name           ;       /*  */
     optional<string>    gender         ;       /* 性别 */
     optional<string>    birth_date     ;       /*  */
-    optional<int8_t>    birth_date_tz  ;       /*  */
+    optional<string>    birth_date_tz  ;       /*  */
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, 
     //NLOHMANN_DEFINE_OPTIONAL_TYPE_INTRUSIVE(User, 
@@ -98,7 +98,7 @@ namespace nameless_carpool {
     optional<string>      number             ;
     optional<string>      vertify_code       ;
     optional<string>      vc_update_time     ;
-    optional<int8_t>      vc_update_time_tz  ;
+    optional<string>      vc_update_time_tz  ;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(Telephone          ,
     // NLOHMANN_DEFINE_OPTIONAL_TYPE_INTRUSIVE(Telephone          ,

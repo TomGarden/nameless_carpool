@@ -1,7 +1,7 @@
 {
   "method"   : "POST",
   "headers"  : {
-    "time_zone":-8,
+    "time_zone":"Asia/Shanghai",
     "headerTwo":"two"
   },     
   "uri"      :  "/fcgi_test/nameless_carpool/request_vertify_code",

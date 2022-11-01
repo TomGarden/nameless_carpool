@@ -75,7 +75,7 @@ namespace nameless_carpool {
 
     string internalMsg;
     string externalMsg;
-    int8_t timeZone = requestInput.headers[httpHeaderNames.timeZone].get<int8_t>();
+    string timeZone = requestInput.headers[httpHeaderNames.timeZone].get<string>();
     DbProxy::getInstance().requestVertifyCode(body.phone.value(), timeZone, internalMsg, externalMsg);
 
     responseOutput.setStatus(HttpStatusEnum::success);

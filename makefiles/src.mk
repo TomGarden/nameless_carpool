@@ -26,6 +26,11 @@ protram_output_dir = $(pro_dir)/build_src
 build_dir = $(protram_output_dir)/build
 dynamic_lib_dir = $(pro_dir)/libs/dynamic
 
+libs = libs
+	libs_date_src = date_3.0.1/src
+		tz_in = $(pro_dir)/$(libs)/$(libs_date_src)/tz.cpp
+		tz_o  = $(build_dir)/$(libs)/$(libs_date_src)/tz.o
+
 src = src
 	main_in = $(pro_dir)/$(src)/main.cpp
 	main_o = $(build_dir)/$(src)/main.o
@@ -72,7 +77,7 @@ src_net = src/net
 objects = $(tom_string_utils_o) $(http_util_o)	$(input_check_o) $(fcgio_o) $(common_o) $(linux_os_o) $(log_utils_o)\
 					$(db_manager_o) $(base_time_o) $(user_info_o) \
 					$(db_proxy_o) \
-					$(api_o) $(authenticate_o) \
+					$(api_o) $(authenticate_o) $(tz_o) \
 					$(main_o)
 
 static_lib = $(mysql)
@@ -81,13 +86,14 @@ static_lib = $(mysql)
 
 # -I 用于指定搜索头文件的路径
 # -L 用于指定动态库名称 , 默认的动态库搜索路径包含了 `/usr/local/lib` , 如果要自行添加使用 -L 
-dynamic_libs = $(links) $(boost)
+dynamic_libs = $(links) $(boost) $(HowardHinnant_date)
 	links = -lglog \
 					-lfcgi -lfcgi++ -lcgicc \
-					-lssl -lcrypto -lpthread -lresolv
+					-lssl -lcrypto -lpthread -lresolv 
 	boost = $(stackTrace) $(date_time)
 		stackTrace = -lboost_stacktrace_backtrace -ldl
 		date_time	 = -lboost_date_time 
+	HowardHinnant_date = -lpthread  -lcurl
 
 #				-lboost_stacktrace_basic -ldl -DBOOST_STACKTRACE_LINK
 # -lboost_stacktrace_backtrace  -lboost_stacktrace_addr2line -lboost_stacktrace_basic -lboost_stacktrace_noop -ldl -DBOOST_STACKTRACE_LINK
@@ -116,6 +122,7 @@ all : try_create_all_dependent_dir					\
 ################################################################################
 try_create_all_dependent_dir :      
 >	$(call create_dir,$(build_dir)/$(src))
+>		$(call create_dir,$(build_dir)/$(libs)/$(libs_date_src))
 >		$(call create_dir,$(build_dir)/$(src_control))
 >		$(call create_dir,$(build_dir)/$(src_utils))
 >		$(call create_dir,$(build_dir)/$(src_net))
@@ -133,6 +140,12 @@ $(protram_output_dir)/execute.run : $(objects)
 # > 	echo " start run ... \n"
 # >		$(protram_output_dir)/execute.run
 
+
+################################################################################
+# 																	libs																			 #
+################################################################################
+$(tz_o) : $(tz_in)
+>		$(g++) $(tz_in) -o $(tz_o) 
 
 ################################################################################
 # 																	src																				 #
@@ -228,7 +241,7 @@ run :
 
 reload_cgi :
 > 	ssh -i /mount_point/data/_beyourself/_global_config_file/ssh/login_remote_ssh  \
-				tom@172.17.0.2 /mount_point/data/_document/nginx_web_server/fcgi_reload.sh 	
+				tom@172.17.0.3 /mount_point/data/_document/nginx_web_server/fcgi_reload.sh 	
 
 
 #		clear && make --file=makefiles/src.mk clean all copy_doc clean_log reload_cgi run       

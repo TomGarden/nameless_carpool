@@ -25,11 +25,11 @@ namespace nameless_carpool {
   /** 基本时间信息 */
   struct BaseTime {
     optional<string>    create_time      ;        /*  */
-    optional<int8_t>    create_time_tz   ;        /*  */
+    optional<string>    create_time_tz   ;        /*  */
     optional<string>    update_time      ;        /*  */
-    optional<int8_t>    update_time_tz   ;        /*  */
+    optional<string>    update_time_tz   ;        /*  */
     optional<string>    del_time         ;        /*  */
-    optional<int8_t>    del_time_tz      ;        /*  */
+    optional<string>    del_time_tz      ;        /*  */
 
     /* 当 name 与 names 中的某个属性匹配的时候 , 从 db_value 获取对应的内容填充到 obj 
        return true  填充成功

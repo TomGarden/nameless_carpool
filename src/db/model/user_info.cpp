@@ -22,7 +22,7 @@ namespace nameless_carpool {
     } else if (name.compare(names.vc_update_time    ) == 0) {
       obj.vc_update_time = value.get<string>() ;
     } else if (name.compare(names.vc_update_time_tz ) == 0) {
-      obj.vc_update_time_tz = value.get<int64_t>();
+      obj.vc_update_time_tz = value.get<string>();
     } else {
       return false;
     }

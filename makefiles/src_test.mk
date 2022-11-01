@@ -22,6 +22,7 @@ build_dir = $(protram_output_dir)/build
 
 objects = $(build_dir)/date_time.o 																\
 					$(build_dir)/mysql_db.o   															\
+					$(build_dir)/tz.o			    															\
 					$(build_dir)/main.o
 
 
@@ -50,20 +51,16 @@ try_create_all_dependent_dir :
 # 使用 mysql 静态库之后链接异常的解答 : https://forums.mysql.com/read.php?167,686070,686070
 # staticLib=$(pro_dir)/libs/mysql_connector_static_tom/lib64/libmysqlcppconn8-static.a
 staticLib=$(pro_dir)/libs/mysql_connector_arm_static/lib64/libmysqlcppconn8-static.a
-linkSsl=-lssl -lcrypto -lpthread -lresolv
+dynamicLibs = -lssl -lcrypto -lpthread -lresolv -lcurl
 $(protram_output_dir)/execute.run : $(objects)
 >   $(g++) $(objects) \
 		$(staticLib) \
-		-o $(protram_output_dir)/execute.run \
-		$(linkSsl)
+		$(dynamicLibs) \
+		-o $(protram_output_dir)/execute.run 
 >		echo "build success ..."
 # > 	echo " start run ... \n"
 # >		$(protram_output_dir)/execute.run
 
-
-# date_time_o_out = $(build_dir)/date_time.o
-# $(date_time_o_out) : $(src_dir)/date_time.cpp $(src_dir)/date_time.h
-# >		$(g++) $(src_dir)/date_time.cpp -o $(date_time_o_out)
 
 date_time_o_out = $(build_dir)/date_time.o
 date_time_o_in = $(src_dir)/date_time.cpp
@@ -74,6 +71,11 @@ mysql_db_o_out = $(build_dir)/mysql_db.o
 mysql_db_o_in = $(src_dir)/mysql_db.cpp
 $(mysql_db_o_out) : $(mysql_db_o_in)
 >		$(g++Unlink) $(mysql_db_o_in) -o $(mysql_db_o_out)
+
+tz_o_out = $(build_dir)/tz.o
+tz_o_in = $(pro_dir)/libs/date_3.0.1/src/tz.cpp
+$(tz_o_out) : $(tz_o_in)
+>		$(g++Unlink) $(tz_o_in) -o $(tz_o_out)
 
 main_o_dependent = $(src_dir)/main.cpp
 main_o_out = $(build_dir)/main.o
@@ -87,6 +89,8 @@ clean :
 
 .PHONY : clear
 clear :
+> 	echo $(pro_dir)
+> 	echo $(objects)
 >   rm -rf $(protram_output_dir)
 
 # 执行编译结果

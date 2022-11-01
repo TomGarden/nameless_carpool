@@ -53,6 +53,15 @@ namespace nameless_carpool {
     }
     return result;
   }
+  string DbManager::nullOrApostrophe(const optional<string>& optStr) {
+    string result = optStr.value_or("");
+    if(result.empty()) {
+      result = "NULL";
+    } else {
+      result = ("'" + result + "'");
+    }
+    return result;
+  }
   string DbManager::apostrophe(const string& str) {
     return ("'" + str + "'");
   }
@@ -232,17 +241,17 @@ namespace nameless_carpool {
         Telephone tel = *telIter;
         sqlTmp 
           << " \t("
-          << " \t " <<                  tel.id.value()                  << " , \n"
-          << " \t " << nullOrApostrophe(tel.number.value())             << " , \n"
-          << " \t " << nullOrApostrophe(tel.vertify_code.value())       << " , \n"
-          << " \t " << nullOrApostrophe(tel.vc_update_time.value())     << " , \n"
-          << " \t " <<                  tel.vc_update_time_tz.value()   << " , \n"
-          << " \t " << nullOrApostrophe(tel.create_time.value())        << " , \n"
-          << " \t " <<                  tel.create_time_tz.value()      << " , \n"
-          << " \t " << nullOrApostrophe(tel.update_time.value())        << " , \n"
-          << " \t " <<                  tel.update_time_tz.value()      << " , \n"
-          << " \t " << nullOrApostrophe(tel.del_time.value())           << " , \n"
-          << " \t " <<                  tel.del_time_tz.value()         << "   \n"
+          << " \t " << nullOrApostrophe(tel.id)                 << " , \n"
+          << " \t " << nullOrApostrophe(tel.number)             << " , \n"
+          << " \t " << nullOrApostrophe(tel.vertify_code)       << " , \n"
+          << " \t " << nullOrApostrophe(tel.vc_update_time)     << " , \n"
+          << " \t " << nullOrApostrophe(tel.vc_update_time_tz)  << " , \n"
+          << " \t " << nullOrApostrophe(tel.create_time)        << " , \n"
+          << " \t " << nullOrApostrophe(tel.create_time_tz)     << " , \n"
+          << " \t " << nullOrApostrophe(tel.update_time)        << " , \n"
+          << " \t " << nullOrApostrophe(tel.update_time_tz)     << " , \n"
+          << " \t " << nullOrApostrophe(tel.del_time)           << " , \n"
+          << " \t " << nullOrApostrophe(tel.del_time_tz)        << "   \n"
           << " \t) ";
 
         if(telIter+1 == telList.cend()) {
@@ -272,19 +281,23 @@ namespace nameless_carpool {
   
     string updatePrefix = " UPDATE " + getDbAndTablename(telephoneNames.tableName) + " \n SET \n";
 
+    /* 预计存储 
+        `字段名`                   = CASE `id`                                                            
+                                  WHEN '1' THEN '15111111111'                                                            
+                                  WHEN '2' THEN '15122222222'
+     */
     using Pair = pair<const string, stringstream>;
-    Pair pair01(telephoneNames.id                              , "");
-    Pair pair02(telephoneNames.number                          , "");
-    Pair pair03(telephoneNames.vertify_code                    , "");
-    Pair pair04(telephoneNames.vc_update_time                  , "");
-    Pair pair05(telephoneNames.vc_update_time_tz               , "");
-    Pair pair06(telephoneNames.BaseTimeNames::create_time      , "");
-    Pair pair07(telephoneNames.BaseTimeNames::create_time_tz   , "");
-    Pair pair08(telephoneNames.BaseTimeNames::update_time      , "");
-    Pair pair09(telephoneNames.BaseTimeNames::update_time_tz   , "");
-    Pair pair10(telephoneNames.BaseTimeNames::del_time         , "");
-    Pair pair11(telephoneNames.BaseTimeNames::del_time_tz      , "");
-    vector< pair<const string, stringstream>* > fieldPairVector {
+    Pair pair01(backticks(telephoneNames.number                       )   , "");
+    Pair pair02(backticks(telephoneNames.vertify_code                 )   , "");
+    Pair pair03(backticks(telephoneNames.vc_update_time               )   , "");
+    Pair pair04(backticks(telephoneNames.vc_update_time_tz            )   , "");
+    Pair pair05(backticks(telephoneNames.BaseTimeNames::create_time   )   , "");
+    Pair pair06(backticks(telephoneNames.BaseTimeNames::create_time_tz)   , "");
+    Pair pair07(backticks(telephoneNames.BaseTimeNames::update_time   )   , "");
+    Pair pair08(backticks(telephoneNames.BaseTimeNames::update_time_tz)   , "");
+    Pair pair09(backticks(telephoneNames.BaseTimeNames::del_time      )   , "");
+    Pair pair10(backticks(telephoneNames.BaseTimeNames::del_time_tz   )   , "");
+    vector< pair<const string, stringstream>* > fieldPairVector { 
       &pair01,
       &pair02,
       &pair03,
@@ -295,27 +308,27 @@ namespace nameless_carpool {
       &pair08,
       &pair09,
       &pair10,
-      &pair11,
     };
     
+    /* sql 后半段 */
     string updateSuffix = "\n WHERE " + backticks(telephoneNames.id) + " IN ();";
 
+    /* 遍历所有要更新的 手机号 , 用这些数据填充 fieldPairVector*/
     for(auto telIter = telList.cbegin(); telIter != telList.cend(); telIter++) {
       
       /* telephone 的 所有变量 按顺序 放到 队列中 */
       vector<string> fieldValVector {
-        to_string(telIter->id.value())                             ,
-                  telIter->number.value()                          ,
-                  telIter->vertify_code.value()                    ,
-                  telIter->vc_update_time.value()                  ,
-        to_string(telIter->vc_update_time_tz.value())              ,
+        nullOrApostrophe(telIter->number)                          ,
+        nullOrApostrophe(telIter->vertify_code)                    ,
+        nullOrApostrophe(telIter->vc_update_time)                  ,
+        nullOrApostrophe(telIter->vc_update_time_tz)               ,
 
-                  telIter->BaseTime::create_time.value()           ,
-        to_string(telIter->BaseTime::create_time_tz.value())       ,
-                  telIter->BaseTime::update_time.value()           ,
-        to_string(telIter->BaseTime::update_time_tz.value())       ,
-                  telIter->BaseTime::del_time.value()              ,
-        to_string(telIter->BaseTime::del_time_tz.value())          
+        nullOrApostrophe(telIter->BaseTime::create_time)           ,
+        nullOrApostrophe(telIter->BaseTime::create_time_tz)        ,
+        nullOrApostrophe(telIter->BaseTime::update_time)           ,
+        nullOrApostrophe(telIter->BaseTime::update_time_tz)        ,
+        nullOrApostrophe(telIter->BaseTime::del_time)              ,
+        nullOrApostrophe(telIter->BaseTime::del_time_tz)           
       };
 
       if(fieldPairVector.size() != fieldValVector.size()) {
@@ -335,27 +348,29 @@ namespace nameless_carpool {
           throw runtime_error("字符流状态异常:" + errState);
         }
         if(outputPosition <= 0) {
-          second << "\n\t" << backticks(first) << " = CASE " << backticks(telephoneNames.id);
+          second << "\n\t" << first << " = CASE " << backticks(telephoneNames.id) << "\n";
         }
-        second << "\t\t WHEN " << telIter->id.value() << " THEN " << nullOrApostrophe(*fieldVal) << '\n';
+          
+        second << "\t\t\t WHEN " << nullOrApostrophe(telIter->id) << " THEN " << *fieldVal << '\n';
 
         if(telIter+1 == telList.cend()){
-          second << "\t\t END ";
+          second << "\t\t\t END ";
 
           if(fieldPair+1 != fieldPairVector.end() && fieldVal+1 != fieldValVector.cend()) {
             second << " , ";
           }
         }
-
+        
         ++fieldPair;
         ++fieldVal;
       }/* while end 为 每条 set 语句 添加一种情况*/
     
-      updateSuffix.insert(updateSuffix.size() - 2, to_string(telIter->id.value()));
+      updateSuffix.insert(updateSuffix.size() - 2, nullOrApostrophe(telIter->id));
       if(telIter+1 != telList.end()) {
-        updateSuffix.insert(updateSuffix.size() - 2, ",");
+        updateSuffix.insert(updateSuffix.size() - 2, ", ");
       }
-    }
+
+    }/* for end */
 
     stringstream sqlTmp; {
       sqlTmp << updatePrefix;

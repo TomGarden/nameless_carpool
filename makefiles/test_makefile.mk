@@ -22,6 +22,7 @@ build_dir = $(protram_output_dir)/build
 objects = $(build_dir)/date_time.o 																\
 					$(build_dir)/main.o
 
+dynamic_libs = -lpthread  -lcurl
 
 # region 定义几个便利函数
 
@@ -44,7 +45,7 @@ try_create_all_dependent_dir :
 
 
 $(protram_output_dir)/execute.run : $(objects)
->   g++ $(objects) -o $(protram_output_dir)/execute.run
+>   g++ $(objects) $(dynamic_libs) -o $(protram_output_dir)/execute.run
 >		echo "build success , start run ... \n"
 # >		$(protram_output_dir)/execute.run
 

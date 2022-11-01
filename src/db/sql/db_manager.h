@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <type_traits>
 
 #include "db_include.h"
 #include "../model/user_info.h"
@@ -47,8 +48,19 @@ namespace nameless_carpool {
       static string backticks(const string& str);
       /* NULL or 单引号 'str' */
       static string nullOrApostrophe(const string& str);
+      static string nullOrApostrophe(const optional<string>& optStr);
       static string apostrophe(const string& str);
-      
+      /* 针对数字 NULL 或 数字字符串 */
+      template<typename _Type>
+      static string nullOrApostrophe(const optional<_Type>& optObj) {
+        static_assert(std::is_arithmetic<_Type>::value == true, "只接受算数类型的 optional 参数");
+        if(optObj.has_value()) {
+          return "'" + std::to_string(optObj.value()) + "'";
+        } else {
+          return "NULL";
+        }
+      }
+
       static string dateSelectStatements(const string& dateStr);
       static string valueToStr(const Value& value);
       static string getDbAndTablename(const string& tableName, const string& dbName = DbManager::dbName);

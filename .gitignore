@@ -8,3 +8,5 @@ build_*
 tmp_dir
 # Mac 下是平台相关文件
 .DS_Store
+# cmake 自动生成的文件夹
+build
