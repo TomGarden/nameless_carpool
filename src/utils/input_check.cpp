@@ -10,6 +10,7 @@
 #include "fcgi_util.h"
 #include "common.h"
 #include "log_utils.h"
+#include "linux_os.h"
 
 namespace nameless_carpool {
 
@@ -20,8 +21,8 @@ namespace nameless_carpool {
 
   bool contentDebugParam(int argc, char **argv) {
     string debugParamStr = paramPrefix + inputParam.getName(InputParamEnum::debug);
-    string helpParamStr = paramPrefix + inputParam.getName(InputParamEnum::help);
-    string fileParamStr = paramPrefix + inputParam.getName(InputParamEnum::inputFile);
+    string helpParamStr  = paramPrefix + inputParam.getName(InputParamEnum::help);
+    string fileParamStr  = paramPrefix + inputParam.getName(InputParamEnum::inputFile);
     for (int index = 1; index < argc; index++) {
       string arg = argv[index];
       if(arg.compare(debugParamStr) == 0 || 
@@ -40,6 +41,39 @@ namespace nameless_carpool {
     HttpStatusEnum forLoopStatus = HttpStatusEnum::success; /* 跳出 for 循环的识别标识 */
     string stopLoopAppendMsg;   /* 停止循环并附加信息 */
 
+    /** 标记 InputFile 读取失败 */
+    auto debugInputFileReadFailed = [&]() {
+      forLoopStatus = HttpStatusEnum::wrongFormat;
+      stopLoopAppendMsg = inputParam.getName(InputParamEnum::inputFile) + "应该单独使用";
+    };
+
+    /** 读取并解析 inputFileContent  
+     *  @param inputFilePath 表示 绝对路径
+     */
+    auto debugInputFileParse = [&](const std::string inputFilePath) {
+      string inputFileContent;
+      bool readSuccess = Common::getContent(inputFileContent, "debugInput.json", "意外: 读取入参文件失败");
+      if(readSuccess) {
+        if(requestInflate.isEmpty()) {
+          try{
+            Json json = Json::parse(inputFileContent);
+            json.get_to<HttpRequest>(requestInflate);
+          } catch (const Json::exception& jsonException) {
+            logDebug << '[' << jsonException.id << ']' << jsonException.what() << endl; 
+            forLoopStatus = HttpStatusEnum::badRequest;
+            stopLoopAppendMsg = "请求配置文件内 , json 格式解析失败";
+          }
+          
+        } else {
+          forLoopStatus = HttpStatusEnum::wrongFormat;
+          stopLoopAppendMsg = inputParam.getName(InputParamEnum::inputFile) + "应该单独使用";
+        }
+
+      } else {
+        debugInputFileReadFailed();
+      }
+    };
+
     for (int index = 1; index < argc; index++) {
       
       string kvStr = argv[index];
@@ -57,6 +91,7 @@ namespace nameless_carpool {
         break;
       }
 
+      /* 只有 key 没有 value */
       auto equalFlagIndex = kvStr.find_first_of('=');
       if(equalFlagIndex == string::npos) {
 
@@ -79,30 +114,14 @@ namespace nameless_carpool {
             break;
           }
           case InputParamEnum::inputFile  : {
-            string debugInfo;
-            bool success = Common::getContent(debugInfo, "debugInput.json", "意外: 读取入参文件失败");
-            
-            if(success) {
-              if(requestInflate.isEmpty()) {
-                try{
-                  Json json = Json::parse(debugInfo);
-                  json.get_to<HttpRequest>(requestInflate);
-                } catch (const Json::exception& jsonException) {
-                  logDebug << '[' << jsonException.id << ']' << jsonException.what() << endl; 
-                  forLoopStatus = HttpStatusEnum::badRequest;
-                  stopLoopAppendMsg = "请求配置文件内 , json 格式解析失败";
-                }
-                
-              } else {
-                forLoopStatus = HttpStatusEnum::wrongFormat;
-                stopLoopAppendMsg = inputParam.getName(InputParamEnum::inputFile) + "应该单独使用";
-              }
-
+            /* 没有给定参数的时候查看执行文件所在目录是否有相应文件 */
+            std::string exeFileFd;
+            if( getCurExeFd(exeFileFd) ) {
+              exeFileFd.append("/").append("debugInput.json");
+              debugInputFileParse(exeFileFd);
             } else {
-              forLoopStatus = HttpStatusEnum::unknowErr;
-              stopLoopAppendMsg = "需要近一半探查 inputFile 入参解析异常";
-            }
-            
+              debugInputFileReadFailed();
+            }            
             break;
           }
           default :                     {
@@ -128,7 +147,7 @@ namespace nameless_carpool {
 
         switch(*keyEnumPtr) {
           case InputParamEnum::inputFile  : {
-            
+            debugInputFileParse(value);
             break;
           }
           case InputParamEnum::header     : {

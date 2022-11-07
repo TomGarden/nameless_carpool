@@ -20,7 +20,9 @@ namespace nameless_carpool {
     return httpMethodUtil.getName(method) + AuthApi::uriPrefix + path;
   }
 
-  const string AuthApi::loginUri = getUri(HttpMethodEnum::POST, "/login");
+  const string AuthApi::loginUri() {
+    return getUri(HttpMethodEnum::POST, "/login");
+  }
   void AuthApi::login(const HttpRequest& requestInput, HttpResponse& responseOutput){
 
 
@@ -47,7 +49,9 @@ namespace nameless_carpool {
     logInfo << "进入登录接口处理块" << endl;
   }
 
-  const string AuthApi::requestVertifyCodeUri = getUri(HttpMethodEnum::POST, "/request_vertify_code");
+  const string AuthApi::requestVertifyCodeUri(){
+      return getUri(HttpMethodEnum::POST, "/request_vertify_code");
+  }
   void AuthApi::requestVC(const HttpRequest& requestInput, HttpResponse& responseOutput) {
 
     string inlegalDesc; /* 非法内容描述 */

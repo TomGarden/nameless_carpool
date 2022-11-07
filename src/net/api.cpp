@@ -8,9 +8,11 @@ namespace nameless_carpool {
   void Api::optRequest(const HttpRequest& requestInput, HttpResponse& responseOutput) {
     string methodUri = requestInput.methodUri();
 
-    if(methodUri.compare(AuthApi::loginUri) == 0) {
+    logDebug << "---------333\t:" << Json(requestInput).dump(2) << endl;
+
+    if(methodUri.compare(AuthApi::loginUri()) == 0) {
       AuthApi::login(requestInput, responseOutput);
-    } else if(methodUri.compare(AuthApi::requestVertifyCodeUri) == 0) {
+    } else if(methodUri.compare(AuthApi::requestVertifyCodeUri()) == 0) {
       AuthApi::requestVC(requestInput, responseOutput);
     }
     else {

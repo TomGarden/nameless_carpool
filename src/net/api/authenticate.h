@@ -13,12 +13,12 @@ namespace nameless_carpool {
       static const string uriPrefix;/* uri 统一前缀 */
 
       static string getUri(const HttpMethodEnum& method, const string& path);
-
-      /* 登录接口 */
-      static const string loginUri;
+      
+      /* 登录接口 */ 
+      static const string loginUri() ;
       static void login(const HttpRequest& requestInput, HttpResponse& responseOutput);
 
-      static const string requestVertifyCodeUri;
+      static const string requestVertifyCodeUri();
       static void requestVC(const HttpRequest& requestInput, HttpResponse& responseOutput);
   };
 

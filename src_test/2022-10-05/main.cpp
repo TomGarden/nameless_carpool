@@ -5,7 +5,8 @@
 
 #include "../../libs/date_3.0.1/include/date/date.h"
 #include "../../libs/date_3.0.1/include/date/tz.h"
-
+#include <stdio.h>
+#include <time.h>
 using namespace std;
 std::string dateFormatStr = "%Y-%m-%d %H:%M:%S";
 using locale_time_nano    = date::local_time<std::chrono::nanoseconds>;
@@ -27,7 +28,7 @@ void test(std::chrono::system_clock::time_point& timePoint) {
 
   // const date::time_zone* timeZone = date::current_zone();
   // const date::time_zone* timeZone = date::time_zone();
-  date::zoned_time zonedTime = date::make_zoned("America/New_York", timePoint);
+  date::zoned_time zonedTime = date::make_zoned("Asia/Shanghai", timePoint);
   std::chrono::time_point sysTP = zonedTime.get_sys_time();
   // date::local_time localTP = zonedTime.get_local_time();
   locale_time_nano localTP = zonedTime.get_local_time();
@@ -47,7 +48,7 @@ void test(std::chrono::system_clock::time_point& timePoint) {
 }
 
 
-void testUtiTime() {
+void testUtcTime() {
 
   date::utc_clock::time_point utcTimePoint     = date::utc_clock::now();
   cout << "utcTimePoint\t" << utcTimePoint.time_since_epoch().count() << endl;
@@ -110,6 +111,26 @@ void ask() {
             << localStrFormat << "\t" << std::endl;
 }
 
+
+
+int offset ()
+{
+	// 获取系统时间
+	time_t _rt = time(NULL);
+	// 系统时间转换为GMT时间
+	tm _gtm = *gmtime(&_rt);
+	// 系统时间转换为本地时间
+	tm _ltm = *localtime(&_rt);
+	printf("UTC:       %s", asctime(&_gtm));
+	printf("local:     %s", asctime(&_ltm));
+	// 再将GMT时间重新转换为系统时间
+	time_t _gt = mktime(&_gtm);
+	tm _gtm2 = *localtime(&_gt);
+	// 这时的_gt已经与实际的系统时间_rt有时区偏移了,计算两个值的之差就是时区偏的秒数,除60就是分钟
+	int offset = ((_rt - _gt ) + (_gtm2.tm_isdst ? 3600 : 0)) / 60;
+	printf(" offset (minutes) %d", offset);
+}
+
 int main() {
   
   // using namespace date;
@@ -141,9 +162,11 @@ int main() {
   // std::chrono::time_point timePoint     = std::chrono::system_clock::now();
   // std::chrono::time_point timePoint     = date::utc_clock::now();
 
-  testUtiTime();
+  testUtcTime();
 
   ask();
+
+  offset ();
 
   std::string format = "%Y-%m-%d %H:%M:%S";
   // std::chrono::nanoseconds timeT {1667124554089197048};

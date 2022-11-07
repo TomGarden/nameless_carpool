@@ -33,6 +33,12 @@ namespace nameless_carpool::Common {
     
   /**********___nameless_carpool::Common   文件读取操作___*********************
    ***************************************************************************/
+  /**
+   * @param content         , 读取到的文件内的内容
+   * @param srcPath         , 文件父目录
+   * @param defSrcFileName  , 文件名称
+   * @param defContent      , 如果读取文件内容失败 , 默认文件内容
+  */
   bool getContent(String& content, const String& srcPath, const String& defSrcFileName, const String& defContent) {
       String defFilePath;
       if(srcPath.empty()) {

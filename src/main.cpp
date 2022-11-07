@@ -51,7 +51,7 @@ void optLocaleData(int argc, char **argv) {
     optRequest(httpRequest, httpResponse.clear());
   } 
   httpResponse.printSelf();
-}/* optLocaleData */
+}
 
 /* 操作网络数据 */
 void optNetData(int argc, char **argv) {

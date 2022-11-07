@@ -5,6 +5,7 @@
 #include <chrono>
 #include <random>
 #include <string>
+#include <type_traits>
 
 #include "../../libs/date_3.0.1/include/date/date.h"
 #include "../../libs/date_3.0.1/include/date/tz.h"
@@ -57,7 +58,7 @@ namespace nameless_carpool {
           - 微秒 : 1970-1-1 00:00:00.000000
           - 毫秒 : 1970-1-1 00:00:00.000
           -   秒 : 1970-1-1 00:00:00
-       需要留意的是 system_clock::now() 默认获取的是 0 时区的时间
+       需要留意的是 system_clock::now() 默认获取的是 0 时区的时间 , 它不会随着操作系统时区的变化而变化
        */
     
     class Date {
@@ -135,8 +136,8 @@ namespace nameless_carpool {
           } else {
             nanoSecond = timeT;
           }
-          std::chrono::nanoseconds durNano     {nanoSecond};
-          localTime = date::local_time(durNano);
+          std::chrono::nanoseconds durNano{nanoSecond};
+          localTime = date::local_time<std::chrono::nanoseconds>(durNano);
         } /* localTime 初始化完毕 */
 
         return formatDef<_Duration>(localTime, format);
@@ -145,7 +146,7 @@ namespace nameless_carpool {
       static constexpr __get_string_if_is_duration<_Duration> 
       formatDef(const timespec& timeT, const String& format = defFormatStr) {
         std::chrono::nanoseconds durNano = std::chrono::seconds{timeT.tv_sec} + std::chrono::nanoseconds{timeT.tv_sec};
-        date::local_time localTime        {durNano};
+        date::local_time<std::chrono::nanoseconds> localTime        {durNano};
         return formatDef<_Duration>(durNano, format);
       }
 

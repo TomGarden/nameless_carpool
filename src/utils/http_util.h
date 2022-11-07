@@ -7,8 +7,10 @@
 #include <iterator>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <cmath>
+#include <iostream>
 #include <ios>
 #include <any>
 
@@ -128,7 +130,12 @@ namespace nameless_carpool {
     }
 
     string getName(HttpMethodEnum methodEnum) {
-      return httpMethodToName.at(methodEnum);
+      if(httpMethodToName.contains(methodEnum)) {
+        return httpMethodToName.at(methodEnum);
+      } else {
+        logError << "静态函数初始化阶段 , 无法获取 httpMethodToName 的有效值" << endl;
+        return "";
+      }
     }
 
   };

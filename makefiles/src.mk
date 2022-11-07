@@ -100,7 +100,7 @@ dynamic_libs = $(links) $(boost) $(HowardHinnant_date)
 # https://stackoverflow.com/questions/52583544/boost-stack-trace-not-showing-function-names-and-line-numbers
 
 # g++ = g++ -g -c -std=c++11 -Wall
-gpp = g++ -g -std=${stdV} -Wall -ggdb -rdynamic -no-pie -fno-pie 
+gpp = g++ -g -std=${stdV} -Wall -ggdb -rdynamic -no-pie -fno-pie -fPIC
 g++ = $(gpp) -c 
 
 # region 定义几个便利函数

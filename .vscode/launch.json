@@ -8,7 +8,65 @@
 
     /* 用于代码编译运行的 */
     {
-      "name": "nameless_debug",
+      "name": "cmake_debug",
+      "type": "cppdbg",
+      "request": "launch",
+      "preLaunchTask": "build_nameless_src_by_cmake",
+      "program": "${workspaceFolder}/build/NamelessCarpool.run",
+      "args": [
+        "--input_file"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+          {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          },
+          {
+              "description":  "Set Disassembly Flavor to Intel",
+              "text": "-gdb-set disassembly-flavor intel",
+              "ignoreFailures": true
+          }
+      ]
+    },
+
+    {
+      "name": "cmake_core_debug",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/NamelessCarpool.run",
+      "coreDumpPath": "${workspaceFolder}/tmp_dir/run_path/core_NamelessCarpool_46813_1667449254",
+      "args": [
+        "--input_file=${workspaceFolder}/build/tom_doc_file_dir/debugInput.json"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+          {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          },
+          {
+              "description":  "Set Disassembly Flavor to Intel",
+              "text": "-gdb-set disassembly-flavor intel",
+              "ignoreFailures": true
+          }
+      ]
+    },
+
+
+    /* 用于代码编译运行的 */
+    {
+      "name": "make_debug",
       "type": "cppdbg",
       "request": "launch",
       "preLaunchTask": "build_nameless_src_by_make",
@@ -37,7 +95,7 @@
 
     /* 用于 在 有 dumpfile 的情况下 用造成 异常的代码复现异常场景的。 */
     {
-      "name": "nameless_core_dump_file_debug",
+      "name": "make_core_debug",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build_src/execute.run",
@@ -66,7 +124,7 @@
 
     /* 用于测试代码编译运行的 */
     {
-      "name": "nameless_test_debug",
+      "name": "test_debug",
       "type": "cppdbg",
       "request": "launch",
       "preLaunchTask": "build_nameless_src_test_by_make",
@@ -93,7 +151,7 @@
 
     /* 用于 在 有 dumpfile 的情况下 用造成 异常的代码复现异常场景的。 */
     {
-      "name": "nameless_test_core_dump_file_debug",
+      "name": "make_test_core_debug",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build_src_test/execute.run",
