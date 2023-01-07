@@ -41,12 +41,7 @@ namespace nameless_carpool {
   /* 入参变量枚举 , 与 inputParamMap 结合定义常量 */
   enum class InputParamEnum {
     inputFile     =  7,
-    debug         =  8,
     help          =  9,
-    header        = 10,
-    method        = 11,
-    uri           = 12,
-    body          = 13,
   };
 
   struct InputParam {
@@ -61,22 +56,12 @@ namespace nameless_carpool {
 
     const map<InputParamEnum, string> inputParamToName = {
       {InputParamEnum::inputFile    ,  inputFile      },
-      {InputParamEnum::debug        ,  debug          },
       {InputParamEnum::help         ,  help           },
-      {InputParamEnum::header       ,  header         },
-      {InputParamEnum::method       ,  method         },
-      {InputParamEnum::uri          ,  uri       },
-      {InputParamEnum::body         ,  body           },
     };
     
     const map<string, InputParamEnum> inputParamFromName = {
       {inputFile      ,  InputParamEnum::inputFile    },
-      {debug          ,  InputParamEnum::debug        },
       {help           ,  InputParamEnum::help         },
-      {header         ,  InputParamEnum::header       },
-      {method         ,  InputParamEnum::method       },
-      {uri            ,  InputParamEnum::uri     },
-      {body           ,  InputParamEnum::body         },
     };
 
     public:
@@ -102,8 +87,8 @@ namespace nameless_carpool {
   extern bool contentDebugParam(int argc, char **argv);
 
   /** 接受参数 , 将参数填充到 httpRequest 
-      return true,  HttpRequest 填充有意义 , HttpResponse 的填充有意义(含异常信息)
-             false, HttpRequest   无意义  , 可以直接将 HttpResponse 输出 */
+      @return true,  HttpRequest 填充有意义 , HttpResponse 的填充有意义(含异常信息)
+              false, HttpRequest   无意义  , 可以直接将 HttpResponse 输出 */
   extern bool accept(
     int argc, char **argv,                                  /* 输入 */
     HttpRequest& requestRead, HttpResponse& reponseInflate  /* 输出 */);

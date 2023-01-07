@@ -1,4 +1,5 @@
 #include <set>
+#include <string>
 #include <vector>
 #include <iterator>
 #include <deque>
@@ -9,6 +10,7 @@
 #include "../../utils/log_utils.h"
 #include "db_manager.h"
 #include "../../utils/common.h"
+#include "src/db/model/user_info.h"
 
 namespace nameless_carpool {
 
@@ -184,25 +186,15 @@ namespace nameless_carpool {
     return sqlResult;
   }
 
-  /*************************___操作用户信息___********************************
+  /*************************___操作电话表-Telephone-___********************************
    **************************************************************************/
   string DbManager::queryTelephoneSql(const string& telStr) {
     auto& objNames = telephoneNames;
     stringstream sqlTmp;
     sqlTmp << " SELECT "
-           << " \t  " <<            backticks(objNames.id)                                   << ", \n"
-           << " \t  " <<            backticks(objNames.number)                               << ", \n"
-           << " \t  " <<            backticks(objNames.vertify_code)                         << ", \n"
-           << " \t  " << dateSelectStatements(objNames.vc_update_time)                       << ", \n"
-           << " \t  " <<            backticks(objNames.vc_update_time_tz)                    << ", \n"
-           << " \t  " << dateSelectStatements(objNames.BaseTimeNames::create_time)           << ", \n"
-           << " \t  " <<            backticks(objNames.BaseTimeNames::create_time_tz)        << ", \n"
-           << " \t  " << dateSelectStatements(objNames.BaseTimeNames::update_time)           << ", \n"
-           << " \t  " <<            backticks(objNames.BaseTimeNames::update_time_tz)        << ", \n"
-           << " \t  " << dateSelectStatements(objNames.BaseTimeNames::del_time)              << ", \n"
-           << " \t  " <<            backticks(objNames.BaseTimeNames::del_time_tz)           << "  \n"
-           << " FROM   " << getDbAndTablename(objNames.tableName) <<" "
-           << " WHERE  " << tableColumn(objNames.tableName, objNames.number) <<" = " << apostrophe(telStr) << " ; ";
+           << objNames.queryAllFieldSql()
+           << " FROM   " << getDbAndTablename(objNames.tableName) << " "
+           << " WHERE  " << tableColumn(objNames.tableName, objNames.number) << " = " << apostrophe(telStr) << " ; ";
     return sqlTmp.str();
   }
   vector<Telephone> DbManager::queryTelephone(const string& telStr) {
@@ -223,36 +215,13 @@ namespace nameless_carpool {
     stringstream sqlTmp; {
       sqlTmp
         << " INSERT LOW_PRIORITY INTO " << getDbAndTablename(telephoneNames.tableName) <<" ( \n"
-        << "         `id`                  ,\n"
-        << "         `number`              ,\n"
-        << "         `vertify_code`        ,\n"
-        << "         `vc_update_time`      ,\n"
-        << "         `vc_update_time_tz`   ,\n"
-        << "         `create_time`         ,\n"
-        << "         `create_time_tz`      ,\n"
-        << "         `update_time`         ,\n"
-        << "         `update_time_tz`      ,\n"
-        << "         `del_time`            ,\n"
-        << "         `del_time_tz`         )\n"
+        << telephoneNames.insertAllFieldSql()        << " )\n"
         << " VALUES                         \n";
 
 
       for(auto telIter = telList.cbegin(); telIter != telList.cend(); telIter++) {
         Telephone tel = *telIter;
-        sqlTmp 
-          << " \t("
-          << " \t " << nullOrApostrophe(tel.id)                 << " , \n"
-          << " \t " << nullOrApostrophe(tel.number)             << " , \n"
-          << " \t " << nullOrApostrophe(tel.vertify_code)       << " , \n"
-          << " \t " << nullOrApostrophe(tel.vc_update_time)     << " , \n"
-          << " \t " << nullOrApostrophe(tel.vc_update_time_tz)  << " , \n"
-          << " \t " << nullOrApostrophe(tel.create_time)        << " , \n"
-          << " \t " << nullOrApostrophe(tel.create_time_tz)     << " , \n"
-          << " \t " << nullOrApostrophe(tel.update_time)        << " , \n"
-          << " \t " << nullOrApostrophe(tel.update_time_tz)     << " , \n"
-          << " \t " << nullOrApostrophe(tel.del_time)           << " , \n"
-          << " \t " << nullOrApostrophe(tel.del_time_tz)        << "   \n"
-          << " \t) ";
+        sqlTmp << " \t(" << tel.insertAllFieldSql() << " \t) "; 
 
         if(telIter+1 == telList.cend()) {
           sqlTmp << ';';
@@ -430,4 +399,56 @@ namespace nameless_carpool {
   void DbManager::delTelephone(const Telephone& telObj) {
     delTelephone(vector<uint64_t>{telObj.id.value()});
   }
+
+  /*************************___UserTel___********************************
+   **************************************************************************/
+  string          DbManager::queryUserTelSql(const uint64_t& telId) {
+    auto& objNames = userTelNames;
+    stringstream sqlTmp;
+    sqlTmp << " SELECT "
+           << objNames.queryAllFieldSql()
+           << " FROM   " << getDbAndTablename(objNames.tableName) <<" "
+           << " WHERE  " << tableColumn(objNames.tableName, objNames.number) << " = " << apostrophe(std::to_string(telId)) << " ; ";
+    return sqlTmp.str();
+  }
+  vector<UserTel> DbManager::queryUserTel(const uint64_t& telId) {
+    const string& sqlStr = queryUserTelSql(telId);
+
+    SqlResult sqlResult = executeSql(sqlStr);
+
+    vector<UserTel> result;
+
+    if (!sqlResult.hasData()) {
+      return result;
+    }
+
+    return UserTel::getUserTelVector(sqlResult);
+  }
+  string          DbManager::insertUserTelSql(const vector<UserTel> userTelVector) {}
+  void            DbManager::insertUserTel(const vector<UserTel>& telList) {}
+  void            DbManager::insertUserTel(const UserTel& telObj) {}
+  string          DbManager::updateUserTelSql(const vector<UserTel>& telList) {}
+  void            DbManager::updateUserTel(const vector<UserTel>& telList) {}
+  void            DbManager::updateUserTel(const UserTel& telObj) {}
+  string          DbManager::delUserTelSql(const vector<uint64_t>& telIds) {}
+  void            DbManager::delUserTel(const vector<uint64_t>& telIds) {}
+  void            DbManager::delUserTel(const vector<UserTel>& telList) {}
+  void            DbManager::delUserTel(const uint64_t& telId) {}
+  void            DbManager::delUserTel(const UserTel& telObj) {}
+
+  /*************************___User___********************************
+   **************************************************************************/
+  string       DbManager::queryUserSql(const string& telStr) {}
+  vector<User> DbManager::queryUser(const string& telStr) {}
+  string       DbManager::insertUserSql(const vector<User> userVector) {}
+  void         DbManager::insertUser(const vector<User>& telList) {}
+  void         DbManager::insertUser(const User& telObj) {}
+  string       DbManager::updateUserSql(const vector<User>& telList) {}
+  void         DbManager::updateUser(const vector<User>& telList) {}
+  void         DbManager::updateUser(const User& telObj) {}
+  string       DbManager::delUserSql(const vector<uint64_t>& telIds) {}
+  void         DbManager::delUser(const vector<uint64_t>& telIds) {}
+  void         DbManager::delUser(const vector<User>& telList) {}
+  void         DbManager::delUser(const uint64_t& telId) {}
+  void         DbManager::delUser(const User& telObj) {}
 }

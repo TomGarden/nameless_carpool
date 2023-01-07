@@ -2,6 +2,15 @@
 /* 说明信息 ：
     在数据库中查看一个表的创建信息 ： SHOW CREATE TABLE db_name.table_name \G 
     删除数据库 
+
+   xxx_time       
+   xxx_time_tz
+   例如在 "Asia/Shanghai" 时区 , 的时间为 2022-12-13 10:25:26 对应的时间戳为 1670927126 (称为上海时间戳)
+   同一时刻在 "UTC-0"      时区 , 的时间为 2022-12-13 02:25:26 对应的时间戳为  比上面的小  (称为 UTC 时间戳)
+   
+   此时 , xxx_time      表示 上海时间戳
+         xxx_time_tz   表示  "Asia/Shanghai"
+
 */
 
 
@@ -302,3 +311,39 @@ CREATE TABLE IF NOT EXISTS `car_bind_customers` (
   PRIMARY KEY (`find_car_id` , `find_customers_id`)
 ) COMMENT '人车绑定表单';
 
+
+CREATE TABLE IF NOT EXISTS `telephone_session` (
+  `id`                            INTEGER             NOT NULL  AUTO_INCREMENT  COMMENT '主键 id 自增',
+  `telephone_id`                  INTEGER             NOT NULL                  COMMENT '手机号 id',
+  `device_info`                   VARCHAR(255)        NOT NULL                  COMMENT '设备信息描述',
+  `token`                         VARCHAR(128)        NOT NULL                  COMMENT 'token 登录成功生成',
+  `max_age`                       INTEGER             NOT NULL                  COMMENT '单位 秒 ; 失效时间 , 同一时区登录时间 + 失效持续描述 与当前时间做对比',
+  `from_where`                    VARCHAR(128)            NULL                  COMMENT '从哪里来到网站登录的 , 不确定能否采集到此信息',
+
+  `create_time`                   DATETIME(6)         NOT NULL                  COMMENT '创建时间',
+  `create_time_tz`                VARCHAR(255)        NOT NULL                  COMMENT '时区',
+  `update_time`                   DATETIME(6)         NOT NULL                  COMMENT '更新时间',
+  `update_time_tz`                VARCHAR(255)        NOT NULL                  COMMENT '时区',
+  `del_time`                      DATETIME(6)             NULL                  COMMENT '删除时间',
+  `del_time_tz`                   VARCHAR(255)            NULL                  COMMENT '时区',
+
+  FOREIGN KEY (`telephone_id`)  REFERENCES `telephone`(`id`)  ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  PRIMARY KEY (`id`) ,
+  INDEX `token` (`token`)
+) COMMENT '手机登录会话';
+
+CREATE TABLE IF NOT EXISTS `user_telephone_session` (
+  `user_id`                     INTEGER             NOT NULL                                COMMENT '外键:用户基础信息 id',
+  `telephone_session_id`        INTEGER             NOT NULL                                COMMENT '外键 手机登录会话 id ',
+
+  `create_time`                 DATETIME(6)         NOT NULL                                COMMENT '创建时间',
+  `create_time_tz`              VARCHAR(255)        NOT NULL                                COMMENT '时区',
+  `update_time`                 DATETIME(6)         NOT NULL                                COMMENT '更新时间',
+  `update_time_tz`              VARCHAR(255)        NOT NULL                                COMMENT '时区',
+  `del_time`                    DATETIME(6)             NULL                                COMMENT '删除时间',
+  `del_time_tz`                 VARCHAR(255)            NULL                                COMMENT '时区',
+
+  FOREIGN KEY (`user_id`)               REFERENCES `user`(`id`)               ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  FOREIGN KEY (`telephone_session_id`)  REFERENCES `telephone_session`(`id`)  ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  PRIMARY KEY (`user_id` , `telephone_session_id`)
+) COMMENT '关联表 : 用户 & 手机登录会话';

@@ -2,17 +2,34 @@
 #include "api.h"
 #include "../net/model/response_body.h"
 #include "../utils/http_util.h"
+#include "../utils/constant.h"
 
 namespace nameless_carpool {
 
   void Api::optRequest(const HttpRequest& requestInput, HttpResponse& responseOutput) {
-    string methodUri = requestInput.methodUri();
+    const string& methodUri = requestInput.methodUri();
 
-    logDebug << "---------333\t:" << Json(requestInput).dump(2) << endl;
+    { /* 请求合法性校验 */
+      if (!requestInput.headers.contains(httpHeaderNames.timeZone)) { /* 请求头非法 */
+        string internalMsg = constantStr.headerMissErr + httpHeaderNames.timeZone;
+        responseOutput.inflateResponse(HttpStatusEnum::badRequest, internalMsg);
+        return;
+      }
 
-    if(methodUri.compare(AuthApi::loginUri()) == 0) {
+      if (!requestInput.headers.contains(httpHeaderNames.token)) {
+        if(AuthApi::loginUri().compare(methodUri) == 0) { /* empty */ }
+        else if(AuthApi::requestVertifyCodeUri().compare(methodUri) == 0) { /* empty */ }
+        else {
+        std::string internalMsg = constantStr.headerMissErr + httpHeaderNames.token;
+        responseOutput.inflateResponse(HttpStatusEnum::badRequest, internalMsg);
+        return;
+        }
+      }
+    }
+
+    if(AuthApi::loginUri().compare(methodUri) == 0) {
       AuthApi::login(requestInput, responseOutput);
-    } else if(methodUri.compare(AuthApi::requestVertifyCodeUri()) == 0) {
+    } else if(AuthApi::requestVertifyCodeUri().compare(methodUri) == 0) {
       AuthApi::requestVC(requestInput, responseOutput);
     }
     else {

@@ -19,6 +19,24 @@ endif()
 set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 # set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
 
+# 设置包含目录
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+include_directories(
+                    ./src             
+                    ./src/control     
+                    ./src/db          
+                    ./src/db/exten    
+                    ./src/db/model    
+                    ./src/db/sql      
+                    ./src/net         
+                    ./src/net/api     
+                    ./src/net/model   
+                    ./src/utils       
+                    ./src/utils/custom
+                    ./src/utils/json  
+                  )
+
+
 
 # 是否到处编译命令到 "build/compile_commands.json" 文件  
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -40,19 +58,21 @@ aux_source_directory(./src/utils             DIR_SRC_UTILS         )
 aux_source_directory(./src/utils/custom      DIR_SRC_UTILS_CUSTOM  )
 aux_source_directory(./src/utils/json        DIR_SRC_UTILS_JSON    )
 
+message(ERROR "尝试下 , 文件路径有没有可能用 for 循环完成递归") 
+
 set(CPP_FILES)
-list(APPEND CPP_FILES ${DIR_SRC}                 )
-list(APPEND CPP_FILES ${DIR_SRC_CONTROL}         )
-list(APPEND CPP_FILES ${DIR_SRC_DB}              )
-list(APPEND CPP_FILES ${DIR_SRC_DB_EXTEN}        )
-list(APPEND CPP_FILES ${DIR_SRC_DB_MODEL}        )
-list(APPEND CPP_FILES ${DIR_SRC_DB_SQL}          )
-list(APPEND CPP_FILES ${DIR_SRC_NET}             )
-list(APPEND CPP_FILES ${DIR_SRC_NET_API}         )
-list(APPEND CPP_FILES ${DIR_SRC_NET_MODEL}       )
-list(APPEND CPP_FILES ${DIR_SRC_UTILS}           )
-list(APPEND CPP_FILES ${DIR_SRC_UTILS_CUSTOM}    )
-list(APPEND CPP_FILES ${DIR_SRC_UTILS_JSON}      )
+list(APPEND CPP_FILES ${DIR_SRC}
+                      ${DIR_SRC_CONTROL}
+                      ${DIR_SRC_DB}
+                      ${DIR_SRC_DB_EXTEN}
+                      ${DIR_SRC_DB_MODEL}
+                      ${DIR_SRC_DB_SQL}
+                      ${DIR_SRC_NET}
+                      ${DIR_SRC_NET_API}
+                      ${DIR_SRC_NET_MODEL}
+                      ${DIR_SRC_UTILS}
+                      ${DIR_SRC_UTILS_CUSTOM}
+                      ${DIR_SRC_UTILS_JSON}      )
 
 list(APPEND CPP_FILES libs/date_3.0.1/src/tz.cpp )
 

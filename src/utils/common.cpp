@@ -33,6 +33,15 @@ namespace nameless_carpool::Common {
     
   /**********___nameless_carpool::Common   文件读取操作___*********************
    ***************************************************************************/
+
+  bool getContent(String& content, const String& fileFullPath, const String& defContent) {
+    if( readStrFromFile(fileFullPath, content) ) {
+      return true;
+    } else {
+      content = defContent;
+      return false;
+    }
+  }
   /**
    * @param content         , 读取到的文件内的内容
    * @param srcPath         , 文件父目录
@@ -40,26 +49,18 @@ namespace nameless_carpool::Common {
    * @param defContent      , 如果读取文件内容失败 , 默认文件内容
   */
   bool getContent(String& content, const String& srcPath, const String& defSrcFileName, const String& defContent) {
-      String defFilePath;
-      if(srcPath.empty()) {
-        if( getCurExeFd(defFilePath) ) {
-          defFilePath.append("/").append(defSrcFileName);
-        } else {
-          content = defContent;
-          return false;
-        }
-      }
-      if( readStrFromFile(defFilePath, content) ) {
-        return true;
+    String defFilePath;
+    if(srcPath.empty()) {
+      if( getCurExeFd(defFilePath) ) {
+        defFilePath.append("/").append(defSrcFileName);
       } else {
         content = defContent;
         return false;
       }
     }
-  bool getContent(String& content, const String& defSrcFileName, const String& defContent) {
-      const String path;
-      return getContent(content, path, defSrcFileName, defContent);
-    }
+    
+    return getContent(content, defFilePath, defContent);
+  }
   
 
   /**********___nameless_carpool::Common::Date___******************************
@@ -88,12 +89,16 @@ namespace nameless_carpool::Common {
         }
       }
 
-      timespec Date::toTimespec(const String& str, const String& format) {
+      date::local_time<std::chrono::nanoseconds> Date::toLocalTime(const String& str, const String& format) {
         using LocaleTimeNano = date::local_time<std::chrono::nanoseconds>;
         std::istringstream inputSs{str};
         LocaleTimeNano     localeTimeNano;
         inputSs >> date::parse(format, localeTimeNano);
+        return localeTimeNano;
+      }
 
+      timespec Date::toTimespec(const String& str, const String& format) {
+        const date::local_time<std::chrono::nanoseconds>& localeTimeNano = toLocalTime(str, format);
         return toTimespec(localeTimeNano.time_since_epoch().count());
       }
 

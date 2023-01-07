@@ -20,10 +20,12 @@
 #include "glog/logging.h"
 #include "json/include_json.h"
 #include "../net/model/response_body.h"
+#include "constant.h"
 
 extern int flag;
 
 namespace nameless_carpool {
+
 
 
   using namespace std;
@@ -151,9 +153,10 @@ namespace nameless_carpool {
   extern MediaType mediaType;
 
   struct HttpHeaderNames {
-    const string timeZone = "time_zone";
+    const string timeZone    = "time_zone";
+    const string token       = "token";
     const string contentType = "Content-type";
-    const string pid = "PID";
+    const string pid         = "PID";
   };
   extern HttpHeaderNames httpHeaderNames;
 
@@ -257,9 +260,6 @@ namespace nameless_carpool {
 
   struct HttpResponse : virtual HttpContent {
 
-    static const string BODY_FORMAT_ERR ;
-    static const string HEADER_MISS_ERR ;
-
     int status = -1;
 
     HttpResponse& setStatus(int statusEnum) {
@@ -333,13 +333,13 @@ namespace nameless_carpool {
       }
     }
 
-    void initForRequestBodyFormatError(const string& internalMsg = BODY_FORMAT_ERR, 
+    void initForRequestBodyFormatError(const string& internalMsg = constantStr.bodyFormatErr, 
                                        const string& externalMsg = "") {
-      initResponse(HttpStatusEnum::badRequest, internalMsg, externalMsg);
+      inflateResponse(HttpStatusEnum::badRequest, internalMsg, externalMsg);
     }
 
     /* 初始化请求错误返回信息 */
-    void initResponse(const HttpStatusEnum& statusEnum, 
+    void inflateResponse(const HttpStatusEnum& statusEnum, 
                       const string& internalMsg = "", 
                       const string& externalMsg = "") {
       status = static_cast<int>(statusEnum);

@@ -20,8 +20,11 @@ namespace nameless_carpool {
      ***************************************************************************/
     namespace Config {
       /* 验证码失效时间 */
-      const int VERTIFY_CODE_LIFE_TIME = 5 * 60; /* 五分钟 */
-    }                                            // namespace Config
+      const uint64_t VERTIFY_CODE_LIFE_TIME_SECOND       = 5 * 60; /* 五分钟 */
+      const uint64_t VERTIFY_CODE_LIFE_TIME_MILLISECONDS = VERTIFY_CODE_LIFE_TIME_SECOND * 1000;
+      const uint64_t VERTIFY_CODE_LIFE_TIME_MICROSECONDS = VERTIFY_CODE_LIFE_TIME_SECOND * 1000000;
+      const uint64_t VERTIFY_CODE_LIFE_TIME_NANOSECONDS  = VERTIFY_CODE_LIFE_TIME_SECOND * 1000000000;
+    }  // namespace Config
 
     /*************___ nameless_carpool::Common::Regex  正则___*****************
      ***************************************************************************/
@@ -47,8 +50,19 @@ namespace nameless_carpool {
           如果读取失败 , defContent 会用于填充 content
        @return true, 读取成功 , defContent 未使用
                false,读取事变 , 用 defContent 填充 content   */
+
+    /** @description: 从文件(path)中读取文本信息(content)
+     *               如果 srcPath 为空 , 会用到  可执行程序所在目录 + defSrcFileName  文件作为 srcPath 
+     *               如果读取失败 , defContent 会用于填充 content
+     * @param {String&} content         文件内容会存储到这个变量中
+     * @param {String&} srcPath         文件父文件夹路径
+     * @param {String&} defSrcFileName  文件名
+     * @param {String&} defContent      读取文件失败 content 填充 这个值
+     * @return {*}                      true, 读取成功 , defContent 未使用
+     *                                  false,读取失败 , 用 defContent 填充 content  
+     */
     extern bool getContent(String& content, const String& srcPath, const String& defSrcFileName, const String& defContent);
-    extern bool getContent(String& content, const String& defSrcFileName, const String& defContent);
+    extern bool getContent(String& content, const String& fileFullPath, const String& defContent);
 
     /*************___ nameless_carpool::Common::Date___************************
      ***************************************************************************/
@@ -87,7 +101,7 @@ namespace nameless_carpool {
       const TimeZone*   tzPtr;
       static String     defFormatStr;
 
-     public:
+     public: /* static member */
       /* 获取一个新的 Date 对象 */
       static Date newInstance(const String&    tzName,
                               const SysClockTimePoint& _timePoint = SystemClock::now());
@@ -97,7 +111,18 @@ namespace nameless_carpool {
       static bool tzLegal(const String& tzName);
       /* 根据 curTz 时区下的时间 curTime 计算目标时区 targetTz 的时间*/
       static timespec fixSecByTz(timespec& curTime, const String& curTz, const String& targetTz);
-      /* 将格式化字符串转换为时间戳 */
+
+      /** @description:       将格式化字符串 转换为 local_time 
+       * @param {String&} str
+       * @param {String&} format
+       * @return {*}
+       */
+      static date::local_time<std::chrono::nanoseconds> toLocalTime(const String& str, const String& format = defFormatStr);
+      /** @description:  将格式化字符串转换为时间戳 , 这个字符串将被转换为不带有时区信息的时间戳 (即 时区 为 0 的时间戳)
+       * @param {String&} str     格式化字符串
+       * @param {String&} format  预期格式化字符串和 这个 格式相匹配
+       * @return {*}
+       */
       static timespec toTimespec(const String& str, const String& format = defFormatStr);
       /* timePoint 对象转换为时间戳对象 */
       static timespec toTimespec(const SysClockTimePoint& tp);
@@ -236,12 +261,6 @@ namespace nameless_carpool {
         }
       /* #endregion */
 
-      // public :
-
-      /************** 预计用 HowardHinnant/date 重构 date 类 ********************/
-      /************** 预计用 HowardHinnant/date 重构 date 类 ********************/
-
-     public:
     };
 
     /*************___ nameless_carpool::Common::Number___**********************

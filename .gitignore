@@ -12,3 +12,4 @@ tmp_dir
 build
 # clangd 生成的文件
 .cache
+.history

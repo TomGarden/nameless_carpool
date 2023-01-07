@@ -21,6 +21,18 @@ namespace nameless_carpool {
     const_string update_time_tz   =  "update_time_tz"   ;
     const_string del_time         =  "del_time"         ;
     const_string del_time_tz      =  "del_time_tz"      ;
+
+    /**  @description: 将本类中的所有字段拼装并返回 . 最后一个字段没有逗号
+     * @return {*}    \t         `field_1`      ,
+     *                \t         `field_2`      ,
+     *                \t         `field_last`   
+     */
+    virtual const std::string queryAllFieldSql() const;
+    
+    /**  @description: 插入语句使用 , 只是增加 反引号包裹
+     * @return {*}
+     */
+    virtual const std::string insertAllFieldSql() const;
   };
   /** 基本时间信息 */
   struct BaseTime {
@@ -31,16 +43,31 @@ namespace nameless_carpool {
     optional<string>    del_time         ;        /*  */
     optional<string>    del_time_tz      ;        /*  */
 
-    /* 当 name 与 names 中的某个属性匹配的时候 , 从 db_value 获取对应的内容填充到 obj 
-       return true  填充成功
-              false names 中没有 name
-    */
+    /**
+     * @description: 当 name 与 names 中的某个属性匹配的时候 , 从 db_value 获取对应的内容填充到 obj 
+     * @param {BaseTime&} obj
+     * @param {BaseTimeNames&} names
+     * @param {string&} name
+     * @param {Value&} value
+     * @return {*}  true  填充成功 ; false names 中没有 name
+     */
     static bool inflateBaseTime(BaseTime& obj, const BaseTimeNames& names, const std::string& name, const Value& value);
+    
+    /**
+     * @description:      curColumnName 对应到 names 中的某个属性名 , 若匹配 , 将 (index : curColumnName ) 插入 map 
+     * @param {map<int, string>&} indexNameMap
+     * @param {int} index
+     * @param {string&} curColumnName
+     * @param {BaseTimeNames&} names
+     * @return {*}  true , 有匹配 , 插入成功; false 无匹配 未插入
+     */
+    static bool getNameMap(map<int, string>& indexNameMap, const int index , const std::string& curColumnName , const BaseTimeNames& names) ;
+  
+    /** @description: 构造插入 sql 子串
+     * @return {*}
+     */
+    virtual const std::string insertAllFieldSql() const;
+  
   };
 
-
-
-  /* 多重继承的时候用于限定符号作用域 : https://stackoverflow.com/a/4118705/7707781 */
-  struct MidBaseTime : BaseTime {};
-  struct MidBaseTimeNames : BaseTimeNames {};
 }

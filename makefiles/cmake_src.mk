@@ -76,8 +76,8 @@ copy_doc:
 >	 $(call log_rad,拷贝文档到编译目录 [$(tom_doc_file_dir)])
 
 >	 $(call create_dir,$(tom_doc_file_dir))
->  cp $(pro_dir)/doc/nameless_carpool.software.usage.txt   $(cmake_output_dir)
->  cp $(pro_dir)/doc/$(debugInputFileName)  			 				 $(cmake_output_dir)
+>  cp $(pro_dir)/doc/nameless_carpool.software.usage.txt   $(tom_doc_file_dir)
+>  cp $(pro_dir)/doc/$(debugInputFileName)  			 				 $(tom_doc_file_dir)
 
 # 执行编译结果
 run :

@@ -65,9 +65,10 @@ namespace nameless_carpool {
     struct RequestBody {
       optional<string> phone;
 
-      /* 参数合法性校验 
-         @return true, 合法 ; 
-                 否则 非法 ;    非法情况下 , ssMsg 含有非法信息*/
+      /** 参数合法性校验 
+          @return true, 合法 ; 
+                 否则 非法 ;    非法情况下 , ssMsg 含有非法信息
+      */
       bool legalityCheck(string& msg) {
         stringstream ssMsg;
         bool result = true;

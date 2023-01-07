@@ -8,17 +8,9 @@
 1. nameless_carpool --help
    输出本说明文本
 
-2. 不适用文本入参使用外化命令入参
-   nameless_carpool                          \   # 软件名称, 测试过程中可能是其他名称
-       --debug                               \   # 关键字, 用于区分数据当做网络数据还是当做本地数据
-       --method=get,post,put,delete ···      \   # http method
-       --header={key:value, key1:value1 ···} \   # http header
-       --uri=httpUrl                    \   # http url
-       --body={anyjsondata}                  \   # http body
-       --input_file=filePath                 \   # 请求信息写在 file 中 , 有这个入参其他都可以参数都可以通过此文件写入
-
-3. nameless_carpool --input_file=filePath
-   如果没有 filePath  , 默认使用 nameless_carpool 相同目录下的 nameless_carpool.software.usage.txt 文件
+2. nameless_carpool --input_file=filePath
+   filePath 指定文件的绝对路径
+   如果没有 filePath  , 默认使用 nameless_carpool 相同目录下的 ./tom_doc_file_dir/debugInput.json 文件
    其中 filePath 格式
       {
         "is_help"  : false,

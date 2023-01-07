@@ -20,13 +20,11 @@ namespace nameless_carpool {
   InputParam inputParam;
 
   bool contentDebugParam(int argc, char **argv) {
-    string debugParamStr = paramPrefix + inputParam.getName(InputParamEnum::debug);
     string helpParamStr  = paramPrefix + inputParam.getName(InputParamEnum::help);
     string fileParamStr  = paramPrefix + inputParam.getName(InputParamEnum::inputFile);
     for (int index = 1; index < argc; index++) {
       string arg = argv[index];
-      if(arg.compare(debugParamStr) == 0 || 
-         arg.compare(helpParamStr) == 0  ||
+      if(arg.compare(helpParamStr) == 0  ||
          arg.compare(fileParamStr) == 0     ) {
         return true;
       } 
@@ -38,26 +36,29 @@ namespace nameless_carpool {
   bool accept(int argc, char **argv, 
               HttpRequest& requestInflate, HttpResponse& responseInflate) {
 
+    logDebug << "进入 accept =============\n";
     HttpStatusEnum forLoopStatus = HttpStatusEnum::success; /* 跳出 for 循环的识别标识 */
     string stopLoopAppendMsg;   /* 停止循环并附加信息 */
 
     /** 标记 InputFile 读取失败 */
-    auto debugInputFileReadFailed = [&]() {
+    auto debugInputFileReadFailed = [&](const std::string& str) {
       forLoopStatus = HttpStatusEnum::wrongFormat;
-      stopLoopAppendMsg = inputParam.getName(InputParamEnum::inputFile) + "应该单独使用";
+      stopLoopAppendMsg = inputParam.getName(InputParamEnum::inputFile) + "  " + str;
     };
 
     /** 读取并解析 inputFileContent  
      *  @param inputFilePath 表示 绝对路径
      */
-    auto debugInputFileParse = [&](const std::string inputFilePath) {
+    auto debugInputFileParse = [&](const std::string& inputFilePath) {
+
       string inputFileContent;
-      bool readSuccess = Common::getContent(inputFileContent, "debugInput.json", "意外: 读取入参文件失败");
+      bool readSuccess = Common::getContent(inputFileContent, inputFilePath, "意外: 读取入参文件失败");
       if(readSuccess) {
         if(requestInflate.isEmpty()) {
           try{
             Json json = Json::parse(inputFileContent);
             json.get_to<HttpRequest>(requestInflate);
+            forLoopStatus = HttpStatusEnum::success;
           } catch (const Json::exception& jsonException) {
             logDebug << '[' << jsonException.id << ']' << jsonException.what() << endl; 
             forLoopStatus = HttpStatusEnum::badRequest;
@@ -65,12 +66,11 @@ namespace nameless_carpool {
           }
           
         } else {
-          forLoopStatus = HttpStatusEnum::wrongFormat;
-          stopLoopAppendMsg = inputParam.getName(InputParamEnum::inputFile) + "应该单独使用";
+          debugInputFileReadFailed("读取文件内容为空 , 需要判断异常详情.");
         }
 
       } else {
-        debugInputFileReadFailed();
+        debugInputFileReadFailed("读取文件内容失败 , 需要判断异常详情.");
       }
     };
 
@@ -78,12 +78,14 @@ namespace nameless_carpool {
       
       string kvStr = argv[index];
 
+      /* 确保 入参 键值对 必然是有值的字符串 */
       if(kvStr.size() < 0) {
         forLoopStatus = HttpStatusEnum::parsingFailed;
         stopLoopAppendMsg = "存在空属性";
         break;
       }
 
+      /* 确保入参是 "--" 开始的字符串 */
       int rightStartFlag = kvStr.compare(0,2, paramPrefix);
       if(rightStartFlag != 0) { /* 字符串非 -- 打头 , 被认为是格式异常 */
         forLoopStatus = HttpStatusEnum::wrongFormat;
@@ -102,25 +104,21 @@ namespace nameless_carpool {
           forLoopStatus = HttpStatusEnum::wrongFormat;
           stopLoopAppendMsg = "未知入参1:" + key;
         } else switch(*inputParamPtr) {
-          case InputParamEnum::debug      : {
-            /* empty */
-            continue;
-          }
           case InputParamEnum::help       : {
             forLoopStatus = HttpStatusEnum::requestHelp;
             string helpInfo;
             Common::getContent(helpInfo, "nameless_carpool.software.usage.txt", "意外: 读取帮助信息失败");
-            responseInflate.initResponse(HttpStatusEnum::success, helpInfo);
+            responseInflate.inflateResponse(HttpStatusEnum::success, helpInfo);
             break;
           }
           case InputParamEnum::inputFile  : {
             /* 没有给定参数的时候查看执行文件所在目录是否有相应文件 */
             std::string exeFileFd;
             if( getCurExeFd(exeFileFd) ) {
-              exeFileFd.append("/").append("debugInput.json");
+              exeFileFd.append("/").append("tom_doc_file_dir/").append("debugInput.json");
               debugInputFileParse(exeFileFd);
             } else {
-              debugInputFileReadFailed();
+              debugInputFileReadFailed("没有 入参 值 , 获取默认文件路径失败");
             }            
             break;
           }
@@ -130,91 +128,8 @@ namespace nameless_carpool {
             break;
           }
         }
-
-        if(forLoopStatus != HttpStatusEnum::success) {
-          break;
-        }
-
       }
 
-      string key = kvStr.substr(2, equalFlagIndex - 2);
-      shared_ptr<InputParamEnum> keyEnumPtr = inputParam.getEnum(key);
-      if(keyEnumPtr == nullptr) {
-        forLoopStatus = HttpStatusEnum::wrongFormat;
-        stopLoopAppendMsg = "未知入参3:" + key;
-      } else {
-        string value = kvStr.substr(equalFlagIndex + 1);
-
-        switch(*keyEnumPtr) {
-          case InputParamEnum::inputFile  : {
-            debugInputFileParse(value);
-            break;
-          }
-          case InputParamEnum::header     : {
-            if(requestInflate.headers.empty()) {
-              Json  jsonHeader = Json::parse(value);
-              for(auto& iterator : jsonHeader.items()) {
-                string iteKey = iterator.key();
-                auto iteVal = iterator.value();
-                string valueTypeStr = iteVal.type_name();
-                string iteStrVal;
-                if(valueTypeStr.compare("string") == 0) {
-                  iteStrVal = iteVal.get<string>();
-                } else {
-                  iteStrVal = to_string(iteVal);
-                }
-                requestInflate.addHeader(iteKey, iteStrVal);
-              }
-            } else {
-              forLoopStatus = HttpStatusEnum::argDefineMultiple;
-              stopLoopAppendMsg = "header";
-            }
-            break;
-          }
-          case InputParamEnum::method     : {
-            if(requestInflate.method.empty()) {
-              requestInflate.method = kvStr.substr(equalFlagIndex+1);
-            } else {
-              forLoopStatus = HttpStatusEnum::argDefineMultiple;
-              stopLoopAppendMsg = "method";
-            }
-            break;
-          }
-          case InputParamEnum::uri   : {
-            if(requestInflate.uri.empty()) {
-              requestInflate.uri = kvStr.substr(equalFlagIndex+1);
-            } else {
-              forLoopStatus = HttpStatusEnum::argDefineMultiple;
-              stopLoopAppendMsg = "uri";
-            }
-            break;
-          }
-          case InputParamEnum::body       : {
-            if(requestInflate.body.empty()) {
-              try{
-                Json jsonBody = kvStr.substr(equalFlagIndex+1);
-                requestInflate.setBody(jsonBody);
-              } catch (const Json::exception& jsonException) {
-                logError << jsonException.what() << endl;
-                forLoopStatus = HttpStatusEnum::badRequest;
-                stopLoopAppendMsg.append("请求体解析失败")
-                                 .append("\n")
-                                 .append(jsonException.what());
-              }
-            } else {
-              forLoopStatus = HttpStatusEnum::argDefineMultiple;
-              stopLoopAppendMsg = "body";
-            }
-            break;
-          }
-
-          default                         : {
-            forLoopStatus = HttpStatusEnum::wrongFormat;
-            stopLoopAppendMsg = "未知异常, 参数字段:" + key;
-            break;
-          }
-        }
-      }
       if(forLoopStatus != HttpStatusEnum::success) { 
         break;
       }
@@ -223,7 +138,7 @@ namespace nameless_carpool {
     if(forLoopStatus != HttpStatusEnum::success) {
       responseInflate.setStatus(static_cast<int>(forLoopStatus));
       if(!stopLoopAppendMsg.empty()) {
-        responseInflate.initResponse(forLoopStatus, stopLoopAppendMsg);
+        responseInflate.inflateResponse(forLoopStatus, stopLoopAppendMsg);
       }
                      
       return false;

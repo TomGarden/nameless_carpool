@@ -6,8 +6,16 @@
 #include <time.h>
 #include <iostream>
 #include <chrono>
+#include <sstream>
 
 #include "date_time.h"
+#include <chrono>
+#include <random>
+#include <string>
+#include <type_traits>
+
+#include "../libs/date_3.0.1/include/date/date.h"
+#include "../libs/date_3.0.1/include/date/tz.h"
 
 using namespace std::chrono;
 using namespace std;
@@ -162,8 +170,73 @@ void printFormatDate() {
 
 }
 
-// int main() {
-//   printFormatDate();
 
-//   return 0 ;
-// }
+/**
+ * @description: 
+ * @return {*}
+ *   编译指令 : g++ -g -std=c++20 date_time.cpp ../libs/date_3.0.1/src/tz.cpp -lpthread  -lcurl  -o date_time.run && ./date_time.run
+ */
+void convertDateTz() {
+  std::string                            inputTz   = "Asia/Shanghai";
+  std::string                            inputDate = "2022-12-13 10:32:06";
+  std::istringstream                     inputSs{inputDate};
+  date::local_time<std::chrono::seconds> localeTimeSecond;
+  inputSs >> date::parse(defFormatStr, localeTimeSecond);
+  std::cout << inputDate << " : " << localeTimeSecond.time_since_epoch().count() << std::endl;
+
+  const date::time_zone* timeZone = date::locate_zone(inputTz);
+  date::sys_time<std::chrono::seconds> utc0Timestamp = timeZone->to_sys(localeTimeSecond);
+  const std::string& systemFormatDate1 = date::format(defFormatStr, utc0Timestamp);
+  std::cout << systemFormatDate1 << " : " << utc0Timestamp.time_since_epoch().count() << std::endl;
+
+  date::zoned_time shanghaiTz = date::zoned_time(inputTz, localeTimeSecond);
+  std::cout << date::format(defFormatStr, shanghaiTz.get_local_time()) << ":" << shanghaiTz.get_local_time().time_since_epoch().count() << std::endl;
+  std::cout << date::format(defFormatStr, shanghaiTz.get_sys_time()) << ":" << shanghaiTz.get_sys_time().time_since_epoch().count() << std::endl;
+
+  auto flag = date::zoned_time(inputTz, std::chrono::system_clock::now());
+  std::cout << date::format(defFormatStr, flag.get_local_time()) << ":" << flag.get_local_time().time_since_epoch().count() << std::endl;
+  std::cout << date::format(defFormatStr, flag.get_sys_time()) << ":" << flag.get_sys_time().time_since_epoch().count() << std::endl;
+
+
+
+  auto flag2 = date::make_zoned(inputTz, std::chrono::system_clock::now());
+  std::cout << date::format(defFormatStr, flag2.get_local_time()) << ":" << flag2.get_local_time().time_since_epoch().count() << std::endl;
+  std::cout << date::format(defFormatStr, flag2.get_sys_time()) << ":" << flag2.get_sys_time().time_since_epoch().count() << std::endl;
+
+
+  auto flag3 = date::make_zoned(inputTz, localeTimeSecond);
+  std::cout << date::format(defFormatStr, flag3.get_local_time()) << ":" << flag3.get_local_time().time_since_epoch().count() << std::endl;
+  std::cout << date::format(defFormatStr, flag3.get_sys_time()) << ":" << flag3.get_sys_time().time_since_epoch().count() << std::endl;
+  
+ }
+
+std::string                            inputTz   = "Asia/Shanghai";
+void testDate() {
+
+  const std::chrono::system_clock::time_point& nowTimePoint = std::chrono::system_clock::now();
+  std::cout << date::format(defFormatStr, nowTimePoint) << " : " << nowTimePoint.time_since_epoch().count() << std::endl;
+
+  const date::zoned_time zonedTime = date::zoned_time(inputTz, nowTimePoint);
+  std::cout << date::format(defFormatStr, zonedTime.get_local_time()) << " : " << zonedTime.get_local_time().time_since_epoch().count() << std::endl;
+  std::cout << date::format(defFormatStr, zonedTime.get_sys_time()) << " : " << zonedTime.get_sys_time().time_since_epoch().count() << std::endl;
+
+  date::local_time<std::chrono::nanoseconds> shangHaiLocalTime = zonedTime.get_local_time();
+  const date::zoned_time                     shangHaiZonedTime = date::zoned_time(inputTz, shangHaiLocalTime);
+  std::cout << date::format(defFormatStr, shangHaiZonedTime.get_local_time()) << " : " << shangHaiZonedTime.get_local_time().time_since_epoch().count() << std::endl;
+  std::cout << date::format(defFormatStr, shangHaiZonedTime.get_sys_time()) << " : " << shangHaiZonedTime.get_sys_time().time_since_epoch().count() << std::endl;
+
+  date::local_time<std::chrono::nanoseconds> shangHaiLocalTime2 = zonedTime.get_local_time();
+  const date::zoned_time                     shangHaiZonedTime2 = date::zoned_time(inputTz, shangHaiLocalTime2);
+  std::cout << date::format(defFormatStr, shangHaiZonedTime2.get_local_time()) << " : " << shangHaiZonedTime2.get_local_time().time_since_epoch().count() << std::endl;
+  std::cout << date::format(defFormatStr, shangHaiZonedTime2.get_sys_time()) << " : " << shangHaiZonedTime.get_sys_time().time_since_epoch().count() << std::endl;
+
+
+}
+
+
+int main() {
+  //convertDateTz();
+  testDate();
+
+  return 0 ;
+}

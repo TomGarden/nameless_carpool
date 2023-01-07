@@ -12,6 +12,7 @@
 
 
 #include "db/model/user_info.h"
+#include "utils/constant.h"
 #include "utils/input_check.h"
 #include "utils/json/include_json.h"
 #include "utils/log_utils.h"
@@ -31,7 +32,7 @@ using namespace std;
 using namespace nameless_carpool;
 using namespace google;
 
-
+/** 真正处理 request 请求 */
 void optRequest(const HttpRequest& requestInput, HttpResponse& responseOutput) {
   Api::optRequest(requestInput, responseOutput);
 }
@@ -100,14 +101,14 @@ void optNetData(int argc, char **argv) {
               httpRequest.addHeader(key, value);
             }
           }
-        }
+        }/* for end */
 
         /* 排除入参非法的可能性 */
         try {
           httpRequest.setBody(requestIn);
         } catch (const Json::exception& jsonException) {
           logError << jsonException.what() << endl;
-          httpResponse.initResponse(HttpStatusEnum::badRequest, HttpResponse::BODY_FORMAT_ERR);
+          httpResponse.inflateResponse(HttpStatusEnum::badRequest, constantStr.bodyFormatErr);
         }
 
         httpRequest.printSelf();
@@ -149,6 +150,8 @@ int main(int argc, char ** argv) {
 
   setlocale(LC_CTYPE, tom_utils::defLocalStr); //必须在 initGlog 之前设置完成
   initGlog(argv[0]);
+
+  logDebug << "Main 开始执行" ;
 
   for (int i = 0; i < argc; i++) {
     logInfo << argv[i] << endl;
