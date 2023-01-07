@@ -9,8 +9,10 @@ endif()
 # Default to C++20
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 20)
+  # set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)     # 包含当前路径
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   add_compile_options(-g -Wall -ggdb -rdynamic -no-pie -fno-pie -fPIC) 
@@ -19,80 +21,69 @@ endif()
 set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 # set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
 
-# 设置包含目录
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-include_directories(
-                    ./src             
-                    ./src/control     
-                    ./src/db          
-                    ./src/db/exten    
-                    ./src/db/model    
-                    ./src/db/sql      
-                    ./src/net         
-                    ./src/net/api     
-                    ./src/net/model   
-                    ./src/utils       
-                    ./src/utils/custom
-                    ./src/utils/json  
-                  )
-
-
-
 # 是否到处编译命令到 "build/compile_commands.json" 文件  
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+
+
+# ┌──────────────────────────────────────────────────────────────────────────┐
+# │    重点关注逻辑开始                                                         │
+# │                         路径获取逻辑                                       │
+# │                                                                          │
+# └──────────────────────────────────────────────────────────────────────────┘                
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeUtils.cmake)   
+
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
+set(LIB_JSON_DIR ${LIB_DIR}/nlohmann_json_3.10.5/include/single_include/nlohmann)
+set(LIB_DATE_DIR ${LIB_DIR}/date_3.0.1/src)
+
+# 构建一个可供后续 检索的 根目录列表
+list(APPEND CODE_ROOT_DIR_LIST 
+            ${SRC_DIR} 
+            ${LIB_JSON_DIR}
+            ${LIB_DATE_DIR}
+    )
+
+all_get_dir_list_from_root_list("${CODE_ROOT_DIR_LIST}" CODE_DIR)
+# all_get_file_list_from_root_list("${CODE_ROOT_DIR_LIST}" CODE_FILE) # 不含根目录 , 文件没有区分类型 , 包含所有文件
+all_get_cpp_file_list("${CODE_DIR}" SOURCE_CODE_LIST)
+
+# 设置包含目录
+include_directories(${CODE_DIR})
+
+message(↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓\n
+        ↓"                           运行异常可以取消注释  , 观察详细信息                              "↓\n
+        ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓)
+# get_property(RESULT_INCLUDE_DIR_LIST DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+# message_list("${RESULT_INCLUDE_DIR_LIST}"   "##-include-dir->")     # 当前的 include 信息
+# message_list("${CODE_DIR}"                  "()-code-dir->")        # 给定根目录以及根目录下的所有 子目录们
+# message_list("${CODE_FILE}"                 "++-all-file->")        # 给定根目录以及根目录下的所有子 文件 , 不区分文件类型 , 没有目录
+# message_list("${SOURCE_CODE_LIST}"          "&&>-source-file-")     # 给定根目录以及根目录下的所有 源文件 们 , 通过 `aux_source_directory` 指令获取的
+
+if (CMAKE_SYSTEM_NAME MATCHES ${PLATEFROM_LINUX})
+  set(EXECUTABLE_ARG_LIST ${SOURCE_CODE_LIST})
+elseif (CMAKE_SYSTEM_NAME MATCHES ${PLATEFROM_MAC}) #[[MacOs]] 
+  set(EXECUTABLE_ARG_LIST ${SOURCE_CODE_LIST})  
+elseif (CMAKE_SYSTEM_NAME MATCHES ${PLATEFROM_WINDOWS})
+  set(EXECUTABLE_ARG_LIST ${CODE_FILE})
+else ()
+  message(>>>>>>>>>>>>>>>>>>>>  "Not setting Cmake logic for unkonw plateform 22222222 ")
+endif (CMAKE_SYSTEM_NAME MATCHES ${PLATEFROM_LINUX})
+
+
+# ┌──────────────────────────────────────────────────────────────────────────┐
+# │    重点关注逻辑结束                                                         │
+# └──────────────────────────────────────────────────────────────────────────┘                
+
 include(CTest)
 enable_testing()
-
-# 如果有必要后续这里的添加文件的指令可以通过 shell script 生成单独文件 , 然后包含到这里即可
-aux_source_directory(./src                   DIR_SRC               )
-aux_source_directory(./src/control           DIR_SRC_CONTROL       )
-aux_source_directory(./src/db                DIR_SRC_DB            )
-aux_source_directory(./src/db/exten          DIR_SRC_DB_EXTEN      )
-aux_source_directory(./src/db/model          DIR_SRC_DB_MODEL      )
-aux_source_directory(./src/db/sql            DIR_SRC_DB_SQL        )
-aux_source_directory(./src/net               DIR_SRC_NET           )
-aux_source_directory(./src/net/api           DIR_SRC_NET_API       )
-aux_source_directory(./src/net/model         DIR_SRC_NET_MODEL     )
-aux_source_directory(./src/utils             DIR_SRC_UTILS         )
-aux_source_directory(./src/utils/custom      DIR_SRC_UTILS_CUSTOM  )
-aux_source_directory(./src/utils/json        DIR_SRC_UTILS_JSON    )
-
-message(ERROR "尝试下 , 文件路径有没有可能用 for 循环完成递归") 
-
-set(CPP_FILES)
-list(APPEND CPP_FILES ${DIR_SRC}
-                      ${DIR_SRC_CONTROL}
-                      ${DIR_SRC_DB}
-                      ${DIR_SRC_DB_EXTEN}
-                      ${DIR_SRC_DB_MODEL}
-                      ${DIR_SRC_DB_SQL}
-                      ${DIR_SRC_NET}
-                      ${DIR_SRC_NET_API}
-                      ${DIR_SRC_NET_MODEL}
-                      ${DIR_SRC_UTILS}
-                      ${DIR_SRC_UTILS_CUSTOM}
-                      ${DIR_SRC_UTILS_JSON}      )
-
-list(APPEND CPP_FILES libs/date_3.0.1/src/tz.cpp )
+include(CPack)
 
 
-# message(STATUS "所有文件 + " ${CPP_FILES}) 
-# message(STATUS "RUNTIME_OUTPUT_DIRECTORY + " ${RUNTIME_OUTPUT_DIRECTORY})  
-# message(STATUS "CMAKE_CURRENT_BINARY_DIR + " ${CMAKE_CURRENT_BINARY_DIR})  
-message(STATUS "CMAKE_INSTALL_PREFIX + " ${CMAKE_INSTALL_PREFIX})  
+add_executable(${CMAKE_PROJECT_NAME}  ${EXECUTABLE_ARG_LIST})
 
-# 通过文件指令 遍历 cmakefile 目录下匹配 正则的所有文件 , 作为 list 放到 RECURSION_XXX_FILES 目录中
-# file(GLOB_RECURSE RECURSION_SRC_FILES LIST_DIRECTORIES false ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-# file(GLOB_RECURSE RECURSION_HEADER_FILES LIST_DIRECTORIES false ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
-
-
-add_executable(${CMAKE_PROJECT_NAME}  ${CPP_FILES})
-
-# add_executable(${CMAKE_PROJECT_NAME}  
-# /mount_point/data/_document/c_cpp_program/nameless_carpool/src_test/2022-10-05/main.cpp
-# libs/date_3.0.1/src/tz.cpp
-# )
 
 # 动态库 在 g++ 使用 -lLibName 指令
 target_link_libraries(${CMAKE_PROJECT_NAME} 
@@ -105,8 +96,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     # HowardHinnant_date 相关 动态库 
     pthread curl                                   
   )
-  
-include(CPack)
 
 
 message(STATUS "CMake 指令全部执行完毕") 
