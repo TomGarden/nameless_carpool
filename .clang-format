@@ -2,11 +2,14 @@
 Language:        Cpp
 # BasedOnStyle:  Google
 
-NamespaceIndentation: All           # 命名空间内缩进
-IndentPPDirectives: BeforeHash      # 预处理指令缩进 , 暂未做到根据代码逻辑进行缩进
-ColumnLimit:     0                  # 行字数限制 , 默认 80
-AlignConsecutiveAssignments: true   # 对其赋值语句
-AlignConsecutiveDeclarations: true  # 变量对齐
+NamespaceIndentation: All                           # 命名空间内缩进
+IndentPPDirectives: BeforeHash                      # 预处理指令缩进 , 暂未做到根据代码逻辑进行缩进
+ColumnLimit:     0                                  # 行字数限制 , 默认 80
+AlignConsecutiveAssignments: true                   # 对其赋值语句
+AlignConsecutiveDeclarations: true                  # 变量对齐
+AllowShortCaseLabelsOnASingleLine: true             # 在 switch 代码块中 允许简短的 case 不换行
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse  # 始终将简短的 ifs、else ifs 和 else 语句放在同一行
+MaxEmptyLinesToKeep: 3                              # 最大的空行保持数
 
 AccessModifierOffset: -1
 AlignAfterOpenBracket: Align
@@ -20,10 +23,8 @@ AllowAllConstructorInitializersOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortEnumsOnASingleLine: true
 AllowShortBlocksOnASingleLine: Never
-AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: All
 AllowShortLambdasOnASingleLine: All
-AllowShortIfStatementsOnASingleLine: WithoutElse
 AllowShortLoopsOnASingleLine: true
 AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakAfterReturnType: None
@@ -102,7 +103,6 @@ JavaScriptWrapImports: true
 KeepEmptyLinesAtTheStartOfBlocks: false
 MacroBlockBegin: ''
 MacroBlockEnd:   ''
-MaxEmptyLinesToKeep: 1
 ObjCBinPackProtocolList: Never
 ObjCBlockIndentWidth: 2
 ObjCBreakBeforeNestedBlockParam: true
