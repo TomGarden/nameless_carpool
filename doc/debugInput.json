@@ -1,12 +1,35 @@
-{
-  "method"   : "POST",
-  "headers"  : {
-    "time_zone":"Asia/Shanghai",
-    "headerTwo":"two"
-  },     
-  "uri"      :  "/fcgi_test/nameless_carpool/login",
-  "body"     : {
-    "phone":"15912341234",
-    "verify_code":"111111"
+[
+  {
+    "desc": [
+      "本对象是注释内容",
+      "当前文件用数组的形式封装 json 对象 , 是为了保留调试记录",
+      "默认的 , 数组第一个元素是对本文件的说明",
+      "第二个元素是正在调试的接口",
+      "后续的元素是历史调试的接口 , 就是为了保存这些历史调试接口 , 才将本文件设计成这种格式",
+      "在 json 解析获取数据是应该只获取第二个元素(索引为 1)"
+    ]
+  },
+  {
+    "method": "POST",
+    "headers": {
+      "time_zone": "Asia/Shanghai",
+      "headerTwo": "two"
+    },
+    "uri": "/fcgi_test/nameless_carpool/login",
+    "body": {
+      "phone": "15912341234",
+      "verify_code": "111111"
+    }
+  },
+  {
+    "method": "POST",
+    "headers": {
+      "time_zone": "Asia/Shanghai",
+      "headerTwo": "two"
+    },
+    "uri": "/fcgi_test/nameless_carpool/request_vertify_code",
+    "body": {
+      "phone": "15912341234"
+    }
   }
-}
+]

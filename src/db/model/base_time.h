@@ -36,12 +36,17 @@ namespace nameless_carpool {
   };
   /** 基本时间信息 */
   struct BaseTime {
+    BaseTime();
+    BaseTime(const BaseTime& obj);
+    BaseTime(const BaseTime&& obj);
+
     optional<string>    create_time      ;        /*  */
     optional<string>    create_time_tz   ;        /*  */
     optional<string>    update_time      ;        /*  */
     optional<string>    update_time_tz   ;        /*  */
     optional<string>    del_time         ;        /*  */
     optional<string>    del_time_tz      ;        /*  */
+
 
     /**
      * @description: 当 name 与 names 中的某个属性匹配的时候 , 从 db_value 获取对应的内容填充到 obj 

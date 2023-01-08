@@ -36,14 +36,14 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeUtils.cmake)
 
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
-set(LIB_JSON_DIR ${LIB_DIR}/nlohmann_json_3.10.5/include/single_include/nlohmann)
-set(LIB_DATE_DIR ${LIB_DIR}/date_3.0.1/src)
+set(LIB_JSON_DIR         ${LIB_DIR}/nlohmann_json_3.10.5/include/single_include)
+set(LIB_DATE_INCLUDE_DIR ${LIB_DIR}/date_3.0.1/include)
 
 # 构建一个可供后续 检索的 根目录列表
 list(APPEND CODE_ROOT_DIR_LIST 
             ${SRC_DIR} 
             ${LIB_JSON_DIR}
-            ${LIB_DATE_DIR}
+            ${LIB_DATE_INCLUDE_DIR}
     )
 
 all_get_dir_list_from_root_list("${CODE_ROOT_DIR_LIST}" CODE_DIR)
@@ -72,17 +72,19 @@ else ()
   message(>>>>>>>>>>>>>>>>>>>>  "Not setting Cmake logic for unkonw plateform 22222222 ")
 endif (CMAKE_SYSTEM_NAME MATCHES ${PLATEFROM_LINUX})
 
+## 有些文件中包含了过多的源文件不适合对文件夹进行检索 , 我们单独摘出来逐个添加
+list(APPEND EXECUTABLE_ARG_LIST ${LIB_DIR}/date_3.0.1/src/tz.cpp)
 
 # ┌──────────────────────────────────────────────────────────────────────────┐
 # │    重点关注逻辑结束                                                         │
 # └──────────────────────────────────────────────────────────────────────────┘                
 
-include(CTest)
-enable_testing()
-include(CPack)
+# include(CTest)
+# enable_testing()
+# include(CPack)
 
 
-add_executable(${CMAKE_PROJECT_NAME}  ${EXECUTABLE_ARG_LIST})
+add_executable(${CMAKE_PROJECT_NAME}  ${EXECUTABLE_ARG_LIST})  
 
 
 # 动态库 在 g++ 使用 -lLibName 指令
@@ -98,4 +100,4 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
   )
 
 
-message(STATUS "CMake 指令全部执行完毕") 
+message(STATUS "CMake 指令全部执行完毕")  

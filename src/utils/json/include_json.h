@@ -10,8 +10,10 @@
 # define JSON_DIAGNOSTICS 1           
 #include "../../../libs/nlohmann_json_3.10.5/json.hpp"
 
-using Json = nlohmann::json;
-
+namespace nameless_carpool {
+  using Json      = nlohmann::json;
+  using OrderedJson = nlohmann::ordered_json;
+}
 
 /* 定义自己的宏 用来 简便完成 to_json from_json , 拷贝修改自 json.hpp*/
 

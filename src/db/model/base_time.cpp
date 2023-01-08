@@ -1,4 +1,6 @@
 #include "base_time.h"
+#include <optional>
+#include <utility>
 #include "../../utils/common.h"
 #include "../sql/db_manager.h"
 #include "db_manager.h"
@@ -27,6 +29,27 @@ namespace nameless_carpool {
         << " \t  " << DbManager::backticks(del_time)           << " ,\n"
         << " \t  " << DbManager::backticks(del_time_tz)        ;
     return sqlTmp.str();
+  }
+}
+
+namespace nameless_carpool/* ::BaseTime */ {
+
+  BaseTime::BaseTime() = default;
+  BaseTime::BaseTime(const BaseTime& obj) {
+    this->create_time    = obj.create_time;
+    this->create_time_tz = obj.create_time_tz;
+    this->update_time    = obj.update_time;
+    this->update_time_tz = obj.update_time_tz;
+    this->del_time       = obj.del_time;
+    this->del_time_tz    = obj.del_time_tz;
+  }
+  BaseTime::BaseTime(const BaseTime&& obj) {
+    this->create_time    = std::move(obj.create_time);
+    this->create_time_tz = std::move(obj.create_time_tz);
+    this->update_time    = std::move(obj.update_time);
+    this->update_time_tz = std::move(obj.update_time_tz);
+    this->del_time       = std::move(obj.del_time);
+    this->del_time_tz    = std::move(obj.del_time_tz);
   }
 
   bool BaseTime::inflateBaseTime(BaseTime& obj, const BaseTimeNames& names, const std::string& name, const Value& value) {

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <ios>
 
+#include "include_json.h"
 #include "input_check.h"
 #include "../net/model/response_body.h"
 #include "http_util.h"
@@ -56,7 +57,8 @@ namespace nameless_carpool {
       if(readSuccess) {
         if(requestInflate.isEmpty()) {
           try{
-            Json json = Json::parse(inputFileContent);
+            OrderedJson json = OrderedJson::parse(inputFilePath);
+            json = json[1];
             json.get_to<HttpRequest>(requestInflate);
             forLoopStatus = HttpStatusEnum::success;
           } catch (const Json::exception& jsonException) {

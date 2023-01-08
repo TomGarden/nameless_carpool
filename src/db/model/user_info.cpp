@@ -207,12 +207,12 @@ namespace nameless_carpool {
     map<int, string> indexNameMap = getTelNameMap(sqlResult.getColumns());
 
     const TelephoneNames& names = telephoneNames;
-    auto columnCount = indexNameMap.size();
+    unsigned long columnCount = indexNameMap.size();
     vector<Telephone> result;
     for (mysqlx::Row row : sqlResult) {
       Telephone telObj;
 
-      for(int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
+      for (unsigned long columnIndex = 0; columnIndex < columnCount; columnIndex++) {
         Value& value = row.get(columnIndex);
 
         const string& columnName = indexNameMap[columnIndex];
@@ -223,8 +223,8 @@ namespace nameless_carpool {
         } else {
           logDebug << "未知属性:" << columnName << endl;
         }
-      }/* endfor , 制造一个 telObj */
-      
+      } /* endfor , 制造一个 telObj */
+
       result.push_back(telObj);
     }/* endfor , 知道一个 Vector<telObj> */
 
@@ -301,12 +301,12 @@ namespace nameless_carpool {
     map<int, string> indexNameMap = getUserTelNameMap(sqlResult.getColumns());
 
     const UserTelNames& names = userTelNames;
-    auto columnCount = indexNameMap.size();
+    std::map<int, string>::size_type columnCount = indexNameMap.size();
     vector<UserTel> result;
     for (mysqlx::Row row : sqlResult) {
       UserTel obj;
 
-      for(int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
+      for(std::map<int, string>::size_type columnIndex = 0; columnIndex < columnCount; columnIndex++) {
         Value& value = row.get(columnIndex);
 
         const string& columnName = indexNameMap[columnIndex];

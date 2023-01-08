@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <iostream>
 #include <bitset>
@@ -107,11 +108,11 @@ namespace nameless_carpool {
   };
   extern const TelephoneNames telephoneNames;
   struct Telephone      : virtual BaseTime {
-    optional<uint64_t>    id                 ;
-    optional<string>      number             ;
-    optional<string>      vertify_code       ;
-    optional<string>      vc_update_time     ;
-    optional<string>      vc_update_time_tz  ;
+    optional<uint64_t> id                = std::nullopt;
+    optional<string>   number            = std::nullopt;
+    optional<string>   vertify_code      = std::nullopt;
+    optional<string>   vc_update_time    = std::nullopt;
+    optional<string>   vc_update_time_tz = std::nullopt;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(Telephone          ,
                                    id                 ,

@@ -1,4 +1,5 @@
 {
+  "C_Cpp.clang_format_path": "/usr/bin/clangd",
   "files.associations": {
     "iostream": "cpp",
     "iosfwd": "cpp",

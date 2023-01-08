@@ -3,6 +3,7 @@
 /* 用于记录一些常量的值 */
 
 #include <chrono>
+#include <cstdint>
 #include <random>
 #include <string>
 #include <type_traits>
@@ -11,71 +12,72 @@
 #include "../../libs/date_3.0.1/include/date/tz.h"
 
 namespace nameless_carpool {
-
   namespace Common {
-    using namespace std;
-    using String = std::string;
+    namespace Config {};
 
-    /*************___ nameless_carpool::Common::Config  全局配置___**************
-     ***************************************************************************/
-    namespace Config {
-      /* 验证码失效时间 */
-      const uint64_t VERTIFY_CODE_LIFE_TIME_SECOND       = 5 * 60; /* 五分钟 */
-      const uint64_t VERTIFY_CODE_LIFE_TIME_MILLISECONDS = VERTIFY_CODE_LIFE_TIME_SECOND * 1000;
-      const uint64_t VERTIFY_CODE_LIFE_TIME_MICROSECONDS = VERTIFY_CODE_LIFE_TIME_SECOND * 1000000;
-      const uint64_t VERTIFY_CODE_LIFE_TIME_NANOSECONDS  = VERTIFY_CODE_LIFE_TIME_SECOND * 1000000000;
-    }  // namespace Config
-
-    /*************___ nameless_carpool::Common::Regex  正则___*****************
-     ***************************************************************************/
-    struct RegexVals {
-      /* 其他国家手机号字符串匹配规则 : https://cloud.tencent.com/developer/article/1140913 */
-      /* 中国 手机号正则字符串  */
-      const String phone_zh_CN = "^(\\+?0?86\\-?)?1[345789]\\d{9}$";
-
-      const String verifyCode = "^\\d{6}$";
-
-      /* 校验合法性 ,
-       @return true, 合法 */
-      bool isLegal(const String& regexStr, const String& str);
-      bool isLegalPhone(const String& phoneNumber);
-      bool isLegalVC(const String& vertifyCodeStr);
-    };
+    struct RegexVals;
     extern RegexVals regexVals;
 
-    /*************___ nameless_carpool::Common   文件读取操作___***************
-     ***************************************************************************/
-    /* 从文件(path)中读取文本信息(content)
-          如果 srcPath 为空 , 会用到  可执行程序所在目录 + defSrcFileName  文件作为 srcPath
-          如果读取失败 , defContent 会用于填充 content
-       @return true, 读取成功 , defContent 未使用
-               false,读取事变 , 用 defContent 填充 content   */
+    class Date;
+    struct Number;
+    struct GetErr;
+  }
+}
 
-    /** @description: 从文件(path)中读取文本信息(content)
-     *               如果 srcPath 为空 , 会用到  可执行程序所在目录 + defSrcFileName  文件作为 srcPath 
-     *               如果读取失败 , defContent 会用于填充 content
-     * @param {String&} content         文件内容会存储到这个变量中
-     * @param {String&} srcPath         文件父文件夹路径
-     * @param {String&} defSrcFileName  文件名
-     * @param {String&} defContent      读取文件失败 content 填充 这个值
-     * @return {*}                      true, 读取成功 , defContent 未使用
-     *                                  false,读取失败 , 用 defContent 填充 content  
-     */
-    extern bool getContent(String& content, const String& srcPath, const String& defSrcFileName, const String& defContent);
-    extern bool getContent(String& content, const String& fileFullPath, const String& defContent);
 
-    /*************___ nameless_carpool::Common::Date___************************
-     ***************************************************************************/
-    /* 封装 C / C++ 时间调用到单一对象中
-       默认的对这几种格式支持较好其他的测试力度不够需要注意
-          - 纳秒 : 1970-1-1 00:00:00.000000000
-          - 微秒 : 1970-1-1 00:00:00.000000
-          - 毫秒 : 1970-1-1 00:00:00.000
-          -   秒 : 1970-1-1 00:00:00
-       需要留意的是 system_clock::now() 默认获取的是 0 时区的时间 , 它不会随着操作系统时区的变化而变化
-       */
-    
-    class Date {
+namespace nameless_carpool::Common::Config { /* 全局配置 */
+  /* 验证码失效时间 */
+  const uint64_t VERTIFY_CODE_LIFE_TIME_SECOND       = 5 * 60; /* 五分钟 */
+  const uint64_t VERTIFY_CODE_LIFE_TIME_MILLISECONDS = VERTIFY_CODE_LIFE_TIME_SECOND * 1000;
+  const uint64_t VERTIFY_CODE_LIFE_TIME_MICROSECONDS = VERTIFY_CODE_LIFE_TIME_SECOND * 1000000;
+  const uint64_t VERTIFY_CODE_LIFE_TIME_NANOSECONDS  = VERTIFY_CODE_LIFE_TIME_SECOND * 1000000000;
+}
+
+struct nameless_carpool::Common::RegexVals { /* 正则 */
+  /* 其他国家手机号字符串匹配规则 : https://cloud.tencent.com/developer/article/1140913 */
+  /* 中国 手机号正则字符串  */
+  const std::string phone_zh_CN = "^(\\+?0?86\\-?)?1[345789]\\d{9}$";
+
+  const std::string verifyCode = "^\\d{6}$";
+
+  /* 校验合法性 ,
+   @return true, 合法 */
+  bool isLegal(const std::string& regexStr, const std::string& str);
+  bool isLegalPhone(const std::string& phoneNumber);
+  bool isLegalVC(const std::string& vertifyCodeStr);
+};
+
+namespace nameless_carpool::Common {/* 文件读取操作 */
+  /* 从文件(path)中读取文本信息(content)
+        如果 srcPath 为空 , 会用到  可执行程序所在目录 + defSrcFileName  文件作为 srcPath
+        如果读取失败 , defContent 会用于填充 content
+     @return true, 读取成功 , defContent 未使用
+             false,读取事变 , 用 defContent 填充 content   */
+
+  /** @description: 从文件(path)中读取文本信息(content)
+   *               如果 srcPath 为空 , 会用到  可执行程序所在目录 + defSrcFileName  文件作为 srcPath
+   *               如果读取失败 , defContent 会用于填充 content
+   * @param {std::string&} content         文件内容会存储到这个变量中
+   * @param {std::string&} srcPath         文件父文件夹路径
+   * @param {std::string&} defSrcFileName  文件名
+   * @param {std::string&} defContent      读取文件失败 content 填充 这个值
+   * @return {*}                      true, 读取成功 , defContent 未使用
+   *                                  false,读取失败 , 用 defContent 填充 content
+   */
+  extern bool getContent(std::string& content, const std::string& srcPath, const std::string& defSrcFileName, const std::string& defContent);
+  extern bool getContent(std::string& content, const std::string& fileFullPath, const std::string& defContent);
+
+}  // namespace nameless_carpool::Common
+
+/* 封装 C / C++ 时间调用到单一对象中
+   默认的对这几种格式支持较好其他的测试力度不够需要注意
+      - 纳秒 : 1970-1-1 00:00:00.000000000
+      - 微秒 : 1970-1-1 00:00:00.000000
+      - 毫秒 : 1970-1-1 00:00:00.000
+      -   秒 : 1970-1-1 00:00:00
+   需要留意的是 system_clock::now() 默认获取的是 0 时区的时间 , 它不会随着操作系统时区的变化而变化
+   */
+class nameless_carpool::Common::Date {
 
       using SystemClock       = std::chrono::system_clock;
       using SysClockTimePoint = std::chrono::system_clock::time_point;
@@ -97,33 +99,34 @@ namespace nameless_carpool {
 
 
      private:
-      SysClockTimePoint timePoint;
+      /* 对于类似 tzPtr 和 timePoint , 定义变量的顺序和 构造函数初始化变量的顺序如果不同 , 编译器会抱怨的 */
       const TimeZone*   tzPtr;
-      static String     defFormatStr;
+      SysClockTimePoint timePoint;
+      static std::string     defFormatStr;
 
      public: /* static member */
       /* 获取一个新的 Date 对象 */
-      static Date newInstance(const String&    tzName,
+      static Date newInstance(const std::string&    tzName,
                               const SysClockTimePoint& _timePoint = SystemClock::now());
       static Date newInstance(const TimeZone*  _tzPtr     = date::current_zone(),
                               const SysClockTimePoint& _timePoint = SystemClock::now());
       /* 判断时区是否合法 */
-      static bool tzLegal(const String& tzName);
+      static bool tzLegal(const std::string& tzName);
       /* 根据 curTz 时区下的时间 curTime 计算目标时区 targetTz 的时间*/
-      static timespec fixSecByTz(timespec& curTime, const String& curTz, const String& targetTz);
+      static timespec fixSecByTz(timespec& curTime, const std::string& curTz, const std::string& targetTz);
 
       /** @description:       将格式化字符串 转换为 local_time 
-       * @param {String&} str
-       * @param {String&} format
+       * @param {std::string&} str
+       * @param {std::string&} format
        * @return {*}
        */
-      static date::local_time<std::chrono::nanoseconds> toLocalTime(const String& str, const String& format = defFormatStr);
+      static date::local_time<std::chrono::nanoseconds> toLocalTime(const std::string& str, const std::string& format = defFormatStr);
       /** @description:  将格式化字符串转换为时间戳 , 这个字符串将被转换为不带有时区信息的时间戳 (即 时区 为 0 的时间戳)
-       * @param {String&} str     格式化字符串
-       * @param {String&} format  预期格式化字符串和 这个 格式相匹配
+       * @param {std::string&} str     格式化字符串
+       * @param {std::string&} format  预期格式化字符串和 这个 格式相匹配
        * @return {*}
        */
-      static timespec toTimespec(const String& str, const String& format = defFormatStr);
+      static timespec toTimespec(const std::string& str, const std::string& format = defFormatStr);
       /* timePoint 对象转换为时间戳对象 */
       static timespec toTimespec(const SysClockTimePoint& tp);
       /* 将以 X秒(比 纳秒 更精确的数据被抹除) 为单位的时间戳转换为时间戳对象 */
@@ -139,24 +142,26 @@ namespace nameless_carpool {
            */
           // using nameless_carpool::Common::Date::TimePoint = std::chrono::_V2::system_clock::time_point 
           // using std::chrono::nanoseconds = std::chrono::duration<int64_t, std::nano> 
-
       template <typename _Duration, typename _Period>
       static constexpr __get_string_if_is_duration<_Duration> 
-      formatDef(const date::local_time<_Period>& timeT, const String& format = defFormatStr) {
+      formatDef(const date::local_time<_Period>& timeT, const std::string& format = defFormatStr) {
         return date::format(format, date::floor<_Duration>(timeT));
       }
       template <typename _Duration>
       static constexpr __get_string_if_is_duration<_Duration> 
-      formatDef(const uint64_t& timeT, const String& format = defFormatStr) {
+      formatDef(const uint64_t& timeT, const std::string& format = defFormatStr) {
         /* 1666686660000000000 */
-        String inputStrTime = to_string(timeT);
+        const std::string& inputStrTime = std::to_string(timeT);
         
         date::local_time<std::chrono::nanoseconds> localTime ; {
           unsigned long long       nanoSecond;
-          int    size = 19;
+          uint8_t    size = 19;
           if (inputStrTime.size() < size) {
-            String outputStrTime(size, '0');  //= "0000000000000000000";
-            outputStrTime.replace(0, inputStrTime.size(), inputStrTime);
+            const std::string& outputStrTime = std::string(size, '0') /* = "0000000000000000000"; */
+                                                   .replace(0, inputStrTime.size(), inputStrTime);
+
+            // std::string outputStrTime(size, '0');  
+            // outputStrTime.replace(0, inputStrTime.size(), inputStrTime);
             nanoSecond = stoull(outputStrTime);
           } else {
             nanoSecond = timeT;
@@ -169,7 +174,7 @@ namespace nameless_carpool {
       }
       template <typename _Duration>
       static constexpr __get_string_if_is_duration<_Duration> 
-      formatDef(const timespec& timeT, const String& format = defFormatStr) {
+      formatDef(const timespec& timeT, const std::string& format = defFormatStr) {
         std::chrono::nanoseconds durNano = std::chrono::seconds{timeT.tv_sec} + std::chrono::nanoseconds{timeT.tv_sec};
         date::local_time<std::chrono::nanoseconds> localTime        {durNano};
         return formatDef<_Duration>(durNano, format);
@@ -177,7 +182,9 @@ namespace nameless_carpool {
 
 
      public:
-      Date(const TimeZone* _tzPtr = date::current_zone(), const SysClockTimePoint& _timePoint = SystemClock::now());
+      Date(const TimeZone*          _tzPtr     = date::current_zone(),
+           const SysClockTimePoint& _timePoint = SystemClock::now())
+          : tzPtr(_tzPtr), timePoint(_timePoint){};
 
      public:
       /* #region 转换为指定单位的 duration 对象 */
@@ -248,7 +255,7 @@ namespace nameless_carpool {
         constexpr __get_string_if_is_duration<duration> 
         formatStr() { return formatStr<duration>(tzPtr); }
         template <typename duration>
-        constexpr __get_string_if_is_duration<duration> 
+        /* constexpr  */__get_string_if_is_duration<duration> 
         formatStr(const TimeZone* tzP) {
           uint64_t sec;
           if(nullptr == tzP) {
@@ -261,19 +268,13 @@ namespace nameless_carpool {
         }
       /* #endregion */
 
-    };
+};
 
-    /*************___ nameless_carpool::Common::Number___**********************
-     ***************************************************************************/
-    struct Number {
-      /* 获取 6 未随机数 */
-      static int randomInt(const int& min = 100000, const int& max = 999999);
-    };
+struct nameless_carpool::Common::Number {
+  /* 获取 6 未随机数 */
+  static int randomInt(const int& min = 100000, const int& max = 999999);
+};
 
-    /*************___ nameless_carpool::Common::GetErr 获取异常信息___***********
-     ***************************************************************************/
-    struct GetErr {
-      static String getErr(const std::ios_base::iostate& state);
-    };
-  }  // namespace Common
-}  // namespace nameless_carpool
+struct nameless_carpool::Common::GetErr { /* 获取异常信息 */
+  static std::string getErr(const std::ios_base::iostate& state);
+};

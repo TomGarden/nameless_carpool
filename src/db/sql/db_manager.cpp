@@ -78,7 +78,8 @@ namespace nameless_carpool {
       return "";
     };
 
-    ValueType type = value.getType();
+    
+    int type = static_cast<int>(value.getType());;
     switch (type) {
       case ValueType::ARRAY:      return throwLogicError();
       case ValueType::DOCUMENT:   return throwLogicError();
@@ -219,8 +220,8 @@ namespace nameless_carpool {
         << " VALUES                         \n";
 
 
-      for(auto telIter = telList.cbegin(); telIter != telList.cend(); telIter++) {
-        Telephone tel = *telIter;
+      for(vector<Telephone>::const_iterator telIter = telList.cbegin(); telIter != telList.cend(); telIter++) {
+        const Telephone& tel = *telIter;
         sqlTmp << " \t(" << tel.insertAllFieldSql() << " \t) "; 
 
         if(telIter+1 == telList.cend()) {
