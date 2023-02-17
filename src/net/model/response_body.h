@@ -16,6 +16,30 @@ namespace nameless_carpool {
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(ResponseBody, status, statusDesc, data, internalMsg, externalMsg)
     // NLOHMANN_DEFINE_OPTIONAL_TYPE_INTRUSIVE(ResponseBody, status, data, internalMsg, externalMsg)
+
+/* 
+
+NLOHMANN_DEFINE_TYPE_INTRUSIVE(ResponseBody, status, statusDesc, data, internalMsg, externalMsg)
+  -> friend void to_json(nlohmann::json& nlohmann_json_j, const Type& nlohmann_json_t) { 
+        NLOHMANN_JSON_EXPAND(NLOHMANN_JSON_PASTE(NLOHMANN_JSON_TO, __VA_ARGS__)) 
+     }
+  ->NLOHMANN_JSON_PASTE(NLOHMANN_JSON_TO, ResponseBody, status, statusDesc, data, internalMsg, externalMsg) 
+    NLOHMANN_JSON_EXPAND(NLOHMANN_JSON_GET_MACRO(NLOHMANN_JSON_TO, ResponseBody, status, statusDesc, data, internalMsg, externalMsg, \
+        NLOHMANN_JSON_PASTE64, \
+        ...
+        NLOHMANN_JSON_PASTE7, \
+        NLOHMANN_JSON_PASTE6, \
+        NLOHMANN_JSON_PASTE5, \
+        NLOHMANN_JSON_PASTE4, \
+        NLOHMANN_JSON_PASTE3, \
+        NLOHMANN_JSON_PASTE2, \
+        NLOHMANN_JSON_PASTE1)(NLOHMANN_JSON_TO, ResponseBody, status, statusDesc, data, internalMsg, externalMsg))
+  ->NLOHMANN_JSON_PASTE7(NLOHMANN_JSON_TO, ResponseBody, status, statusDesc, data, internalMsg, externalMsg)
+  ->NLOHMANN_JSON_TO(ResponseBody)
+
+ */
+
+
   };
 
 }

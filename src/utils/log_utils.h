@@ -11,14 +11,14 @@ namespace nameless_carpool {
 
   /* 标示符 : 如果定义了这个宏 , 那就说明在 debug 模式下 */
   #define DEBUG_MODEL
-  #define logInfo     google::LogMessage(__FILE__, __LINE__, INFO).stream()
-  #define logError    google::LogMessage(__FILE__, __LINE__, ERROR).stream()
-  #define logWarning  google::LogMessage(__FILE__, __LINE__, WARNING).stream()
-  #define logFatal    google::LogMessage(__FILE__, __LINE__, FATAL).stream()
+  #define logInfo     google::LogMessage(__FILE__, __LINE__, INFO).stream()    << "INFO  : "
+  #define logError    google::LogMessage(__FILE__, __LINE__, ERROR).stream()   << "ERROR : "
+  #define logWarning  google::LogMessage(__FILE__, __LINE__, WARNING).stream() << "WARN  : "
+  #define logFatal    google::LogMessage(__FILE__, __LINE__, FATAL).stream()   << "FATAL : "
   #ifdef DEBUG_MODEL
-    #define logDebug    google::LogMessage(__FILE__, __LINE__, ERROR).stream()
+    #define logDebug    logError
   #else
-    #define logDebug    google::LogMessage(__FILE__, __LINE__, FATAL).stream()
+    #define logDebug    logFatal
   #endif
 
   /* trace 就携带了调用栈信息 */

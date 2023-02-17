@@ -22,6 +22,11 @@ namespace nameless_carpool {
     /* telephone 表内一个手机号可以查到几行 */
     const vector<Telephone>& telVector = DbManager::getInstance().queryTelephone(phoneNumber);
 
+    return HttpStatusEnum::success;
+
+    Json telVectorJson = Json(telVector);
+    logInfo << telVectorJson.dump(2) << std::endl;
+
     if (telVector.size() > 1) {
       internalMsg = constantStr.logicException;
       externalMsg = constantStr.serverErr;

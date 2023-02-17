@@ -1,5 +1,6 @@
 
 #include <unistd.h>
+#include <filesystem>
 #include <optional>
 
 #include "linux_os.h"
@@ -21,7 +22,7 @@ namespace nameless_carpool {
   bool getCurExeFd(string& result) {
     string filePath;
     if( getCurExePath(filePath) ) {
-      size_t index = filePath.find_last_of('/');
+      size_t index = filePath.find_last_of(std::filesystem::path::preferred_separator);
       result = filePath.substr(0, index);
       return true;
     } else {

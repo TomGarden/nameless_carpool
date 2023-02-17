@@ -52,17 +52,18 @@ namespace nameless_carpool/* ::BaseTime */ {
     this->del_time_tz    = std::move(obj.del_time_tz);
   }
 
+  /* TODO - 应该搞清楚 , 时间类型的数据获取原始类型后如何通过 C++ 翻译成字符串或者数据类型 */
   bool BaseTime::inflateBaseTime(BaseTime& obj, const BaseTimeNames& names, const std::string& name, const Value& value) {
     if        (  name.compare(names.BaseTimeNames::create_time    ) == 0  ) {
-      obj.create_time     = value.get<string>()               ;
+      obj.create_time     = DbManager::getOptionalDate(value);
     } else if (  name.compare(names.BaseTimeNames::create_time_tz ) == 0  ) {
       obj.create_time_tz  = value.get<string>()              ;
     } else if (  name.compare(names.BaseTimeNames::update_time    ) == 0  ) {
-      obj.update_time     = value.get<string>()               ;
+      obj.update_time     = DbManager::getOptionalDate(value);
     } else if (  name.compare(names.BaseTimeNames::update_time_tz ) == 0  ) {
       obj.update_time_tz  = value.get<string>()              ;
     } else if (  name.compare(names.BaseTimeNames::del_time       ) == 0  ) {
-      obj.del_time        = DbManager::getOptional<string>(value)      ;
+      obj.del_time        = DbManager::getOptionalDate(value);
     } else if (  name.compare(names.BaseTimeNames::del_time_tz    ) == 0  ) {
       obj.del_time_tz     = DbManager::getOptional<string>(value)     ;
     } else {

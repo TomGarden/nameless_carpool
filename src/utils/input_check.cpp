@@ -47,33 +47,23 @@ namespace nameless_carpool {
       stopLoopAppendMsg = inputParam.getName(InputParamEnum::inputFile) + "  " + str;
     };
 
-    /** 读取并解析 inputFileContent  
+    /** 读取并解析 inputFilePath  
      *  @param inputFilePath 表示 绝对路径
      */
     auto debugInputFileParse = [&](const std::string& inputFilePath) {
+      logInfo << "配置文件路径:" << inputFilePath << std ::endl;
 
-      string inputFileContent;
-      bool readSuccess = Common::getContent(inputFileContent, inputFilePath, "意外: 读取入参文件失败");
-      if(readSuccess) {
-        if(requestInflate.isEmpty()) {
-          try{
-            OrderedJson json = OrderedJson::parse(inputFilePath);
-            json = json[1];
-            json.get_to<HttpRequest>(requestInflate);
-            forLoopStatus = HttpStatusEnum::success;
-          } catch (const Json::exception& jsonException) {
-            logDebug << '[' << jsonException.id << ']' << jsonException.what() << endl; 
-            forLoopStatus = HttpStatusEnum::badRequest;
-            stopLoopAppendMsg = "请求配置文件内 , json 格式解析失败";
-          }
-          
-        } else {
-          debugInputFileReadFailed("读取文件内容为空 , 需要判断异常详情.");
-        }
-
-      } else {
-        debugInputFileReadFailed("读取文件内容失败 , 需要判断异常详情.");
+      try {
+        OrderedJson json = OrderedJson::parse(std::ifstream(inputFilePath));
+        json             = json[1];
+        json.get_to<HttpRequest>(requestInflate);
+        forLoopStatus = HttpStatusEnum::success;
+      } catch (const Json::exception& jsonException) {
+        logDebug << '[' << jsonException.id << ']' << jsonException.what() << endl;
+        forLoopStatus     = HttpStatusEnum::badRequest;
+        stopLoopAppendMsg = "请求配置文件内 , json 格式解析失败";
       }
+
     };
 
     for (int index = 1; index < argc; index++) {
@@ -117,7 +107,9 @@ namespace nameless_carpool {
             /* 没有给定参数的时候查看执行文件所在目录是否有相应文件 */
             std::string exeFileFd;
             if( getCurExeFd(exeFileFd) ) {
-              exeFileFd.append("/").append("tom_doc_file_dir/").append("debugInput.json");
+              exeFileFd
+                  .append(&std::filesystem::path::preferred_separator)
+                  .append("tom_doc_file_dir/debugInput.json");
               debugInputFileParse(exeFileFd);
             } else {
               debugInputFileReadFailed("没有 入参 值 , 获取默认文件路径失败");

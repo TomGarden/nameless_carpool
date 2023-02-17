@@ -7,6 +7,7 @@
 #include "../../utils/common.h"
 #include "../sql/db_manager.h"
 #include "libs/date_3.0.1/include/date/tz.h"
+#include "libs/mysql_connector_arm_static/include/mysqlx/devapi/common.h"
 
 namespace nameless_carpool {
 
@@ -150,8 +151,10 @@ namespace nameless_carpool {
   }
 
 
-  bool Telephone::inflateTelephone(Telephone& obj, const TelephoneNames& names, const string& name, const Value& value) {
-
+  bool Telephone::inflateTelephone(Telephone&            obj,
+                                   const TelephoneNames& names,
+                                   const string&         name,
+                                   const mysqlx::Value&  value) {
     if      (name.compare(names.id                ) == 0) {
       obj.id = value.get<uint64_t>();
     } else if (name.compare(names.number            ) == 0) {
@@ -159,7 +162,7 @@ namespace nameless_carpool {
     } else if (name.compare(names.vertify_code      ) == 0) {
       obj.vertify_code = value.get<string>();
     } else if (name.compare(names.vc_update_time    ) == 0) {
-      obj.vc_update_time = value.get<string>() ;
+      obj.vc_update_time = DbManager::getOptionalDate(value);
     } else if (name.compare(names.vc_update_time_tz ) == 0) {
       obj.vc_update_time_tz = value.get<string>();
     } else {
@@ -169,7 +172,7 @@ namespace nameless_carpool {
     return true;
   }
 
-  map<int, string> Telephone::getTelNameMap(const Columns& columns) {
+  std::map<int, string> Telephone::getTelNameMap(const Columns& columns) {
 
     const TelephoneNames& names = telephoneNames;
     std::map<int,string> indexNameMap; 
@@ -204,18 +207,46 @@ namespace nameless_carpool {
   }
 
   vector<Telephone> Telephone::getTelVector(SqlResult& sqlResult) {
-    map<int, string> indexNameMap = getTelNameMap(sqlResult.getColumns());
+    std::map<int, string> indexNameMap = getTelNameMap(sqlResult.getColumns());
 
     const TelephoneNames& names = telephoneNames;
-    unsigned long columnCount = indexNameMap.size();
+    std::map<int, string>::size_type columnCount = indexNameMap.size();
     vector<Telephone> result;
     for (mysqlx::Row row : sqlResult) {
       Telephone telObj;
 
-      for (unsigned long columnIndex = 0; columnIndex < columnCount; columnIndex++) {
-        Value& value = row.get(columnIndex);
-
+      for (std::map<int, string>::size_type columnIndex = 0;
+           columnIndex < columnCount; columnIndex++) {
+        mysqlx::Value& value = row.get(columnIndex);
         const string& columnName = indexNameMap[columnIndex];
+
+        // if        ( columnName.compare(names.BaseTimeNames::create_time    ) == 0   ||
+        //             columnName.compare(names.vc_update_time    ) == 0   ||
+        //             columnName.compare(names.BaseTimeNames::update_time    ) == 0   ||
+        //             columnName.compare(names.BaseTimeNames::del_time    ) == 0  
+        // ) {
+        //   value.getType();
+        //   mysqlx::bytes rawBytes = value.getRawBytes();
+
+        //   std::stringstream strStream;
+        //   /* 打印整个指针已经完成 */
+        //   strStream << columnName << ":" << "[" << *rawBytes.first << "]:";
+
+        //   for(int i = 0; i< rawBytes.second; i++) {
+        //     /* 预计逐个字节获取 整数类型数据 */
+        //     strStream << *(rawBytes.first + i) << ", ";
+        //   }
+        //   // std::stringstream strStream;
+        //   // value.print(strStream);
+        //   // const std::string& flag = strStream.str();
+        //   // logDebug << flag << std::endl;
+
+        //   logDebug << columnName << ":" << nameless_carpool::DbManager::rawDateParse(rawBytes) << std::endl;
+
+
+        //   continue;
+        // }
+
         if(Telephone::inflateTelephone(telObj, names, columnName, value)) {
           /* empty */
         } else if(BaseTime::inflateBaseTime(telObj, names, columnName, value)) {
@@ -250,7 +281,10 @@ namespace nameless_carpool {
     return true;
   }
 
-  bool UserTel::inflateUserTel(UserTel& obj, const UserTelNames& names, const string& name, const Value& value) {
+  bool UserTel::inflateUserTel(UserTel&             obj,
+                               const UserTelNames&  names,
+                               const string&        name,
+                               const mysqlx::Value& value) {
     if (name.compare(names.user_id             ) == 0) {
       obj.User::id = value.get<uint64_t>();
     } else if (name.compare(names.telephone_id ) == 0) {
@@ -266,7 +300,7 @@ namespace nameless_carpool {
     return true;
   }
 
-  map<int, string> UserTel::getUserTelNameMap(const Columns& columns) {
+  std::map<int, string> UserTel::getUserTelNameMap(const Columns& columns) {
     const UserTelNames& names = userTelNames;
     std::map<int,string> indexNameMap; 
 
@@ -298,7 +332,7 @@ namespace nameless_carpool {
   }
 
   vector<UserTel> UserTel::getUserTelVector(SqlResult& sqlResult) {
-    map<int, string> indexNameMap = getUserTelNameMap(sqlResult.getColumns());
+    std::map<int, string> indexNameMap = getUserTelNameMap(sqlResult.getColumns());
 
     const UserTelNames& names = userTelNames;
     std::map<int, string>::size_type columnCount = indexNameMap.size();
@@ -307,7 +341,7 @@ namespace nameless_carpool {
       UserTel obj;
 
       for(std::map<int, string>::size_type columnIndex = 0; columnIndex < columnCount; columnIndex++) {
-        Value& value = row.get(columnIndex);
+       mysqlx::Value& value = row.get(columnIndex);
 
         const string& columnName = indexNameMap[columnIndex];
         if(UserTel::inflateUserTel(obj, names, columnName, value)) {

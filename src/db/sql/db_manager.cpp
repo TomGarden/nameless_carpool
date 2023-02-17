@@ -1,15 +1,25 @@
-#include <set>
-#include <string>
-#include <vector>
-#include <iterator>
-#include <deque>
-#include <map>
-#include <cstdarg>
-#include <utility>
-
-#include "../../utils/log_utils.h"
 #include "db_manager.h"
+
+#include <bitset>
+#include <boost/format/format_fwd.hpp>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
+#include <deque>
+#include <iterator>
+#include <limits>
+#include <map>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+#include <boost/format.hpp>
+
 #include "../../utils/common.h"
+#include "../../utils/log_utils.h"
+#include "libs/mysql_connector_arm_static/include/mysqlx/devapi/common.h"
 #include "src/db/model/user_info.h"
 
 namespace nameless_carpool {
@@ -31,7 +41,7 @@ namespace nameless_carpool {
     return getInstance().client;
   }
 
-  /* #region ___静态函数 : 方便数据库对象操作的函数集 ____________________________*/
+  /* ___静态函数 : 方便数据库对象操作的函数集 ____________________________*/
   using CommonType = mysqlx::common::Value::Type ;
   using ValueType       = mysqlx::Value::Type;
   string DbManager::nullOrBackticks(const string& str){
@@ -70,6 +80,8 @@ namespace nameless_carpool {
   
   string DbManager::dateSelectStatements(const string& dateStr) {
     /* DATE_FORMAT(`vc_update_time`,'%Y-%m-%d %H:%i:%S.%f') AS `vc_update_time` */
+    /* 手动转换为 字符串 , 默认得到的是 raw 类型数据 */
+    return "`" + dateStr + "`";
     return "DATE_FORMAT(" + backticks(dateStr) + ",'%Y-%m-%d %H:%i:%S.%f') AS " + backticks(dateStr);
   }
   string DbManager::valueToStr(const Value& value) {
@@ -122,7 +134,7 @@ namespace nameless_carpool {
     return strOrDef(value, "");
   }
   
-  /* #region 模板函数 定义 范围 : https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl*/
+  /* 模板函数 定义 范围 : https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl*/
   template<typename Type>
   optional<Type> DbManager::getOptional(const Value& value) {
     if(value.isNull()) {
@@ -131,11 +143,175 @@ namespace nameless_carpool {
       return value.get<Type>();
     }
   }
+  optional<std::string> DbManager::getOptionalDate(const Value& value) {
+    if(value.isNull()) {
+      return nullopt;
+    } else {
+      return rawDateParse(value.getRawBytes());
+    }
+  }
   /* 当需要到其他类型的时候在做新增, 这么做的原因 : https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl */
   template optional<string> DbManager::getOptional(const Value& value); 
   template optional<int64_t> DbManager::getOptional(const Value& value); 
-  /* #endregion */
-  /* #endregion */
+
+  std::string DbManager::rawDateParse(const std::vector<uint8_t>& inByteVector) {
+
+    // {
+    //   const int   bits           = 8;
+    //   std::string strResult      = {};
+    //   std::string strResultSplit = {};
+
+    //   if (inByteVector.size() < 1) {
+    //     /* empty */
+    //     strResult.append("无有效数据");
+    //   } else if (inByteVector.size() == 1) {
+    //     /* 没有符号位 , 八位都是有效数据 */
+    //     strResult.append(std::bitset<bits>(inByteVector[0]).to_string());
+    //   } else {
+    //     /* 每个字节的最高位是符号位 , 字节按照小端内存序排列 */
+    //   }
+
+
+    //   int                                  flag = 0b01111111;
+    //   std::vector<uint8_t>::const_iterator objIterator;
+    //   for (objIterator = inByteVector.cbegin(); objIterator < inByteVector.cend(); objIterator++) {
+    //     std::string rawBitsStr = std::bitset<bits>(*objIterator).to_string();
+    //     strResultSplit.append(rawBitsStr).append(",");
+    //     uint8_t     tmp     = *objIterator & flag;
+    //     std::string bitsStr = std::bitset<bits>(tmp).to_string().substr(1, bits);
+    //     strResult.append(bitsStr);
+    //   }
+
+    //   // unsigned long long numResult = std::stoull(strResult, nullptr, 2);
+
+    //   logDebug << "!!!!> " << strResult << std::endl;
+    //   logDebug << "!!!!> " << strResultSplit << std::endl;
+    //   // logDebug << "!!!!> " << numResult << std::endl;
+    // }
+
+    class Result {
+     private:
+      uint16_t year        = 0;
+      uint8_t  month       = 0;
+      uint8_t  day         = 0;
+      uint8_t  hour        = 0; 
+      uint8_t  minute      = 0;
+      uint8_t  second      = 0;
+      uint32_t microsecond = 0; /* 微秒 , 1秒 = 1000毫秒 ; 1毫秒 = 1000微秒 */
+     public:
+      const uint8_t fieldCount = 7;
+      std::deque<uint32_t> dequeResult;
+
+     private:
+      uint8_t getValue8(const uint32_t inVal) {
+        if (inVal > std::numeric_limits<uint8_t>::max()) throw std::logic_error(getHumenReadableInfo());
+        return static_cast<uint8_t>(inVal);
+      }
+      uint16_t getValue16(const uint32_t inVal) {
+        if (inVal > std::numeric_limits<uint16_t>::max()) throw std::logic_error(getHumenReadableInfo());
+        return static_cast<uint16_t>(inVal);
+      }
+
+     public:
+      std::string getHumenReadableInfo() {
+        std::stringstream strStream;
+        for (int index = 0; index < dequeResult.size(); index++) {
+          switch (index) {
+            case 0: strStream << dequeResult[index]; break;
+            case 1: strStream << "-" << dequeResult[index]; break;
+            case 2: strStream << "-" << dequeResult[index]; break;
+            case 3: strStream << " " << dequeResult[index]; break;
+            case 4: strStream << ":" << dequeResult[index]; break;
+            case 5: strStream << ":" << dequeResult[index]; break;
+            case 6: strStream << "." << dequeResult[index]; break;
+            default : strStream << "~" << dequeResult[index]; break;
+          }
+        }
+        return strStream.str();
+      }
+
+      void setYear /*       */ (const uint32_t inVal) { year = getValue16(inVal); }
+      void setMonth /*      */ (const uint32_t inVal) { month = getValue8(inVal); }
+      void setDay /*        */ (const uint32_t inVal) { day = getValue8(inVal); }
+      void setHour /*       */ (const uint32_t inVal) { hour = getValue8(inVal); }
+      void setMinute /*     */ (const uint32_t inVal) { minute = getValue8(inVal); }
+      void setSecond /*     */ (const uint32_t inVal) { second = getValue8(inVal); }
+      void setMicrosecond /**/ (const uint32_t inVal) { microsecond = inVal; }
+
+      std::string dateFormatStr() {
+        return boost::str(boost::format("%d-%02d-%02d %02d:%02d:%02d.%d") %
+                          static_cast<uint32_t>(year) %
+                          static_cast<uint32_t>(month) %
+                          static_cast<uint32_t>(day) %
+                          static_cast<uint32_t>(hour) %
+                          static_cast<uint32_t>(minute) %
+                          static_cast<uint32_t>(second) %
+                          static_cast<uint32_t>(microsecond));
+      }
+    } objResult;
+    std::deque<uint32_t>& dequeResult = objResult.dequeResult;
+
+    auto funWithNextByte = [](uint8_t inOneByte) -> bool { return (inOneByte & 0b1000'0000) != 0; }; /* true, 下一个字节是当前字节合并使用 */
+    auto funGetPayload   = [](uint8_t inOneByte) -> uint8_t { return (inOneByte & 0b0111'1111); };   /* 获取 每个字节的 荷载 */
+
+    bool     withNextByte   = false; /* true , 下一个字节中的数据与当前字节应该组合 */
+    uint8_t  leftShiftBits  = 0;     /* 记录应当左移的位数, 因为是小端字节序所以需要它 */
+    for (uint8_t oneByte : inByteVector) {
+      uint32_t tmp = {0};
+
+      if(withNextByte) {
+        tmp = dequeResult.back();
+        dequeResult.pop_back();
+      } else {
+        leftShiftBits  = 0;
+      }
+       
+      withNextByte = funWithNextByte(oneByte);
+      uint8_t payload = funGetPayload(oneByte);
+      if (leftShiftBits > (32 - 7)) /* 对于我们所获取的信息 , 我们认为 超过 4 字节即为非法 */ {
+        throw std::logic_error(boost::str(boost::format("超过预期的范围 : 左移[ %1% ]会生成大于 4 字节的整数") % leftShiftBits));
+      }
+      tmp |= (payload << leftShiftBits);
+      leftShiftBits += 7;
+
+      dequeResult.push_back(tmp);
+    }
+
+    if (dequeResult.size() > objResult.fieldCount) {
+      logWarning << boost::str(boost::format(
+                                   "预期外的队列长度为 : %d \n"
+                                   "逐个输出结果为 : %s \n"
+                                   "请做进一步逻辑校验 , 避免未知异常发生 \n") %
+                               dequeResult.size() %
+                               objResult.getHumenReadableInfo());
+    } else if (dequeResult.size() < 3) {
+      throw std::logic_error(boost::str(boost::format("要解析的日期是非法的 , 需要进一步校验 ; 当前 dequeResult.size()=%1%") % dequeResult.size()));
+    }
+
+    for(int index = 0; index < dequeResult.size(); index++) {
+      switch(index) {
+        case 0: objResult.setYear(dequeResult.at(index)); break;
+        case 1: objResult.setMonth(dequeResult.at(index)); break;
+        case 2: objResult.setDay(dequeResult.at(index)); break;
+        case 3: objResult.setHour(dequeResult.at(index)); break;
+        case 4: objResult.setMinute(dequeResult.at(index)); break;
+        case 5: objResult.setSecond(dequeResult.at(index)); break;
+        case 6: objResult.setMicrosecond(dequeResult.at(index)); break;
+      }
+    }
+
+    return objResult.dateFormatStr();
+  }
+  std::string DbManager::rawDateParse(const mysqlx::bytes& inByteVector) {
+    // logDebug << "!!!!> " << "inByteVector.second = " << inByteVector.second << std::endl;
+    const mysqlx::byte*  srcBegin         = inByteVector.first;
+    const mysqlx::byte*  srcEnd           = inByteVector.first + inByteVector.second;
+    const uint8_t*       destinationBegin = reinterpret_cast<const uint8_t*>(srcBegin);
+    const uint8_t*       destinationEnd   = reinterpret_cast<const uint8_t*>(srcEnd);
+    std::vector<uint8_t> objVector;
+    objVector.insert(objVector.begin(), destinationBegin, destinationEnd);
+    return rawDateParse(objVector);
+  }
 
 
   /*************************___Sql 封装___********************************

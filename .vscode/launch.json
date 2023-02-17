@@ -16,7 +16,7 @@
       "args": [
         "--input_file"
       ],
-      "stopAtEntry": false,
+      "stopAtEntry": true,
       "cwd": "${fileDirname}",
       "environment": [],
       "externalConsole": false,

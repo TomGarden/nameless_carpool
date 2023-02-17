@@ -135,7 +135,7 @@ namespace nameless_carpool {
       if(httpMethodToName.contains(methodEnum)) {
         return httpMethodToName.at(methodEnum);
       } else {
-        logError << "静态函数初始化阶段 , 无法获取 httpMethodToName 的有效值" << endl;
+        logError << "静态函数初始化阶段 , 无法获取 httpMethodToName 的有效值" << std::endl;
         return "";
       }
     }
@@ -246,8 +246,10 @@ namespace nameless_carpool {
     }
     virtual void printSelf() override {
       HttpContent::printSelf();
-      logInfo << "****************   Request ↓↓↓  ***************" << endl 
-              << Json(*this).dump(2) << endl;
+      logInfo << std::endl
+              << "****************   Request ↓↓↓  ***************" << std::endl
+              << Json(*this).dump(2) << std::endl
+              << "****************   Request done  ***************" << std::endl;
     }
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpRequest, 
@@ -277,7 +279,7 @@ namespace nameless_carpool {
 
       /* 状态码 */   {
         if(status >= 0) {
-          ss << "Status: " << status << endl;
+          ss << "Status: " << status << std::endl;
         }
       }
       /* header */  {
@@ -289,7 +291,7 @@ namespace nameless_carpool {
 
         ss << "Headers: " << headersTmp.dump(2);
 
-        ss << endl;
+        ss << std::endl;
       }
       /* body */    {
         ss << body.dump(2) ;
@@ -318,19 +320,21 @@ namespace nameless_carpool {
     }
     virtual void printSelf() override {
       HttpContent::printSelf();
+      logInfo<< std::endl;
       switch(static_cast<HttpStatusEnum>(status)) {
         case HttpStatusEnum::success      : 
         case HttpStatusEnum::requestHelp  : {
-          logInfo << "****************   Response [" << status << "] ↑↑↑  ***************" << endl 
-                  << Json(*this).dump(2) << endl;
+          logInfo << "****************   Response [" << status << "] ↑↑↑  ***************" << std::endl 
+                  << Json(*this).dump(2) << std::endl;
           break;
         }
         default: {
-          logInfo << "****************   Response [" << status << "] ×××  ***************" << endl 
-                  << Json(*this).dump(2) << endl;
+          logInfo << "****************   Response [" << status << "] ×××  ***************" << std::endl 
+                  << Json(*this).dump(2) << std::endl;
           break;
         }
       }
+      logInfo << "****************   Response [" << status << "] done  ***************" << std::endl ;
     }
 
     void initForRequestBodyFormatError(const string& internalMsg = constantStr.bodyFormatErr, 

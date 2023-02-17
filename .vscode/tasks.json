@@ -18,7 +18,7 @@
     {
       "label": "build_nameless_src_by_cmake",
       "type": "shell",
-      "command": "make --file=${workspaceFolder}/makefiles/cmake_src.mk       all copy_doc clean_log            run"
+      "command": "make --file=${workspaceFolder}/makefiles/cmake_src.mk       all copy_doc clean_log            run       "
     }
   ]
 }

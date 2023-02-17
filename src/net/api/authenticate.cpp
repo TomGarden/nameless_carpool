@@ -32,9 +32,9 @@ namespace nameless_carpool {
     try {
       requestInput.body.get_to<RequestVertifyCode::RequestBody>(body);
       bodyLegal = body.legalityCheck(inlegalDesc);
-    } catch (const Json::exception& e) {
+    } catch (const Json::exception& objException) {
       bodyLegal   = false;
-      inlegalDesc = e.what();
+      inlegalDesc = objException.what();
       logInfo << inlegalDesc << endl;
     }
 

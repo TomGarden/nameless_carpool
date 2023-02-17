@@ -87,6 +87,7 @@ run :
 >  $(cmake_output_dir)/NamelessCarpool.run  --input_file
 
 
+# 进入 nginx 容器 ifconfig 即可查看容器 ip
 reload_cgi :
 >	 $(call log_rad,重启 CGI)
 >  ssh -i /mount_point/data/_beyourself/_global_config_file/ssh/login_remote_ssh  \
@@ -122,4 +123,5 @@ sub___________________________________reload_cgi__run :
 #		clear && make --file=makefiles/cmake_src.mk clean all copy_doc clean_log            run
 #		clear && make --file=makefiles/cmake_src.mk       all copy_doc clean_log            run       
 #		clear && make --file=makefiles/cmake_src.mk       all copy_doc clean_log reload_cgi run       
+#		clear && make --file=makefiles/cmake_src.mk       all copy_doc           reload_cgi run       
 #		clear && make --file=makefiles/cmake_src.mk                              reload_cgi run       

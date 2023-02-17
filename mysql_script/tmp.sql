@@ -1,6 +1,6 @@
 /* 时间转换 */
--- SELECT * , DATE_FORMAT(`vc_update_time`,'%Y-%m-%d %H:%i:%S.%f') as `vc_update_time`
--- FROM   `nameless_carpool`.`telephone` WHERE  `nameless_carpool`.`telephone`.`number` = '15912341234' ;
+SELECT * , DATE_FORMAT(`vc_update_time`,'%Y-%m-%d %H:%i:%S.%f') as `vc_update_time_123`
+FROM   `nameless_carpool`.`telephone` WHERE  `nameless_carpool`.`telephone`.`number` = '15912341234' ;
 
 
 /* SELECT `vc_update_time` , CAST(vc_update_time `nameless_carpool`.`telephone`.`vc_update_time` TIME ZONE INTERVAL '+08:00' AS DATETIME)
@@ -97,16 +97,33 @@ WHERE  `telephone`.`number` = '--123123' ; */
 
 /* SELECT `id` FROM `nameless_carpool`.`telephone` WHERE id = '1'; */
 
-UPDATE `nameless_carpool`.`telephone`                                                             
-SET                                                                
-       `number`              = CASE `id`                                                            
-                               WHEN '1' THEN '15111111111'                                                            
-                               WHEN '2' THEN '15122222222'                                                            
-                               END,                                                            
-       `vertify_code`        = CASE `id`                                                            
-                               WHEN '1' THEN 'vvv11111111'                                                            
-                               WHEN '2' THEN 'vvv22222222'                                                            
-                               END                                                            
-WHERE  `id`                  IN ('1', '2') ;
+-- UPDATE `nameless_carpool`.`telephone`                                                             
+-- SET                                                                
+--        `number`              = CASE `id`                                                            
+--                                WHEN '1' THEN '15111111111'                                                            
+--                                WHEN '2' THEN '15122222222'                                                            
+--                                END,                                                            
+--        `vertify_code`        = CASE `id`                                                            
+--                                WHEN '1' THEN 'vvv11111111'                                                            
+--                                WHEN '2' THEN 'vvv22222222'                                                            
+--                                END                                                            
+-- WHERE  `id`                  IN ('1', '2') ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
