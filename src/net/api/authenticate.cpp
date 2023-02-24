@@ -3,9 +3,9 @@
 
 #include <string>
 
-#include "../../control/db_proxy.h"
-#include "../../utils/http_util.h"
-#include "../../utils/log_utils.h"
+#include "db_proxy.h"
+#include "http_util.h"
+#include "log_utils.h"
 #include "authenticate_m.h"
 
 namespace nameless_carpool {

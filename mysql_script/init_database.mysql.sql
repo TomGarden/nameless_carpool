@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS `car` (
 ) COMMENT '汽车';
 
 
-CREATE TABLE IF NOT EXISTS `user_tel` (
+CREATE TABLE IF NOT EXISTS `user_car` (
   `user_id`             INTEGER             NOT NULL                COMMENT '外键:用户基础信息 id',
   `car_id`              INTEGER             NOT NULL                COMMENT '外键 手机号 id ',
 

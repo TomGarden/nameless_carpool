@@ -6,7 +6,7 @@
 
 #include "include_json.h"
 #include "input_check.h"
-#include "../net/model/response_body.h"
+#include "response_body.h"
 #include "http_util.h"
 #include "fcgi_util.h"
 #include "common.h"

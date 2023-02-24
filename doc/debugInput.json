@@ -17,8 +17,9 @@
     },
     "uri": "/fcgi_test/nameless_carpool/request_vertify_code",
     "body": {
-      "phone": "15912341234"
-    }
+      "phone": "15912341111"
+    },
+    "desc": "申请验证码"
   },
   {
     "method": "POST",
@@ -30,7 +31,8 @@
     "body": {
       "phone": "15912341234",
       "verify_code": "111111"
-    }
+    },
+    "desc": "通过验证码登录"
   },
   {
     "method": "POST",
@@ -41,6 +43,7 @@
     "uri": "/fcgi_test/nameless_carpool/request_vertify_code",
     "body": {
       "phone": "15912341234"
-    }
+    },
+    "desc": "申请验证码"
   }
 ]

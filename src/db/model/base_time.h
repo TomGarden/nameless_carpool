@@ -4,75 +4,114 @@
 #include <string>
 #include <optional> 
 
-#include "../sql/db_include.h"
+#include "base_model.h"
+#include "sql_util.h"
+
+
 
 
 namespace nameless_carpool {
   using namespace std;
   //using string = std::string;
-
-  struct BaseTimeNames {
-    using const_string = const std::string;
-
-    const_string className        =  "BaseTime"         ;
-    const_string create_time      =  "create_time"      ;
-    const_string create_time_tz   =  "create_time_tz"   ;
-    const_string update_time      =  "update_time"      ;
-    const_string update_time_tz   =  "update_time_tz"   ;
-    const_string del_time         =  "del_time"         ;
-    const_string del_time_tz      =  "del_time_tz"      ;
-
-    /**  @description: 将本类中的所有字段拼装并返回 . 最后一个字段没有逗号
-     * @return {*}    \t         `field_1`      ,
-     *                \t         `field_2`      ,
-     *                \t         `field_last`   
-     */
-    virtual const std::string queryAllFieldSql() const;
-    
-    /**  @description: 插入语句使用 , 只是增加 反引号包裹
-     * @return {*}
-     */
-    virtual const std::string insertAllFieldSql() const;
-  };
-  /** 基本时间信息 */
-  struct BaseTime {
-    BaseTime();
-    BaseTime(const BaseTime& obj);
-    BaseTime(const BaseTime&& obj);
-
-    optional<string>    create_time      ;        /*  */
-    optional<string>    create_time_tz   ;        /*  */
-    optional<string>    update_time      ;        /*  */
-    optional<string>    update_time_tz   ;        /*  */
-    optional<string>    del_time         ;        /*  */
-    optional<string>    del_time_tz      ;        /*  */
-
-
-    /**
-     * @description: 当 name 与 names 中的某个属性匹配的时候 , 从 db_value 获取对应的内容填充到 obj 
-     * @param {BaseTime&} obj
-     * @param {BaseTimeNames&} names
-     * @param {string&} name
-     * @param {Value&} value
-     * @return {*}  true  填充成功 ; false names 中没有 name
-     */
-    static bool inflateBaseTime(BaseTime& obj, const BaseTimeNames& names, const std::string& name, const Value& value);
-    
-    /**
-     * @description:      curColumnName 对应到 names 中的某个属性名 , 若匹配 , 将 (index : curColumnName ) 插入 map 
-     * @param {map<int, string>&} indexNameMap
-     * @param {int} index
-     * @param {string&} curColumnName
-     * @param {BaseTimeNames&} names
-     * @return {*}  true , 有匹配 , 插入成功; false 无匹配 未插入
-     */
-    static bool getNameMap(map<int, string>& indexNameMap, const int index , const std::string& curColumnName , const BaseTimeNames& names) ;
   
-    /** @description: 构造插入 sql 子串
-     * @return {*}
-     */
-    virtual const std::string insertAllFieldSql() const;
-  
-  };
-
+  struct BaseTime;
+  struct BaseTimeNames;
 }
+
+struct nameless_carpool::BaseTimeNames : virtual BaseNames {
+  using const_string = const std::string;
+
+  // [[deprecated("ANCHOR - 目前看这个变量并非必须, 待到认识到必须时删除此弃用标识")]]   
+  // const std::string className        =  "BaseTime"         ; 
+
+  const std::string create_time      =  "create_time"      ;
+  const std::string create_time_tz   =  "create_time_tz"   ;
+  const std::string update_time      =  "update_time"      ;
+  const std::string update_time_tz   =  "update_time_tz"   ;
+  const std::string del_time         =  "del_time"         ;
+  const std::string del_time_tz      =  "del_time_tz"      ;
+
+  /** 获取所有成员名 */
+  const std::string allFieldSql(const std::vector<std::string> inStrVector) const;
+
+  // virtual const std::string getTableName() const override;
+  // virtual const std::vector<std::string> getPrimaryKeyNameVector() const override;
+
+
+
+  /*┌──────────────────────────────────────────────────────────────────────────────────────
+  * │                以上的内容需要重新考虑
+  * └────────────────────────────────────────────────────────────────────────────────────── */
+
+  /* ANCHOR - 只获取当前子类的 un primary key , 归并的动作交给 BaseTimeNames::getUnPrimaryKeyNameVector 完成 */
+  virtual std::vector<std::string> getSubUnPrimaryKeyNameVector() const { return {}; }
+
+  virtual const std::vector<std::string> getUnPrimaryKeyNameVector() const override {
+    std::vector<std::string> subUnPrimaryKeyNameVector = getSubUnPrimaryKeyNameVector();
+    return SqlUtil::insertBackAll(subUnPrimaryKeyNameVector,
+                                  {create_time,
+                                   create_time_tz,
+                                   update_time,
+                                   update_time_tz,
+                                   del_time,
+                                   del_time_tz});
+  }
+};
+
+/** 基本时间信息 */
+struct nameless_carpool::BaseTime : virtual BaseModel {
+  BaseTime();
+  BaseTime(const BaseTime& obj);
+  BaseTime(const BaseTime&& obj);
+  std::optional<std::string>    create_time      ;        /*  */
+  std::optional<std::string>    create_time_tz   ;        /*  */
+  std::optional<std::string>    update_time      ;        /*  */
+  std::optional<std::string>    update_time_tz   ;        /*  */
+  std::optional<std::string>    del_time         ;        /*  */
+  std::optional<std::string>    del_time_tz      ;        /*  */
+
+
+  /* 构造插入 sql 子串 : 获取所有成员 '值' , 或者 NULL , 用于 insert 语句 ; 获取的值被单引号包围 */
+  const std::string insertAllFieldSql(const std::vector<optional<std::string>> inStrVector) const ;
+
+  /** 把 value 中的值 , 通过名称筛选后 设置到成员变量
+   * @param {const ModelNames&} names  表头名称列表 , 用于从 value 中判断当前是那一列
+   * @param {string&} name    明确制定了要被填充的对象的列名
+   * @param {Value&} value    保存了从数据库中取出的列值
+   * @return {*}  true , 填充成功 ; false 填充失败有异常
+   */
+  const bool inflate(const BaseTimeNames& names, const std::string& name, const mysqlx::Value& value) {
+    if /*  */ (name.compare(names.BaseTimeNames::create_time) == 0) {
+      this->BaseTime::create_time = SqlUtil::getOptionalDate(value);
+    } else if (name.compare(names.BaseTimeNames::create_time_tz) == 0) {
+      this->BaseTime::create_time_tz = value.get<std::string>();
+    } else if (name.compare(names.BaseTimeNames::update_time) == 0) {
+      this->BaseTime::update_time = SqlUtil::getOptionalDate(value);
+    } else if (name.compare(names.BaseTimeNames::update_time_tz) == 0) {
+      this->BaseTime::update_time_tz = value.get<std::string>();
+    } else if (name.compare(names.BaseTimeNames::del_time) == 0) {
+      this->BaseTime::del_time = SqlUtil::getOptionalDate(value);
+    } else if (name.compare(names.BaseTimeNames::del_time_tz) == 0) {
+      this->BaseTime::del_time_tz = SqlUtil::getOptional<std::string>(value);
+    } else {
+      return false;
+    }
+
+    return true;
+  }
+
+
+  /* ANCHOR - 只获取当前子类的 un primary key , 归并的动作交给 BaseTime::getUnPrimaryKeyValVector 完成 */
+  virtual std::vector<std::optional<std::string>> getSubUnPrimaryKeyValVector() const { return {}; }
+
+  virtual const std::vector<std::optional<std::string>> getUnPrimaryKeyValVector() const override {
+    std::vector<std::optional<std::string>> subUnPrimaryKeyValVector = getSubUnPrimaryKeyValVector();
+    return SqlUtil::insertBackAll(subUnPrimaryKeyValVector,
+                                  {create_time,
+                                   create_time_tz,
+                                   update_time,
+                                   update_time_tz,
+                                   del_time,
+                                   del_time_tz});
+  }
+};

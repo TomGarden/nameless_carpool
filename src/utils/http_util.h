@@ -19,7 +19,7 @@
 #include "log_utils.h"
 #include "glog/logging.h"
 #include "json/include_json.h"
-#include "../net/model/response_body.h"
+#include "response_body.h"
 #include "constant.h"
 
 extern int flag;

@@ -1,6 +1,6 @@
 /* 时间转换 */
-SELECT * , DATE_FORMAT(`vc_update_time`,'%Y-%m-%d %H:%i:%S.%f') as `vc_update_time_123`
-FROM   `nameless_carpool`.`telephone` WHERE  `nameless_carpool`.`telephone`.`number` = '15912341234' ;
+-- SELECT * , DATE_FORMAT(`vc_update_time`,'%Y-%m-%d %H:%i:%S.%f') as `vc_update_time_123`
+-- FROM   `nameless_carpool`.`telephone` WHERE  `nameless_carpool`.`telephone`.`number` = '15912341234' ;
 
 
 /* SELECT `vc_update_time` , CAST(vc_update_time `nameless_carpool`.`telephone`.`vc_update_time` TIME ZONE INTERVAL '+08:00' AS DATETIME)
@@ -108,6 +108,76 @@ WHERE  `telephone`.`number` = '--123123' ; */
 --                                WHEN '2' THEN 'vvv22222222'                                                            
 --                                END                                                            
 -- WHERE  `id`                  IN ('1', '2') ;
+
+-- UPDATE `nameless_carpool`.`user_tel`                                                             
+-- SET                                                                
+--        `desc`              = CASE `user_id`                                           
+--                                WHEN '1' THEN '15111111111'                                                            
+--                                WHEN '2' THEN '15122222222'                                                            
+--                                END,                                                            
+--        `vertify_code`        = CASE `id`                                                            
+--                                WHEN '1' THEN 'vvv11111111'                                                            
+--                                WHEN '2' THEN 'vvv22222222'                                                            
+--                                END                                                            
+-- WHERE  `id`                  IN ('1', '2') ;
+
+-- -------------------------------------------------------------
+-- 复合主键表的更新删除动作
+-- -------------------------------------------------------------
+
+INSERT INTO `nameless_carpool`.`user_tel` ( `user_id`, 
+                                            `telephone_id`,
+                                            `desc`,
+                                            `flag`,
+                                            `create_time`,
+                                            `create_time_tz`,
+                                            `update_time`,
+                                            `update_time_tz`,
+                                            `del_time`,
+                                            `del_time_tz`
+                                          )  
+VALUES (    '1',
+            '1',
+            'desc111111111',
+            'flag',
+            '2023-02-22 17:19:53.000000',
+            'shangHai',
+            '2023-02-22 17:19:53.000000',
+            'shangHai',
+            NULL,
+            NULL
+        )
+ON DUPLICATE KEY UPDATE         `desc`           =VALUES(`desc`          ),
+                                `flag`           =VALUES(`flag`          ),
+                                `create_time`    =VALUES(`create_time`   ),
+                                `create_time_tz` =VALUES(`create_time_tz`),
+                                `update_time`    =VALUES(`update_time`   ),
+                                `update_time_tz` =VALUES(`update_time_tz`),
+                                `del_time`       =VALUES(`del_time`      ),
+                                `del_time_tz`    =VALUES(`del_time_tz`   )
+                        ;
+
+
+-- 这条语句报错 , 暂时舍弃它
+-- UPDATE `nameless_carpool`.`user_tel`                                                        
+-- SET                                                                
+--        `desc`              = CASE (`user_id`, `telephone_id`)
+--                                WHEN ('1', '1') THEN '这回是中文了'
+--                                END                                               
+-- WHERE  (`user_id`, `telephone_id`) IN ( ('1', '1') ) ;
+
+
+
+
+-- 
+-- DELETE FROM `nameless_carpool`.`user_tel`
+-- WHERE (`user_id`, `telephone_id`) IN ( ('1', '1') );
+-- 
+
+
+
+
+
 
 
 

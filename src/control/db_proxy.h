@@ -1,8 +1,8 @@
 #pragma once
 
 #include <string>
-#include "../utils/http_util.h"
-#include "../net/api/authenticate_m.h"
+#include "http_util.h"
+#include "authenticate_m.h"
 
 namespace nameless_carpool {
 

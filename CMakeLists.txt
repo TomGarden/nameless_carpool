@@ -36,8 +36,9 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeUtils.cmake)
 
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
-set(LIB_JSON_DIR         ${LIB_DIR}/nlohmann_json_3.10.5/include/single_include)
-set(LIB_DATE_INCLUDE_DIR ${LIB_DIR}/date_3.0.1/include)
+set(LIB_JSON_DIR          ${LIB_DIR}/nlohmann_json_3.10.5/include/single_include)
+set(LIB_DATE_INCLUDE_DIR  ${LIB_DIR}/date_3.0.1/include)
+set(LIB_MYSQL_INCLUDE_DIR ${LIB_DIR}/mysql_connector_arm_static/include/mysqlx)
 
 # 构建一个可供后续 检索的 根目录列表
 list(APPEND CODE_ROOT_DIR_LIST 

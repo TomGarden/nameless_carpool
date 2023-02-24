@@ -11,49 +11,49 @@ namespace tom_utils {
 
   void test() {
 
-    // cout << "loclae:" << std::setlocale(LC_ALL, NULL) << endl;
+    // std::cout  << "loclae:" << std::setlocale(LC_ALL, NULL) << std::endl;
     // std::setlocale(LC_ALL, "en_US.UTF-8");
-    cout << "loclae:" << std::setlocale(LC_ALL, NULL) << endl;
+    std::cout  << "loclae:" << std::setlocale(LC_ALL, NULL) << std::endl;
 
     
-    cout << "cout.getloc().name()-->" << cout.getloc().name() << endl;
-    cout << "wcout.getloc().name()-->" << wcout.getloc().name() << endl;
+    std::cout  << "cout.getloc().name()-->" << std::cout .getloc().name() << std::endl;
+    std::cout  << "wcout.getloc().name()-->" << std::wcout.getloc().name() << std::endl;
 
     const char32_t cp32[] = U"你好啊";
-    cout << "sizeof(cp32)/sizeof(char32_t) : " 
+    std::cout  << "sizeof(cp32)/sizeof(char32_t) : " 
         << sizeof(cp32) << '/' << sizeof(char32_t) << '='
         << sizeof(cp32)/sizeof(char32_t) 
-        << endl;
+        << std::endl;
 
     const char16_t cp16[] = u"你好啊";
-    cout << "sizeof(cp16)/sizeof(char16_t) : " 
+    std::cout  << "sizeof(cp16)/sizeof(char16_t) : " 
         << sizeof(cp16) << '/' << sizeof(char16_t) << '='
         << sizeof(cp16)/sizeof(char16_t) 
-        << endl;
+        << std::endl;
     
     const char cp8[] = "你好啊";
-    cout << "sizeof(cp8)/sizeof(char) : " 
+    std::cout  << "sizeof(cp8)/sizeof(char) : " 
         << sizeof(cp8) << '/' << sizeof(char) << '='
         << sizeof(cp8)/sizeof(char) 
         << "\t" << cp8
-        << endl;
+        << std::endl;
 
     const wchar_t cpW[] = L"你好啊";
-    cout << "sizeof(cpW)/sizeof(wchar_t) : " 
+    std::cout  << "sizeof(cpW)/sizeof(wchar_t) : " 
         << sizeof(cpW) << '/' << sizeof(wchar_t) << '='
         << sizeof(cpW)/sizeof(wchar_t) 
-        << endl;
+        << std::endl;
 
 
-    wcout << "****************************::::" << /* cp32 << */ cpW << endl;
+    std::wcout << "****************************::::" << /* cp32 << */ cpW << std::endl;
     //setlocale(LC_ALL, "zh_CN.UTF-8");
     std::ios_base::sync_with_stdio(false);
-    wcout.imbue(locale("zh_CN.UTF-8"));
-    cout << "\nloclae:" << std::setlocale(LC_ALL, NULL) << endl;
-    wcout << "****************************" << /* cp32 << */ cpW << endl;
+    std::wcout.imbue(std::locale("zh_CN.UTF-8"));
+    std::cout  << "\nloclae:" << std::setlocale(LC_ALL, NULL) << std::endl;
+    std::wcout << "****************************" << /* cp32 << */ cpW << std::endl;
 
     const wchar_t cpW2[] = L"你好啊巴拉巴巴";
-    wcout << "****************************" << /* cp32 << */ cpW2 << endl;
+    std::wcout << "****************************" << /* cp32 << */ cpW2 << std::endl;
 
 
     // const  wchar_t *testCpW = {L"中文按时;对开发商;地方"};
@@ -61,14 +61,14 @@ namespace tom_utils {
     // wprintf(L"wprintf1:%s\n", cpW);
     // printf("printf2:%ls\n", cpW);
     // std::setlocale(LC_ALL, "zh_CN.UTF-8");
-    // cout << "\nloclae:" << std::setlocale(LC_ALL, NULL) << endl;
+    // std::cout  << "\nloclae:" << std::setlocale(LC_ALL, NULL) << std::endl;
     // wprintf(L"wprintf3:%ls\n", cpW);
     // printf("printf4:%s\n", cpW);
 
     // u32string u32Str = U"你好啊 ABC 32 - ";
 
     // std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert;
-    // cout << std::stoi(convert.to_bytes(u32Str))  << endl;
+    // std::cout  << std::stoi(convert.to_bytes(u32Str))  << std::endl;
     
     //===========================================================
 
@@ -79,58 +79,58 @@ namespace tom_utils {
     char zhCn = *zhCnP;
     char enUs = *enUsP;
 
-    cout << static_cast<int>(*zhCnP) << endl;
-    cout << (long long)(*zhCnP) << endl;
+    std::cout  << static_cast<int>(*zhCnP) << std::endl;
+    std::cout  << (long long)(*zhCnP) << std::endl;
 
-    cout << zhCnP << "转换为" << tolower(*zhCnP) << endl;
-    cout << enUsP << "转换为" << tolower(*enUsP) << endl;
+    std::cout  << zhCnP << "转换为" << tolower(*zhCnP) << std::endl;
+    std::cout  << enUsP << "转换为" << tolower(*enUsP) << std::endl;
     printf("%c 转换为 %c \n", zhCn, tolower(zhCn));
     printf("%c 转换为 %c \n", enUs, tolower(enUs));
 
 
     const char *cpZh = {"一共五个字"};
-    cout << "cpZh --> \t  " << cpZh << ":" << strlen(cpZh) << "\t" << cpZh << endl;
-    cout << "cpZh --> \t  " << cpZh << ":" << sizeof(cpZh) << "\t" << cpZh << endl;
+    std::cout  << "cpZh --> \t  " << cpZh << ":" << strlen(cpZh) << "\t" << cpZh << std::endl;
+    std::cout  << "cpZh --> \t  " << cpZh << ":" << sizeof(cpZh) << "\t" << cpZh << std::endl;
 
     std::string strZh = { std::string(cpZh) };
-    cout << "strZh --> \t  " << strZh << ":" << strZh.length() << "\t" << strZh << endl;
-    cout << "strZh --> \t  " << strZh << ":" << strZh.size() << "\t" << strZh << endl;
+    std::cout  << "strZh --> \t  " << strZh << ":" << strZh.length() << "\t" << strZh << std::endl;
+    std::cout  << "strZh --> \t  " << strZh << ":" << strZh.size() << "\t" << strZh << std::endl;
 
 
     std::string strZhThree("三个字");
-    cout << "strZhThree --> \t  " << strZhThree << ":" << strZhThree.length() << "\t" << strZhThree << endl;
-    cout << "strZhThree --> \t  " << strZhThree << ":" << strZhThree.size() << "\t" << strZhThree << endl;
+    std::cout  << "strZhThree --> \t  " << strZhThree << ":" << strZhThree.length() << "\t" << strZhThree << std::endl;
+    std::cout  << "strZhThree --> \t  " << strZhThree << ":" << strZhThree.size() << "\t" << strZhThree << std::endl;
 
     const char *cp = {"four"};
-    cout << "cp --> \t  " << cp << ":" << strlen(cp) << endl;
-    cout << "cp --> \t  " << cp << ":" << sizeof(cp) << endl;
+    std::cout  << "cp --> \t  " << cp << ":" << strlen(cp) << std::endl;
+    std::cout  << "cp --> \t  " << cp << ":" << sizeof(cp) << std::endl;
 
 
     char charAryEN[] = {"four"};
-    cout << "charAryEN --> \t  " << charAryEN << ":" << strlen(charAryEN) << endl;
-    cout << "charAryEN --> \t  " << charAryEN << ":" << sizeof(charAryEN) << endl;
+    std::cout  << "charAryEN --> \t  " << charAryEN << ":" << strlen(charAryEN) << std::endl;
+    std::cout  << "charAryEN --> \t  " << charAryEN << ":" << sizeof(charAryEN) << std::endl;
 
     char charAry[] = {"一\0共五个字"};
-    cout << "charAry --> \t  " << charAry << ":" << strlen(charAry) << endl;
-    cout << "charAry --> \t  " << charAry << ":" << sizeof(charAry) << endl;
-    cout << "charAry --> \t  " << charAry << ":" << sizeof(charAry[0]) << ":" << charAry[0] << endl;
+    std::cout  << "charAry --> \t  " << charAry << ":" << strlen(charAry) << std::endl;
+    std::cout  << "charAry --> \t  " << charAry << ":" << sizeof(charAry) << std::endl;
+    std::cout  << "charAry --> \t  " << charAry << ":" << sizeof(charAry[0]) << ":" << charAry[0] << std::endl;
   }
 
   const char *defLocalStr = "C.UTF-8";
 
-  wstring utfMbsrtowcs(const char *input , const char *localeStr/*  = defLocalStr */) {
+  std::wstring utfMbsrtowcs(const char *input , const char *localeStr/*  = defLocalStr */) {
     setlocale(LC_CTYPE, localeStr);
     int srcLength = strlen(input);
     wchar_t dest[srcLength];
     memset(dest, 0, srcLength);
     size_t convertCount = mbsrtowcs(dest, &input, srcLength, nullptr);
-    return wstring(dest).substr(0,convertCount);
+    return std::wstring(dest).substr(0,convertCount);
   }
-  wstring utfMbsrtowcs(string input,      const char *localeStr/*  = defLocalStr */) {
+  std::wstring utfMbsrtowcs(std::string input,      const char *localeStr/*  = defLocalStr */) {
     return utfMbsrtowcs(input.c_str(), localeStr);
   }
 
-  string utfWcstombs(const wchar_t *input, const char *localeStr/*   = defLocalStr */) {
+  std::string utfWcstombs(const wchar_t *input, const char *localeStr/*   = defLocalStr */) {
     setlocale(LC_CTYPE, localeStr);
     int rawStrLength = wcslen(input);
     int maxLength = rawStrLength * 4;
@@ -140,11 +140,11 @@ namespace tom_utils {
     //char *dest = static_cast<char*>(calloc(maxLength, sizeof(char)));
     //char *dest = static_cast<char*>(malloc(maxLength));
     size_t convertCount = wcstombs(dest, input, maxLength); /* 乘以 4 是因为我们判断宽字符转换成窄字符 , 最多需要四个 窄字符 */
-    string result = string(dest).substr(0, convertCount);
+    std::string result = std::string(dest).substr(0, convertCount);
     //free(dest);
     return result;
   }
-  string utfWcstombs(wstring input,        const char *localeStr /* = defLocalStr */) {
+  std::string utfWcstombs(std::wstring input,        const char *localeStr /* = defLocalStr */) {
     return utfWcstombs(input.c_str(), localeStr);
   }
 
