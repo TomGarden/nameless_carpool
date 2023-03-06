@@ -17,11 +17,11 @@ namespace nameless_carpool {
 
     /* 请求验证码 */
     static const string requestVertifyCodeUri();
-    static void         requestVC(const HttpRequest& requestInput, HttpResponse& responseOutput);
+    static void         requestVC(const HttpRequest& requestInput, HttpResponse& outResponse);
 
     /* 登录接口 */
     static const string loginUri();
-    static void         login(const HttpRequest& requestInput, HttpResponse& responseOutput);
+    static void         login(const HttpRequest& requestInput, HttpResponse& outResponse);
 
 
   };

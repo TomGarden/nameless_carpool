@@ -31,8 +31,6 @@ struct nameless_carpool::BaseTimeNames : virtual BaseNames {
   const std::string del_time         =  "del_time"         ;
   const std::string del_time_tz      =  "del_time_tz"      ;
 
-  /** 获取所有成员名 */
-  const std::string allFieldSql(const std::vector<std::string> inStrVector) const;
 
   // virtual const std::string getTableName() const override;
   // virtual const std::vector<std::string> getPrimaryKeyNameVector() const override;
@@ -59,20 +57,28 @@ struct nameless_carpool::BaseTimeNames : virtual BaseNames {
 };
 
 /** 基本时间信息 */
-struct nameless_carpool::BaseTime : virtual BaseModel {
-  BaseTime();
-  BaseTime(const BaseTime& obj);
-  BaseTime(const BaseTime&& obj);
-  std::optional<std::string>    create_time      ;        /*  */
-  std::optional<std::string>    create_time_tz   ;        /*  */
-  std::optional<std::string>    update_time      ;        /*  */
-  std::optional<std::string>    update_time_tz   ;        /*  */
-  std::optional<std::string>    del_time         ;        /*  */
-  std::optional<std::string>    del_time_tz      ;        /*  */
+struct nameless_carpool::BaseTime : public BaseModel {
+  // BaseTime();
+  // BaseTime(const BaseTime& obj);
+  // BaseTime(const BaseTime&& obj);
+  // ~BaseTime() = default;
+  std::optional<std::string>    create_time      = std::nullopt;        /*  */
+  std::optional<std::string>    create_time_tz   = std::nullopt;        /*  */
+  std::optional<std::string>    update_time      = std::nullopt;        /*  */
+  std::optional<std::string>    update_time_tz   = std::nullopt;        /*  */
+  std::optional<std::string>    del_time         = std::nullopt;        /*  */
+  std::optional<std::string>    del_time_tz      = std::nullopt;        /*  */
+
+
+  /* 此数据是否是已经标记为删除的数据 */
+  const bool inline isDelete() { return (del_time != std::nullopt || del_time_tz != std::nullopt); }
+
 
 
   /* 构造插入 sql 子串 : 获取所有成员 '值' , 或者 NULL , 用于 insert 语句 ; 获取的值被单引号包围 */
-  const std::string insertAllFieldSql(const std::vector<optional<std::string>> inStrVector) const ;
+  const std::string insertAllFieldSql(const std::vector<optional<std::string>> inStrVector) const;
+  /* 预期 入参是已经 被 '' 包围的字符串们 */
+  const std::string insertAllFieldSqlWithoutApostrophe(const std::vector<std::string> inStrVector) const;
 
   /** 把 value 中的值 , 通过名称筛选后 设置到成员变量
    * @param {const ModelNames&} names  表头名称列表 , 用于从 value 中判断当前是那一列
@@ -84,11 +90,11 @@ struct nameless_carpool::BaseTime : virtual BaseModel {
     if /*  */ (name.compare(names.BaseTimeNames::create_time) == 0) {
       this->BaseTime::create_time = SqlUtil::getOptionalDate(value);
     } else if (name.compare(names.BaseTimeNames::create_time_tz) == 0) {
-      this->BaseTime::create_time_tz = value.get<std::string>();
+      this->BaseTime::create_time_tz = SqlUtil::getOptional<std::string>(value);
     } else if (name.compare(names.BaseTimeNames::update_time) == 0) {
       this->BaseTime::update_time = SqlUtil::getOptionalDate(value);
     } else if (name.compare(names.BaseTimeNames::update_time_tz) == 0) {
-      this->BaseTime::update_time_tz = value.get<std::string>();
+      this->BaseTime::update_time_tz = SqlUtil::getOptional<std::string>(value);
     } else if (name.compare(names.BaseTimeNames::del_time) == 0) {
       this->BaseTime::del_time = SqlUtil::getOptionalDate(value);
     } else if (name.compare(names.BaseTimeNames::del_time_tz) == 0) {

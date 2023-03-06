@@ -11,13 +11,7 @@
 
 /*
 
-  // 最终结果应该是下面这个样子
-
-  struct ExampleModel : BaseModel {
-    struct Names : BaseNames{
-
-    };
-  };
+  > BaseMode , BaseModelNames , 的 getColumnXxxVector 获取的值应该是一一对应的
 
 */
 
@@ -29,15 +23,19 @@ namespace nameless_carpool {
 
 /* 数据库 数据模型 基类 */
 struct nameless_carpool::BaseModel {
+  // BaseModel()                      = default;
+  // BaseModel(const BaseModel& obj)  = default;
+  // BaseModel(const BaseModel&& obj) = default;
+  // ~BaseModel()                     = default;
 
-  inline std::optional<std::string> numOptionToStrOption(const std::optional<std::string>& inStrOptional) { return inStrOptional; }
+  static inline std::optional<std::string> numOptionToStrOption(const std::optional<std::string>& inStrOptional) { return inStrOptional; }
   template <typename T>
-  inline std::optional<std::string> numOptionToStrOption(const std::optional<T>& inNumOptional) const {
+  static inline std::optional<std::string> numOptionToStrOption(const std::optional<T>& inNumOptional) {
     if (!inNumOptional.has_value()) return "";
     return tom_utils::numToStr(inNumOptional.value());
   }
   template <typename T>
-  inline std::vector<std::optional<std::string>> numOptionToStrOption(const std::initializer_list<std::optional<T>>& inNumList) const {
+  static inline std::vector<std::optional<std::string>> numOptionToStrOption(const std::initializer_list<std::optional<T>>& inNumList) {
     std::vector<std::optional<std::string>> result = {};
     for(auto inNumItr = inNumList.begin(); inNumItr!= inNumList.end(); inNumItr++) {
       result.push_back(numOptionToStrOption(*inNumItr));
@@ -80,12 +78,26 @@ struct nameless_carpool::BaseModel {
 
 /* ANCHOR - 表描述结构体作为内部类定义 , 子类名称限定为 Names */
 struct nameless_carpool::BaseNames {
+
   /* ANCHOR -> 返回表名称字段 */
   virtual const std::string getTableName() const = 0;
+
   /* ANCHOR -> 获取主键列名称组成的列表 , 主键可能不止一个 */
   virtual const std::vector<std::string> getPrimaryKeyNameVector() const = 0;
+
   /* ANCHOR -> 获取非主键列名称组成的列表 */
   virtual const std::vector<std::string> getUnPrimaryKeyNameVector() const = 0;
+
+
+    /*        - 获取主键名 , 只有主键唯一的时候有效 , 主键非唯一的情况下 crash */
+  virtual const std::string getPrimaryKeyName() const {
+    const std::vector<std::string>& pkNameVector = getPrimaryKeyNameVector();
+    int size = pkNameVector.size();
+    if (pkNameVector.size() != 1) throw std::logic_error(
+        boost::str(boost::format("预期 size 为 1 , 实际为 %1% ") % size));
+    return pkNameVector[0];
+  };
+
   /*        -> 获取所有列名称组成的列表 , 
      一般来说是 getPrimaryKeyNameVector / getUnPrimaryKeyNameVector 合体 , 
      特殊情况 , 覆写即可 

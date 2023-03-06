@@ -28,7 +28,7 @@ namespace nameless_carpool {
 
 
 
-  using namespace std;
+  // using namespace std;
 
   /* 状态码一般信息参考 : https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Status 
      > 信息响应 (100–199)
@@ -47,10 +47,11 @@ namespace nameless_carpool {
     parsingFailed       = 502 ,
     wrongFormat         = 503 ,
     argDefineMultiple   = 504 ,
+    serverLogicError    = 505 ,
   };
 
   struct HttpStatus {
-    const map<HttpStatusEnum, const string> name = {
+    const map<HttpStatusEnum, const std::string> name = {
       {HttpStatusEnum::success,             "success"            },
       {HttpStatusEnum::badRequest,          "badRequest"         },
       {HttpStatusEnum::requestUndefined,    "requestUndefined"   },
@@ -59,9 +60,10 @@ namespace nameless_carpool {
       {HttpStatusEnum::parsingFailed,       "parsingFailed"      },
       {HttpStatusEnum::wrongFormat,         "wrongFormat"        },
       {HttpStatusEnum::argDefineMultiple,   "argDefineMultiple"  },
+      {HttpStatusEnum::serverLogicError,    "serverLogicError"  },
     };
 
-    const map<HttpStatusEnum, const string> desc = {
+    const map<HttpStatusEnum, const std::string> desc = {
       {HttpStatusEnum::success,             "解析完成"                                                                                                          },
       {HttpStatusEnum::badRequest,          "Bad Request : 被认为是客户端错误（例如，错误的请求语法、无效的请求消息帧或欺骗性的请求路由），服务器无法或不会处理请求。"             },
       {HttpStatusEnum::requestUndefined,    "404 请求未定义"                                                                                                    },
@@ -70,13 +72,14 @@ namespace nameless_carpool {
       {HttpStatusEnum::parsingFailed,       "服务端异常 , 解析失败"                                                                                                },
       {HttpStatusEnum::wrongFormat,         "入参错误 , 入参格式错误"                                                                                             },
       {HttpStatusEnum::argDefineMultiple,   "入参错误 , 属性多次定义"                                                                                             },
+      {HttpStatusEnum::serverLogicError,    "服务端内部逻辑错误"                                                                                                  },
     };
 
-    string getName(HttpStatusEnum statusEnum) {
+    std::string getName(HttpStatusEnum statusEnum) {
       return name.at(statusEnum);
     }
 
-    string getDesc(HttpStatusEnum statusEnum) {
+    std::string getDesc(HttpStatusEnum statusEnum) {
       return desc.at(statusEnum);
     }
 
@@ -110,7 +113,7 @@ namespace nameless_carpool {
       { "PATCH"    ,   HttpMethodEnum::PATCH   },
     };
 
-    const map<HttpMethodEnum, string> httpMethodToName = {
+    const map<HttpMethodEnum, std::string> httpMethodToName = {
       { HttpMethodEnum::GET      ,    "GET"      },
       { HttpMethodEnum::HEAD     ,    "HEAD"     },
       { HttpMethodEnum::POST     ,    "POST"     },
@@ -131,7 +134,7 @@ namespace nameless_carpool {
       }
     }
 
-    string getName(HttpMethodEnum methodEnum) {
+    std::string getName(HttpMethodEnum methodEnum) {
       if(httpMethodToName.contains(methodEnum)) {
         return httpMethodToName.at(methodEnum);
       } else {
@@ -146,26 +149,26 @@ namespace nameless_carpool {
   struct MediaType {
     /* 常见 media type https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types */
 
-    const string json = "application/json";
-    const string txt  = "text/plain";
+    const std::string json = "application/json";
+    const std::string txt  = "text/plain";
 
   };
   extern MediaType mediaType;
 
   struct HttpHeaderNames {
-    const string timeZone    = "time_zone";
-    const string token       = "token";
-    const string contentType = "Content-type";
-    const string pid         = "PID";
+    const std::string timeZone    = "time_zone";
+    const std::string token       = "token";
+    const std::string contentType = "Content-type";
+    const std::string pid         = "PID";
   };
   extern HttpHeaderNames httpHeaderNames;
 
   struct HttpContent {
-    //map<string, string> headers;
+    //map<string, std::string> headers;
     Json headers;
     Json body;
 
-    HttpContent& addHeader(string key, string val) {
+    HttpContent& addHeader(string key, std::string val) {
       headers.push_back({key, val});
       return *this;
     }
@@ -194,8 +197,8 @@ namespace nameless_carpool {
   };
 
   struct HttpRequest : virtual HttpContent {
-    string method;
-    string uri;
+    std::string method;
+    std::string uri;
 
     HttpRequest& setMethod(string str) {
       method = str;
@@ -210,18 +213,18 @@ namespace nameless_carpool {
     HttpRequest& initByNet(FCGX_Request &request) {
       char **envp = request.envp;
       for (int index = 0; *envp; index++, envp++) {
-        // string env = utfMbsrtowcs(*envp);
-        string env = *envp;
+        // std::string env = utfMbsrtowcs(*envp);
+        std::string env = *envp;
         int equalIndex = env.find('=');
-        string key = env.substr(0, equalIndex);
+        std::string key = env.substr(0, equalIndex);
         if(key == "REQUEST_METHOD") {
           this->method = env.substr(equalIndex + 1);
         } else if(key == "REQUEST_URI") {
           this->uri = env.substr(equalIndex + 1);
         } else {
-          string prefix = env.substr(0, 5);
+          std::string prefix = env.substr(0, 5);
           if(prefix == "HTTP_") {
-            string value = env.substr(equalIndex+1);
+            std::string value = env.substr(equalIndex+1);
             this->addHeader(key, value);
           }
         }
@@ -236,8 +239,8 @@ namespace nameless_carpool {
       return *this;
     }
     /* 获取 method + uri 字符串 */
-    string methodUri() const {
-      string upperMethod = method;
+    std::string methodUri() const {
+      std::string upperMethod = method;
       std::transform(upperMethod.begin(), upperMethod.end(),upperMethod.begin(), ::toupper);
       return upperMethod + uri;
     }
@@ -246,7 +249,7 @@ namespace nameless_carpool {
     }
     virtual void printSelf() override {
       HttpContent::printSelf();
-      logInfo << std::endl
+      logWarning << std::endl
               << "****************   Request ↓↓↓  ***************" << std::endl
               << Json(*this).dump(2) << std::endl
               << "****************   Request done  ***************" << std::endl;
@@ -274,8 +277,8 @@ namespace nameless_carpool {
       return *this;
     }
 
-    string toString(bool withDefHeader = true) {
-      stringstream ss;
+    std::string toString(bool withDefHeader = true) {
+      std::stringstream ss;
 
       /* 状态码 */   {
         if(status >= 0) {
@@ -296,7 +299,7 @@ namespace nameless_carpool {
       /* body */    {
         ss << body.dump(2) ;
       }
-      string result = ss.str();
+      std::string result = ss.str();
       ss.str("");
       ss.clear();
 
@@ -304,7 +307,7 @@ namespace nameless_carpool {
     }
 
     wstring toWString() {
-      string str = toString();
+      std::string str = toString();
       wstring result = utfMbsrtowcs(str.c_str());
       return result;
     }
@@ -337,15 +340,15 @@ namespace nameless_carpool {
       logInfo << "****************   Response [" << status << "] done  ***************" << std::endl ;
     }
 
-    void initForRequestBodyFormatError(const string& internalMsg = constantStr.bodyFormatErr, 
-                                       const string& externalMsg = "") {
+    void initForRequestBodyFormatError(const std::string& internalMsg = constantStr.bodyFormatErr, 
+                                       const std::string& externalMsg = "") {
       inflateResponse(HttpStatusEnum::badRequest, internalMsg, externalMsg);
     }
 
     /* 初始化请求错误返回信息 */
-    void inflateResponse(const HttpStatusEnum& statusEnum, 
-                      const string& internalMsg = "", 
-                      const string& externalMsg = "") {
+    HttpResponse& inflateResponse(const HttpStatusEnum& statusEnum,
+                         const std::string&    internalMsg = "",
+                         const std::string&    externalMsg = "") {
       status = static_cast<int>(statusEnum);
       body = ResponseBody {
         status,
@@ -354,10 +357,19 @@ namespace nameless_carpool {
         internalMsg,
         externalMsg
       };
+
+      return *this;
+    }
+    HttpResponse& inflateBodyData(const std::string& bodyData) {
+      body[ResponseBody::Names::data()] = bodyData;
+      return *this;
+    }
+    HttpResponse& inflateBodyData(const Json& bodyData) {
+      body[ResponseBody::Names::data()] = bodyData;
+      return *this;
     }
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpResponse, 
-    // NLOHMANN_DEFINE_CHECK_TYPE_INTRUSIVE(HttpResponse, 
                                    status, 
                                    headers, 
                                    body );

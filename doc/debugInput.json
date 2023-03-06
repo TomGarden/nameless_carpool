@@ -15,24 +15,17 @@
       "time_zone": "Asia/Shanghai",
       "headerTwo": "two"
     },
-    "uri": "/fcgi_test/nameless_carpool/request_vertify_code",
-    "body": {
-      "phone": "15912341111"
-    },
-    "desc": "申请验证码"
-  },
-  {
-    "method": "POST",
-    "headers": {
-      "time_zone": "Asia/Shanghai",
-      "headerTwo": "two"
-    },
     "uri": "/fcgi_test/nameless_carpool/login",
     "body": {
       "phone": "15912341234",
-      "verify_code": "111111"
+      "verify_code": "790179",
+      "client_type" :"[ Unknow, Android, iOS, web, microProgram ]"
     },
-    "desc": "通过验证码登录"
+    "desc": [
+      "通过验证码登录",
+      "client_type , 表示登录设备的类型",
+      "每个平台的设备最多有一个在线 , 目前我们服务端没有同步逻辑 , 每一个端提交的内容都会覆盖原有内容"
+    ]
   },
   {
     "method": "POST",

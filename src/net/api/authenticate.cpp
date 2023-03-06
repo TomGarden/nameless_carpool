@@ -6,7 +6,8 @@
 #include "db_proxy.h"
 #include "http_util.h"
 #include "log_utils.h"
-#include "authenticate_m.h"
+// #include "authenticate_m.h"
+#include "net/model/authenticate.h"
 
 namespace nameless_carpool {
 
@@ -24,7 +25,7 @@ namespace nameless_carpool {
   const string AuthApi::requestVertifyCodeUri() {
     return getUri(HttpMethodEnum::POST, "/request_vertify_code");
   }
-  void AuthApi::requestVC(const HttpRequest& requestInput, HttpResponse& responseOutput) {
+  void AuthApi::requestVC(const HttpRequest& requestInput, HttpResponse& outResponse) {
     string                          inlegalDesc; /* 非法内容描述 */
     bool                            bodyLegal;   /* true : body 合法 */
     RequestVertifyCode::RequestBody body;
@@ -39,7 +40,7 @@ namespace nameless_carpool {
     }
 
     if (!bodyLegal) { /* 请求体 非法 */
-      responseOutput.inflateResponse(HttpStatusEnum::badRequest, inlegalDesc);
+      outResponse.inflateResponse(HttpStatusEnum::badRequest, inlegalDesc);
       return;
     }
     /* httpHeaderNames.timeZone 请求头 在 Api::optRequest 统一校验了 */
@@ -51,13 +52,13 @@ namespace nameless_carpool {
     const HttpStatusEnum& result = DbProxy::getInstance().requestVertifyCode(
         body.phone.value(), timeZone, internalMsg, externalMsg);
 
-    responseOutput.inflateResponse(result, internalMsg, externalMsg);
+    outResponse.inflateResponse(result, internalMsg, externalMsg);
   }
 
   const string AuthApi::loginUri() {
     return getUri(HttpMethodEnum::POST, "/login");
   }
-  void AuthApi::login(const HttpRequest& requestInput, HttpResponse& responseOutput) {
+  void AuthApi::login(const HttpRequest& requestInput, HttpResponse& outResponse) {
     string             inlegalDesc; /* 非法内容描述 */
     bool               bodyLegal;
     Login::RequestBody loginBody;
@@ -72,19 +73,18 @@ namespace nameless_carpool {
     }
 
     if (!bodyLegal) {
-      responseOutput.inflateResponse(HttpStatusEnum::badRequest, inlegalDesc);
+      outResponse.inflateResponse(HttpStatusEnum::badRequest, inlegalDesc);
       return;
     }
 
     logInfo << "进入登录接口处理块" << endl;
 
-    bool loginCodeDone = DbProxy::getInstance().login(requestInput, requestInput.body, responseOutput);
+    bool loginSuccess = DbProxy::getInstance().login(requestInput, loginBody, outResponse);
 
-    if(loginCodeDone) {
+    if(loginSuccess) {
 
     } else {
-      responseOutput.clear();
-      responseOutput.inflateResponse(HttpStatusEnum::unknowErr);
+      if (outResponse.isEmpty()) outResponse.inflateResponse(HttpStatusEnum::unknowErr);
     }
 
 

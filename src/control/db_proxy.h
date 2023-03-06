@@ -1,8 +1,9 @@
 #pragma once
 
 #include <string>
+#include "net/model/authenticate.h"
 #include "http_util.h"
-#include "authenticate_m.h"
+// #include "authenticate_m.h"
 
 namespace nameless_carpool {
 
@@ -41,6 +42,6 @@ namespace nameless_carpool {
      * @param {string&} externalMsg
      * @return {*}  true, 操作成功, 结果有效
      */
-    bool login(const HttpRequest& requestInput, const Login::RequestBody& body, HttpResponse& responseOutput);
+    bool login(const HttpRequest& inRequest, const Login::RequestBody& inBody, HttpResponse& outResponse);
   };
 }  // namespace nameless_carpool

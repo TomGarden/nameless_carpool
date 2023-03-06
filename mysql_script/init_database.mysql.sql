@@ -1,7 +1,12 @@
 
 /* 说明信息 ：
     在数据库中查看一个表的创建信息 ： SHOW CREATE TABLE db_name.table_name \G 
-    删除数据库 
+    删除数据库                    mysql> DROP DATABASE IF EXISTS `nameless_carpool`;
+
+    # 删除一直无法完成可以尝试先杀死对 mysql 的使用进程
+    # https://dba.stackexchange.com/a/37646
+    $ mysqladmin processlist -u root -p
+    $ mysqladmin kill 174 -u root -p
 
    xxx_time       
    xxx_time_tz
@@ -23,7 +28,7 @@ USE `nameless_carpool` ;
 CREATE TABLE IF NOT EXISTS `user` (
   `id`                  INTEGER           NOT NULL  AUTO_INCREMENT  COMMENT '主键 id 自增',
   `id_card_num`         VARCHAR(255)          NULL                  COMMENT '身份证号',
-  `name`                VARCHAR(255)      NOT NULL                  COMMENT '姓名',
+  `name`                VARCHAR(255)          NULL                  COMMENT '姓名',
   `gender`              TINYINT(1)            NULL                  COMMENT '性别 : 0女 ; 1男',
   `birth_date`          DATETIME(6)           NULL                  COMMENT '生日',
   `birth_date_tz`       VARCHAR(255)          NULL                  COMMENT '时区',
@@ -312,13 +317,16 @@ CREATE TABLE IF NOT EXISTS `car_bind_customers` (
 ) COMMENT '人车绑定表单';
 
 
-CREATE TABLE IF NOT EXISTS `telephone_session` (
+CREATE TABLE IF NOT EXISTS `session` (
   `id`                            INTEGER             NOT NULL  AUTO_INCREMENT  COMMENT '主键 id 自增',
-  `telephone_id`                  INTEGER             NOT NULL                  COMMENT '手机号 id',
-  `device_info`                   VARCHAR(255)        NOT NULL                  COMMENT '设备信息描述',
+  `client_more_info`              VARCHAR(255)            NULL                  COMMENT '更多设备信息描述',
+  `client_type`                   VARCHAR(255)        NOT NULL                  COMMENT '客户端类型',
   `token`                         VARCHAR(128)        NOT NULL                  COMMENT 'token 登录成功生成',
   `max_age`                       INTEGER             NOT NULL                  COMMENT '单位 秒 ; 失效时间 , 同一时区登录时间 + 失效持续描述 与当前时间做对比',
   `from_where`                    VARCHAR(128)            NULL                  COMMENT '从哪里来到网站登录的 , 不确定能否采集到此信息',
+  `auth_method`                   VARCHAR(128)            NULL                  COMMENT '登录获取此 session 的验证方式 , 比如手机验证码 , 或者微信授权 , 或者其他',
+  `token_update_time`             DATETIME(6)         NOT NULL                  COMMENT 'token 更新时间',
+  `token_update_time_tz`          VARCHAR(255)        NOT NULL                  COMMENT 'token 更新时区',
 
   `create_time`                   DATETIME(6)         NOT NULL                  COMMENT '创建时间',
   `create_time_tz`                VARCHAR(255)        NOT NULL                  COMMENT '时区',
@@ -327,14 +335,13 @@ CREATE TABLE IF NOT EXISTS `telephone_session` (
   `del_time`                      DATETIME(6)             NULL                  COMMENT '删除时间',
   `del_time_tz`                   VARCHAR(255)            NULL                  COMMENT '时区',
 
-  FOREIGN KEY (`telephone_id`)  REFERENCES `telephone`(`id`)  ON UPDATE CASCADE  ON DELETE RESTRICT ,
   PRIMARY KEY (`id`) ,
   INDEX `token` (`token`)
-) COMMENT '手机登录会话';
+) COMMENT '登录会话';
 
-CREATE TABLE IF NOT EXISTS `user_telephone_session` (
+CREATE TABLE IF NOT EXISTS `user_session` (
   `user_id`                     INTEGER             NOT NULL                                COMMENT '外键:用户基础信息 id',
-  `telephone_session_id`        INTEGER             NOT NULL                                COMMENT '外键 手机登录会话 id ',
+  `session_id`                  INTEGER             NOT NULL                                COMMENT '外键 会话 id ',
 
   `create_time`                 DATETIME(6)         NOT NULL                                COMMENT '创建时间',
   `create_time_tz`              VARCHAR(255)        NOT NULL                                COMMENT '时区',
@@ -344,6 +351,6 @@ CREATE TABLE IF NOT EXISTS `user_telephone_session` (
   `del_time_tz`                 VARCHAR(255)            NULL                                COMMENT '时区',
 
   FOREIGN KEY (`user_id`)               REFERENCES `user`(`id`)               ON UPDATE CASCADE  ON DELETE RESTRICT ,
-  FOREIGN KEY (`telephone_session_id`)  REFERENCES `telephone_session`(`id`)  ON UPDATE CASCADE  ON DELETE RESTRICT ,
-  PRIMARY KEY (`user_id` , `telephone_session_id`)
-) COMMENT '关联表 : 用户 & 手机登录会话';
+  FOREIGN KEY (`session_id`)            REFERENCES `session`(`id`)            ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  PRIMARY KEY (`user_id` , `session_id`)
+) COMMENT '关联表 : 用户 & 登录会话';

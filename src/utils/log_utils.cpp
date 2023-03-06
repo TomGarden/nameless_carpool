@@ -33,14 +33,14 @@ namespace nameless_carpool {
   }
 
   void logFlush() {
-    FlushLogFiles(google::INFO);
-    FlushLogFiles(google::WARNING);
-    FlushLogFiles(google::ERROR);
-    FlushLogFiles(google::FATAL);
+    google::FlushLogFiles(google::INFO);
+    google::FlushLogFiles(google::WARNING);
+    google::FlushLogFiles(google::ERROR);
+    google::FlushLogFiles(google::FATAL);
   }
 
-  std::string getStackTrace() {
-    return to_string(boost::stacktrace::stacktrace());
-  }
+  // std::string getStackTrace() {
+  //   return to_string(boost::stacktrace::stacktrace());
+  // }
 
 }

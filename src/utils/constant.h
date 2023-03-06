@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <boost/format.hpp>
 #include <string>
 
 /* 设计用于管理常量们 */
@@ -22,7 +23,7 @@ namespace nameless_carpool {
     const std::string vertifyCodeExpired = vertifyCode + "已到期";
 
     const std::string telNumber      = "手机号";
-    const std::string telNotRegister = "未注册" + telNumber;
+    const std::string telNotRegister = boost::str(boost::format("未用手机号[%1%]接受验证码") % telNumber);
 
     const std::string tzUTC          = "UTC";
     const std::string tzAsiaShanghai = "Asia/Shanghai";

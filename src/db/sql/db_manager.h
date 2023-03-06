@@ -3,6 +3,7 @@
 #include <boost/format.hpp>
 #include <boost/format/format_fwd.hpp>
 #include <cstdint>
+#include <initializer_list>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -11,11 +12,12 @@
 #include <type_traits>
 #include <vector>
 
-#include "user_info.h"
-#include "db_include.h"
-#include "libs/mysql_connector_arm_static/include/mysqlx/devapi/common.h"
-#include "sql_util.h"
 #include "common.h"
+#include "libs/mysql_connector_arm_static/include/mysqlx/devapi/common.h"
+#include "libs/mysql_connector_arm_static/include/mysqlx/devapi/result.h"
+#include "libs/mysql_connector_arm_static/include/mysqlx/xdevapi.h"
+#include "sql_util.h"
+#include "user_info.h"
 
 namespace nameless_carpool {
   class DbManager;
@@ -23,37 +25,33 @@ namespace nameless_carpool {
 
 
 class nameless_carpool::DbManager {
-  using string = std::string;
-  template <typename T>
-  using vector = std::vector<T>;
-
 
  private:
-  Client client = Client(SessionOption::USER, "root",
-                         SessionOption::PWD, "root",
-                         SessionOption::HOST, "172.17.0.4",
-                         SessionOption::PORT, 33060,
-                         SessionOption::DB, SqlUtil::dbName);
+  mysqlx::Client client = mysqlx::Client(mysqlx::SessionOption::USER, "root",
+                                         mysqlx::SessionOption::PWD, "root",
+                                         mysqlx::SessionOption::HOST, "172.17.0.4",
+                                         mysqlx::SessionOption::PORT, 33060,
+                                         mysqlx::SessionOption::DB, SqlUtil::dbName);
 
  private:
   DbManager(); /* 默认构造 */
 
- public:
+ public: /* constructor */
   DbManager(const DbManager& dbManager) = delete;             /* 拷贝构造 */
   DbManager& operator=(const DbManager& dbManager) = delete;  /* 拷贝赋值 */
   DbManager(const DbManager&& dbManager)           = delete;  /* 移动构造 */
   DbManager& operator=(const DbManager&& dbManager) = delete; /* 移动赋值 */
-                                                              //~DbManager();                                                /* 析   构 */
-
- public:
+  //~DbManager();                                                /* 析   构 */
 
   static DbManager& getInstance();
-  static Client&    getClient();
+  static mysqlx::Client&    getClient();
 
 
- public:
-  SqlResult executeSql(const string& sqlTmp);
-  SqlResult executeSql(const stringstream& sqlTmp);
+ public: /* executeSql */
+  std::string             getSqlResultWarning(mysqlx::SqlResult* sqlResult);
+  mysqlx::SqlResult       executeSql(const std::string& sqlTmp);
+  mysqlx::SqlResult       executeSql(const std::stringstream& sqlTmp);
+  mysqlx::SqlResult       executeTransactionSql(const std::vector<std::string>& sqlVector);
 
  public: /* model operate util */
 
@@ -85,22 +83,22 @@ class nameless_carpool::DbManager {
     return indexNameMap;
   }
 
-  /* 从数据库对象 SqlResult 中读取所有 Model 对象并保存到 vector 中 */
+  /* 从数据库对象 mysqlx::SqlResult 中读取所有 Model 对象并保存到 vector 中 */
   template <typename Model, typename ModeNames = typename Model::Names>
-  std::vector<Model> getModelVector(SqlResult& sqlResult) {
-    std::map<int, string> indexNameMap = getModelColumnNameMap<Model>(sqlResult.getColumns());
+  std::vector<Model> getModelVector(mysqlx::SqlResult& sqlResult) {
+    std::map<int, std::string> indexNameMap = getModelColumnNameMap<Model>(sqlResult.getColumns());
 
     const ModeNames& modeNames = getModelNames<Model>();
 
-    std::map<int, string>::size_type      columnCount      = indexNameMap.size();
+    std::map<int, std::string>::size_type      columnCount      = indexNameMap.size();
     std::vector<Model> result;
     for (mysqlx::Row row : sqlResult) {
       Model model;
 
-      for (std::map<int, string>::size_type columnIndex = 0;
+      for (std::map<int, std::string>::size_type columnIndex = 0;
            columnIndex < columnCount; columnIndex++) {
         mysqlx::Value& value = row.get(columnIndex);
-        const string& columnName = indexNameMap[columnIndex];
+        const std::string& columnName = indexNameMap[columnIndex];
 
         /* ANCHOR - 这个 inflate 预计手动生成 */
         if (model.inflate(modeNames, columnName, value)) model; /* empty */
@@ -119,12 +117,13 @@ class nameless_carpool::DbManager {
    * @param {const std::string& whereStr} 
    * @return {*}
    */
-  template <typename ModelNames>
-  std::string queryModelSql(const ModelNames& modelNames, const std::string& whereStatements) {
-    stringstream sqlTmp;
+  inline std::string queryModelSql(const std::vector<std::string>& modelNames,
+                                   const std::string&              tableName,
+                                   const std::string&              whereStatements) {
+    std::stringstream sqlTmp;
 
-    sqlTmp << " SELECT " << modelNames.allFieldSql(modelNames.getColumnNameVector()) 
-           << " FROM   " << SqlUtil::getDbAndTablename(modelNames.tableName) << " \n"
+    sqlTmp << " SELECT " << SqlUtil::allFieldSql(modelNames) 
+           << " FROM   " << SqlUtil::getDbAndTablename(tableName) << " \n"
            << " WHERE  " << whereStatements << " ; ";
     return sqlTmp.str();
   }
@@ -132,9 +131,11 @@ class nameless_carpool::DbManager {
   template <typename Model>
   std::vector<Model> query(const std::string& whereStatements) {
 
-    std::string sqlStr = queryModelSql(getModelNames<Model>(), whereStatements); 
+    const typename Model::Names& modelNames = getModelNames<Model>();
 
-    SqlResult sqlResult = executeSql(sqlStr);
+    std::string sqlStr = queryModelSql(modelNames.getColumnNameVector(), modelNames.tableName, whereStatements);
+
+    mysqlx::SqlResult sqlResult = executeSql(sqlStr);
 
     std::vector<Model> result;
 
@@ -142,6 +143,16 @@ class nameless_carpool::DbManager {
 
     return result;
 
+  }
+
+  template <typename Model>
+  inline Model querySingleResult(const std::string& whereStatements) {
+    std::vector<Model> result = query<Model>(whereStatements);
+    if (result.size() != 1) throw std::logic_error(
+        "调用这个函数的你应该知道 , 你期望只获得一个结果 , 如果事实上结果有多个 , 那可能有两个原因  "
+        " 1. 这个函数不该出现在你调用的地方"
+        " 2. 其他地方的逻辑异常 , 导致这里有了多于一个结果");
+    return result;
   }
 
   /*┌─────────────────────────────────────────────────────────────────────────────────────┐
@@ -201,11 +212,11 @@ class nameless_carpool::DbManager {
     if (modelVector.size() < 1) return "";
 
     const typename Model::Names& modelName = getModelNames<Model>();
-    stringstream sqlTmp;
+    std::stringstream sqlTmp;
 
     sqlTmp
         << " INSERT INTO " << SqlUtil::getDbAndTablename(modelName.tableName) << " ( \n"
-        << modelName.BaseTimeNames::allFieldSql(modelName.getColumnNameVector()) << " )\n"
+        << SqlUtil::allFieldSql(modelName.getColumnNameVector()) << " )\n"
         << " VALUES \n";
 
     for (typename std::vector<Model>::const_iterator modelIter = modelVector.cbegin();
@@ -224,105 +235,133 @@ class nameless_carpool::DbManager {
     return sqlTmp.str();
   }
 
+  /** @description: sql 插入指令 , 返回多行中首行的首个自增长数字类型的数据 . 我们预期的是多行插入具有原子性 . */
   template <typename Model>
-  void insert(const std::vector<Model>& modelVector) {
-    if (modelVector.size() < 1) return;
+  uint64_t insert(const std::vector<Model>& modelVector) {
+    if (modelVector.size() < 1) throw std::logic_error("不接受空向量 , 需要开发者自行筛选后 再入参");
 
-    const string& sqlTmp    = insertModelSql(modelVector);
-    SqlResult     sqlResult = executeSql(sqlTmp);
+    const std::string& sqlTmp    = insertModelSql(modelVector);
+    mysqlx::SqlResult     sqlResult = executeSql(sqlTmp);
 
-    return;
+    return sqlResult.getAutoIncrementValue();
   }
 
   template <typename Model>
-  void insert(const Model& model) {
+  uint64_t insert(const Model& model) {
     return insert(std::vector<Model>{model});
   }
 
-  /*┌─────────────────────────────────────────────────────────────────────────────────────┐
-  * │ update 目前的局限性在于只支持唯一主键的单条或多条语句的一次性更新 ;                           │
-  * │        具有联合主键的表的更新 , 考虑下 insert or update ;                                │
-  * └─────────────────────────────────────────────────────────────────────────────────────┘ */
 
+
+
+  /*┌─────────────────────────────────────────────────────────────────────────────────────┐
+  * │ update  : https://stackoverflow.com/a/75627308/7707781
+  * └─────────────────────────────────────────────────────────────────────────────────────┘ */
   template <typename Model>
   std::string updateModelSql(const std::vector<Model>& modelVector) {
 
-    const typename Model::Names& modelName  = getModelNames<Model>();
-    std::vector<std::string> unPkVector = modelName.getUnPrimaryKeyNameVector();
-    std::string primaryKey; {
-      std::vector<std::string> pkVector   = modelName.getPrimaryKeyNameVector();
-      if (pkVector.size() < 1) throw std::logic_error("预期至少有一个 id");
-      else if (pkVector.size() > 1) throw std::logic_error("联合主键不兼容 , 使用 insert or update 吧");
-      primaryKey = pkVector[0];
-    }
+    const typename Model::Names& modelName      = getModelNames<Model>();
+    std::vector<std::string>     unPkNameVector = modelName.getUnPrimaryKeyNameVector();
+    std::vector<std::string>     pkNameVector   = modelName.getPrimaryKeyNameVector();
 
-    string updatePrefix = " UPDATE " + SqlUtil::getDbAndTablename(modelName.getTableName()) + " \n SET \n";
+    std::string updatePrefix = " UPDATE " + SqlUtil::getDbAndTablename(modelName.getTableName()) + " \n SET \n";
 
     /* 预计存储 
         `字段名`                   = CASE `id`                                                            
                                   WHEN '1' THEN '15111111111'                                                            
                                   WHEN '2' THEN '15122222222'  */
-    // using Pair = pair<const string, stringstream>;
-    using ColumnNamePair       = std::pair<const string, stringstream>;
+    // using Pair = pair<const std::string, std::stringstream>;
+    using ColumnNamePair       = std::pair<const std::string, std::stringstream>;
     using ColumnNamePairPtr    = std::shared_ptr<ColumnNamePair>;
     using ColumnNamePairVector = std::vector<ColumnNamePairPtr>;
-    ColumnNamePairVector columnNamePairVector;
-    for(const std::string& name: unPkVector) {
-      ColumnNamePairPtr pair = std::make_shared<std::pair<const string, stringstream>>(SqlUtil::backticks(name), "");
-      columnNamePairVector.push_back(pair);
+    ColumnNamePairVector unPkNamePairVector;
+    for(const std::string& name: unPkNameVector) {
+      ColumnNamePairPtr pair = std::make_shared<std::pair<const std::string, std::stringstream>>(SqlUtil::backticks(name), "");
+      unPkNamePairVector.push_back(pair);
     }
     
     /* sql 后半段 */
-    std::string updateSuffix = "\n WHERE " + SqlUtil::backticks(primaryKey) + " IN ();";
+    std::stringstream updateSuffix;
+    updateSuffix << "\n WHERE (" ;
+    for (std::vector<std::string>::const_iterator pkNameItr = pkNameVector.cbegin();
+         pkNameItr != pkNameVector.cend(); pkNameItr++) {
+      updateSuffix << SqlUtil::backticks(*pkNameItr);
+      if (pkNameItr + 1 == pkNameVector.cend()) updateSuffix << ")";
+      else updateSuffix << ", ";
+    }
+    updateSuffix << " IN ( ";
 
-    /* 遍历所有要更新的 手机号 , 用这些数据填充 fieldPairVector*/
+    /* 遍历所有要更新的 手机号 , 用这些数据填充 columnNamePairVector*/
     for(auto modelIter = modelVector.cbegin(); modelIter != modelVector.cend(); modelIter++) {
 
-      std::vector<std::string> columnValVector; /* telephone 的 所有变量 按顺序 放到 队列中 */
-      for(const std::string& columnVal: unPkVector) columnValVector.push_back(SqlUtil::nullOrApostrophe(columnVal));
+      const std::vector<std::optional<std::string>>& pkValVector   = modelIter->getPrimaryKeyValVector();
+      const std::vector<std::optional<std::string>>& unPkValVector = modelIter->getUnPrimaryKeyValVector();
 
-      ColumnNamePairVector::iterator           columnNamePairItr = columnNamePairVector.begin();
-      std::vector<std::string>::const_iterator columnValItr      = columnValVector.cbegin();
+      std::vector<std::string>::const_iterator                pkNameVectorItr = pkNameVector.cbegin();
+      std::vector<std::optional<std::string>>::const_iterator pkValVectorItr  = pkValVector.cbegin();
+      while (pkNameVectorItr != pkNameVector.cend() && pkValVectorItr != pkValVector.cend()) {
+        /* sql 后段逻辑 */
+        if (pkValVectorItr == pkValVector.cbegin()) updateSuffix << "( ";
+        updateSuffix << SqlUtil::nullOrApostrophe(*pkValVectorItr);
+        if (pkNameVectorItr + 1 == pkNameVector.cend() || pkValVectorItr + 1 == pkValVector.cend()) {
+          updateSuffix << ") ";
+        } else {
+          updateSuffix << ", ";
+        }
 
-      while(columnNamePairItr != columnNamePairVector.end() && columnValItr != columnValVector.cend()) {
+        ++pkNameVectorItr;
+        ++pkValVectorItr;
+      }
 
-        const std::string& columnName     = (**columnNamePairItr).first;
-        std::stringstream& columnNameStr  = (**columnNamePairItr).second;
+
+      ColumnNamePairVector::iterator                          unPkNamePairItr = unPkNamePairVector.begin();
+      std::vector<std::optional<std::string>>::const_iterator unPkValItr      = unPkValVector.cbegin();
+
+      while(unPkNamePairItr != unPkNamePairVector.end() && unPkValItr != unPkValVector.cend()) {
+
+        const std::string& columnName     = (**unPkNamePairItr).first;
+        std::stringstream& columnNameStr  = (**unPkNamePairItr).second;
 
         int outputPosition = columnNameStr.tellg(); /* 输出到 std::stringstream 中的当前位置索引 */
         if(outputPosition == -1) {
           std::string errState = Common::GetErr::getErr(columnNameStr.rdstate());
-          throw runtime_error("字符流状态异常:" + errState);
+          throw std::runtime_error("字符流状态异常:" + errState);
         }
-        if(outputPosition <= 0) {
-          columnNameStr << "\n\t" << columnName << " = CASE " << SqlUtil::backticks(telephoneNames.id) << "\n";
-        }
-          
-        columnNameStr << "\t\t\t WHEN " << SqlUtil::nullOrApostrophe(primaryKey) << " THEN " << *columnValItr << '\n';
+        if (outputPosition <= 0) columnNameStr << "\t" << columnName << " = CASE \n\t\t\t WHEN (";
 
-        if (modelIter + 1 == modelVector.cend()) {
-          columnNameStr << "\t\t\t END ";
-
-          if(columnNamePairItr+1 != columnNamePairVector.end() && columnValItr+1 != columnValVector.cend()) {
-            columnNameStr << " , ";
+        std::vector<std::string>::const_iterator                pkNameVectorItr = pkNameVector.cbegin();
+        std::vector<std::optional<std::string>>::const_iterator pkValVectorItr  = pkValVector.cbegin();
+        while (pkNameVectorItr != pkNameVector.cend() && pkValVectorItr != pkValVector.cend()) {
+          /* sql 中段逻辑 */
+          columnNameStr << SqlUtil::backticks(*pkNameVectorItr) << "=" << SqlUtil::nullOrApostrophe(*pkValVectorItr);
+          if (pkNameVectorItr + 1 == pkNameVector.cend() || pkValVectorItr + 1 == pkValVector.cend()) {
+            columnNameStr << ") ";
+          } else {
+            columnNameStr << ", ";
           }
+
+          ++pkNameVectorItr;
+          ++pkValVectorItr;
+        }
+        columnNameStr << " THEN " << SqlUtil::nullOrApostrophe(*unPkValItr) << " \n ";
+        columnNameStr << " \t\t\t END ";
+
+        if (unPkNamePairItr + 1 != unPkNamePairVector.end() && unPkValItr + 1 != unPkValVector.cend()) {
+          columnNameStr << " , ";
         }
 
-        ++columnNamePairItr;
-        ++columnValItr;
+        ++unPkNamePairItr;
+        ++unPkValItr;
       }/* while end 为 每条 set 语句 添加一种情况*/
-    
-      updateSuffix.insert(updateSuffix.size() - 2, SqlUtil::nullOrApostrophe(modelIter->getPrimaryKeyVal()));
-      if (modelIter + 1 != modelVector.end()) {
-        updateSuffix.insert(updateSuffix.size() - 2, ", ");
-      }
 
     }/* for end */
 
+    updateSuffix << " )";
+
     std::stringstream sqlTmp; {
       sqlTmp << updatePrefix;
-      for (const ColumnNamePairPtr& columnNamePair : columnNamePairVector) sqlTmp << columnNamePair->second.str();
-      sqlTmp << updateSuffix;
+      for (const ColumnNamePairPtr& columnNamePair : unPkNamePairVector) sqlTmp << columnNamePair->second.str();
+      sqlTmp << updateSuffix.str();
     }
   
     return sqlTmp.str();
@@ -331,8 +370,8 @@ class nameless_carpool::DbManager {
   template <typename Model>
   void update(const std::vector<Model>& modelVector) {
     if (modelVector.size() < 1) return;
-    const string& sqlTmp    = updateModelSql(modelVector);
-    SqlResult     sqlResult = executeSql(sqlTmp);
+    const std::string& sqlTmp    = updateModelSql(modelVector);
+    mysqlx::SqlResult     sqlResult = executeSql(sqlTmp);
     return;
   }
 
@@ -411,8 +450,8 @@ class nameless_carpool::DbManager {
   template <typename Model>
   void insertOrUpdate(const std::vector<Model>& modelVector) {
     if (modelVector.empty()) return;
-    const string& sqlTmp    = insertOrUpdateModelSql(modelVector);
-    SqlResult     sqlResult = executeSql(sqlTmp);
+    const std::string& sqlTmp    = insertOrUpdateModelSql(modelVector);
+    mysqlx::SqlResult     sqlResult = executeSql(sqlTmp);
     return;
   }
 
@@ -425,29 +464,33 @@ class nameless_carpool::DbManager {
   * │ delete
   * └────────────────────────────────────────────────────────────────────────────────────── */
   /* TODO - DELETE 动作尚需进行进一步测试方可确认无误 */
-  template <typename Model>
-  std::string delModelSql(const std::vector<Model>& modelVector) {
+
+  template <typename Model,
+            typename PkOptional        = std::optional<std::string>,
+            typename PkOptVector       = std::vector<std::optional<std::string>>,
+            typename PkOptDoubleVector = std::vector<std::vector<std::optional<std::string>>>>
+  std::string delSqlByPkDoubleVector(const PkOptDoubleVector& pkValVectorVector) {
     /*  DELETE FROM `nameless_carpool`.`user_tel`
         WHERE (`user_id`, `telephone_id`) IN ( ('1', '1') );    */
 
-    if (modelVector.empty() == true) return "";
+    if (pkValVectorVector.empty() == true) return "";
 
     const typename Model::Names& modelName = getModelNames<Model>();
     // const std::vector<std::string>& unPkVector       = modelName.getUnPrimaryKeyNameVector();
-    const std::vector<std::string>& pkVector         = modelName.getPrimaryKeyNameVector();
+    const std::vector<std::string>& pkVector = modelName.getPrimaryKeyNameVector();
     // const std::vector<std::string>& colunmNameVector = modelName.getColumnNameVector();
-    std::stringstream               sqlTmp;
+    std::stringstream sqlTmp;
     /* sub sql : DELETE FROM */
-    sqlTmp << " DELETE FROM " << getDbAndTablename(modelName.tableName) << "\n WHERE (";
+    sqlTmp << " DELETE FROM " << SqlUtil::getDbAndTablename(modelName.tableName) << "\n WHERE (";
     /* sub sql : WHERE */
     for (auto primaryKeyItr = pkVector.cbegin(); primaryKeyItr != pkVector.cend(); primaryKeyItr++) {
       sqlTmp << SqlUtil::backticks(*primaryKeyItr);
-      if(primaryKeyItr != pkVector.cend()) sqlTmp << ", ";
+      if (primaryKeyItr != pkVector.cend()) sqlTmp << ", ";
       else sqlTmp << ") IN ( \n";
     }
     /* sub sql : IN */
-    for (auto modelItr = modelVector.cbegin(); modelItr != modelVector.cend(); modelItr++) {
-      const std::vector<std::optional<std::string>>& pkValVector = modelItr->getPrimaryKeyValVector();
+    for (auto modelItr = pkValVectorVector.cbegin(); modelItr != pkValVectorVector.cend(); modelItr++) {
+      const PkOptVector& pkValVector = *modelItr;
 
       sqlTmp << "\t(";
       for (auto pkValItr = pkValVector.cbegin(); pkValItr != pkValVector.cend(); pkValItr++) {
@@ -456,54 +499,143 @@ class nameless_carpool::DbManager {
         else sqlTmp << ")";
       }
 
-      if (modelItr + 1 != modelVector.cend()) sqlTmp << ", \n";
+      if (modelItr + 1 != pkValVectorVector.cend()) sqlTmp << ", \n";
       else sqlTmp << " \n\t) ;";
     }
 
     return sqlTmp.str();
   }
 
-  template <typename Model>
+  template <typename Model,
+            typename PkOptional        = std::optional<std::string>,
+            typename PkOptVector       = std::vector<std::optional<std::string>>,
+            typename PkOptDoubleVector = std::vector<std::vector<std::optional<std::string>>>>
+  std::string delSqlByModelVector(const std::vector<Model>& modelVector) {
+    std::vector<std::vector<std::optional<std::string>>> pkOptDoubleVector;
+    for (const Model& model : modelVector) pkOptDoubleVector.push_back(model.getPrimaryKeyValVector());
+    return delSqlByPkDoubleVector<Model>(pkOptDoubleVector);
+  }
+
+  template <typename Model,
+            typename PkOptional        = std::optional<std::string>,
+            typename PkOptVector       = std::vector<std::optional<std::string>>,
+            typename PkOptDoubleVector = std::vector<std::vector<std::optional<std::string>>>>
+  std::string delSqlByModel(const Model& model) { return delSqlByModelVector({model}); }
+
+  template <typename Model,
+            typename PkOptional        = std::optional<std::string>,
+            typename PkOptVector       = std::vector<std::optional<std::string>>,
+            typename PkOptDoubleVector = std::vector<std::vector<std::optional<std::string>>>>
+  void delByDoubleleVector(const PkOptDoubleVector& modelVector) {
+    if (modelVector.empty()) return;
+    const std::string& sqlTmp    = delSqlByPkDoubleVector<Model>(modelVector);
+    mysqlx::SqlResult  sqlResult = executeSql(sqlTmp);
+    return;
+  }
+
+  template <typename Model,
+            typename PkOptional        = std::optional<std::string>,
+            typename PkOptVector       = std::vector<std::optional<std::string>>,
+            typename PkOptDoubleVector = std::vector<std::vector<std::optional<std::string>>>>
+  void delBySingleVector(const PkOptVector& model) {
+    return delByDoubleleVector<Model>(PkOptDoubleVector{model});
+  }
+
+  template <typename Model,
+            typename PkOptional        = std::optional<std::string>,
+            typename PkOptVector       = std::vector<PkOptional>,
+            typename PkOptDoubleVector = std::vector<PkOptVector>>
   void del(const std::vector<Model>& modelVector) {
     if (modelVector.empty()) return;
-    const string& sqlTmp    = delModelSql(modelVector);
-    SqlResult     sqlResult = executeSql(sqlTmp);
-    return;
+
+    PkOptDoubleVector pkOptDoubleVector;
+    for(const Model& model: modelVector) pkOptDoubleVector.push_back(model.getPrimaryKeyValVector());
+
+    return delByDoubleleVector<Model>(pkOptDoubleVector);
   }
 
   template <typename Model>
   void del(const Model& model) {
-    return del(std::vector<Model>{model});
+    return del<Model>(std::vector<Model>{model});
   }
 
+  /*┌──────────────────────────────────────────────────────────────────────────────────────
+  * │ 事务 应该使用 session.startTransaction() 执行
+  * └────────────────────────────────────────────────────────────────────────────────────── */
+  // inline std::string transactionSql(const std::initializer_list<std::string>& subSqls){
+  //   if (subSqls.size() < 1) return "";
+
+  //   std::stringstream strStream;
+  //   strStream << "START TRANSACTION ; \n";
+  //   for (const std::string& subSql : subSqls) {
+  //     strStream << subSql;
+  //     if (!subSql.ends_with(";")) strStream << " ; ";
+  //     strStream << "\n";
+  //   }
+  //   strStream << "COMMIT ; ";
+
+  //   return strStream.str();
+  // }
+
  public: /* sql where sub statements */
-  /**  @description:  where 对 where 字句补充 是否搜索删除字段的秒速 */
-  template <typename ModelNames>
-  inline std::string andDelFilter(const ModelNames& modelNames , const std::optional<bool> isDel = std::nullopt) {
+  /**  @description:  where 对 where 字句补充 是否搜索删除字段的秒速
+   * @param {bool} isDel    true, 查找已删除的 Model 
+   */
+  inline std::string andDelFilter(const std::optional<bool> isDel = std::nullopt ) {
     if (std::nullopt == isDel) return "";
-    if (isDel) {
-      auto delSql = boost::format("  AND  ( %1% != NULL  OR  %2% != NULL )") % modelNames.del_time % modelNames.del_time_tz;
+
+    /* 由于都是 BaseTime 的基类 , 所以这里实际上是那个 ModelNames 都不是紧要的 */
+    const User::Names& modelNames = userNames;
+
+    if (isDel.value()) {
+      auto delSql = boost::format("  AND  ( %1% IS NOT NULL  OR  %2% IS NOT NULL )") % SqlUtil::backticks(modelNames.del_time) % SqlUtil::backticks(modelNames.del_time_tz);
       return boost::str(delSql);
     } else {
-      auto unDelSql = boost::format("  AND  ( %1% == NULL  OR  %2% == NULL )") % modelNames.del_time % modelNames.del_time_tz;
+      auto unDelSql = boost::format("  AND  ( %1% IS NULL  AND  %2% IS NULL )") % SqlUtil::backticks(modelNames.del_time) % SqlUtil::backticks(modelNames.del_time_tz);
       return boost::str(unDelSql);
     }
   }
-  template <typename Model>
-  inline std::string andDelFilter(const std::optional<bool> isDel = std::nullopt) {
-    if (std::nullopt == isDel) return "";
 
-    const typename Model::Names& modelNames = getModelNames<Model>();
-
-    return andDelFilter(modelNames, isDel);
+  /** @description: 单列查询 where 语句 
+  * @param {bool} isDel    true, 查找已删除的 Model ; 默认 false
+  */
+  inline std::string where(const std::string& key, const std::string& val, const std::optional<bool>& isDel = false) {
+    std::string result = boost::str(boost::format("%1%=%2%") % key % val);
+    return result.append(andDelFilter(isDel));
   }
 
-  /** @description: 根据 telNum 查找 Telephone 的 where 字句
-   * @param {string} telNum 
-   * @param {bool} isDel    true, 查找已删除的 Telephone ; 默认 false
-   * @return {*}   where 字句
-   */
-  const std::string whereTelByNum(const std::string telNum, const std::optional<bool> isDel = false);
+  /** @description: 单列查询 where 语句 , key value 默认包裹
+  * @param {bool} isDel    true, 查找已删除的 Model ; 默认 false
+  */
+  template <typename Type>
+  inline std::string whereWithPack(const std::string& key, const std::optional<Type>& val, const std::optional<bool>& isDel = false) {
+    return where(SqlUtil::backticks(key), SqlUtil::nullOrApostrophe(val), isDel);
+  }
 
+
+  /** @description: 多个查询条件 , 用 And 连接
+   * @param {initializer_list<std::string>} listFilter
+   * @param {bool} isDel    true, 查找已删除的 Model 
+   * @return {*}
+   */
+  inline std::string whereWithAnd(const std::initializer_list<std::string> listFilter, const std::optional<bool>& isDel = false) {
+    std::stringstream strStream;
+    std::initializer_list<std::string>::iterator it;
+    for (it = listFilter.begin(); it != listFilter.end(); it++) {
+      strStream << *it;
+      if (it + 1 != listFilter.end()) strStream << " AND ";
+    }
+
+    return strStream.str().append(andDelFilter(isDel));
+  }
+
+
+ public: /* other insert opt */
+  void insert(const Telephone& telephone, User& user, const UserTel& userTel);
+  void insert(Session& session, UserSession& userSession);
+
+ public:  /* 测试函数 */
+  void testSqlResult(mysqlx::SqlResult& sqlResult) ;
+  void testMultipleThread();
 
 };

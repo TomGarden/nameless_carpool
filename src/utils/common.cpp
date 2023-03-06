@@ -1,14 +1,24 @@
 
 
+#include <optional>
 #include <regex>
 #include <ctime>
 #include <exception>
 #include  <iomanip>
 
 #include "common.h"
+#include "date.h"
 #include "linux_os.h"
 #include "input_check.h"
 
+
+namespace nameless_carpool::Common::Config { /* 全局配置 */
+  /* 验证码失效时间 */
+  const uint64_t VERTIFY_CODE_LIFE_TIME_SECOND       = 5 * 60; /* 五分钟 */
+  const uint64_t VERTIFY_CODE_LIFE_TIME_MILLISECONDS = VERTIFY_CODE_LIFE_TIME_SECOND * 1'000;
+  const uint64_t VERTIFY_CODE_LIFE_TIME_MICROSECONDS = VERTIFY_CODE_LIFE_TIME_SECOND * 1'000'000;
+  const uint64_t VERTIFY_CODE_LIFE_TIME_NANOSECONDS  = VERTIFY_CODE_LIFE_TIME_SECOND * 1'000'000'000;
+}
 
 
 namespace nameless_carpool::Common {
@@ -70,48 +80,53 @@ namespace nameless_carpool::Common {
 }  // namespace nameless_carpool::Common
 
 namespace nameless_carpool::Common/* date */ {
-    using namespace std::chrono;
-    using time_point = std::chrono::system_clock::time_point;
+  using namespace std::chrono;
+  using time_point = std::chrono::system_clock::time_point;
 
-    /* #region 静态函数 & 静态变量 */
-      std::string Date::defFormatStr = "%Y-%m-%d %H:%M:%S";
 
-      Date Date::newInstance(const std::string& tzName, const SysClockTimePoint& _timePoint) {
-        return Date::newInstance(date::locate_zone(tzName));
-      }
+  /*┌─────────────────────────────────────────────────────────────────────────────────────┐
+  * │   静态函数 & 静态变量
+  * └─────────────────────────────────────────────────────────────────────────────────────┘ */
 
-      Date Date::newInstance(const TimeZone* _tzPtr, const SysClockTimePoint& _timePoint) {
+
+  std::string Date::defFormatStr = "%Y-%m-%d %H:%M:%S";
+  
+  Date Date::newInstance(const std::string& tzName, const SysClockTimePoint& _timePoint) {
+    return Date::newInstance(date::locate_zone(tzName));
+  }
+  
+  Date Date::newInstance(const TimeZone* _tzPtr, const SysClockTimePoint& _timePoint) {
         return Date(_tzPtr, _timePoint);
-      }
-
-      bool Date::tzLegal(const std::string& tzName) {
+  }
+  
+  bool Date::tzLegal(const std::string& tzName) {
         try {
           date::locate_zone(tzName);
           return true;
         } catch (std::exception& except) {
           return false;
         }
-      }
+  }
 
-      date::local_time<std::chrono::nanoseconds> Date::toLocalTime(const std::string& str, const std::string& format) {
-        using LocaleTimeNano = date::local_time<std::chrono::nanoseconds>;
-        std::istringstream inputSs{str};
-        LocaleTimeNano     localeTimeNano;
-        inputSs >> date::parse(format, localeTimeNano);
-        return localeTimeNano;
-      }
+  date::local_time<std::chrono::nanoseconds> Date::toLocalTime(const std::string& str, const std::string& format) {
+    using LocaleTimeNano = date::local_time<std::chrono::nanoseconds>;
+    std::istringstream inputSs{str};
+    LocaleTimeNano     localeTimeNano;
+    inputSs >> date::parse(format, localeTimeNano);
+    return localeTimeNano;
+  }
 
-      timespec Date::toTimespec(const std::string& str, const std::string& format) {
-        const date::local_time<std::chrono::nanoseconds>& localeTimeNano = toLocalTime(str, format);
-        return toTimespec(localeTimeNano.time_since_epoch().count());
-      }
+  timespec Date::toTimespec(const std::string& str, const std::string& format) {
+    const date::local_time<std::chrono::nanoseconds>& localeTimeNano = toLocalTime(str, format);
+    return toTimespec(localeTimeNano.time_since_epoch().count());
+  }
 
-      timespec Date::toTimespec(const SysClockTimePoint& tp) {
+  timespec Date::toTimespec(const SysClockTimePoint& tp) {
         uint64_t nanoSec = tp.time_since_epoch().count();
         return toTimespec(nanoSec);
-      }
-      
-      timespec Date::toTimespec(const uint64_t& xSeconds) {
+  }
+  
+  timespec Date::toTimespec(const uint64_t& xSeconds) {
         //{10'000'000'000'000'000'000ull}; /* 比 纳秒   更精细 , 忽略更精细的部分*/
         //{    10'000'000'000'000'000ull}; /* 比 微秒   更精细 */
         //{        10'000'000'000'000ull}; /* 比 毫秒   更精细 */
@@ -138,33 +153,47 @@ namespace nameless_carpool::Common/* date */ {
         }
 
         return timeSpec;
-      }
+  }
 
+  int64_t Date::passedNanoseconds(const std::string& formatDate, const std::string& timeZone) {
+    using nanoDuration                     = std::chrono::nanoseconds;
+    using localNanoTime                    = date::local_time<nanoDuration>;
+    const localNanoTime&   localTimeNano   = Common::Date::toLocalTime(formatDate);
+    const date::zoned_time zonedTime       = date::zoned_time(timeZone, localTimeNano);
+    const nanoDuration&    recordTimePoint = zonedTime.get_sys_time().time_since_epoch(); /* get_sys_time 用于获取 utc0 时区的时间 */
+    const nanoDuration&    nowTimePoint    = std::chrono::system_clock::now().time_since_epoch();
+    int64_t                offset          = (nowTimePoint - recordTimePoint).count();
+    return offset;
+  }
+  std::optional<int64_t> Date::passedNanoseconds(const std::optional<std::string>& formatDate, const std::optional<std::string>& timeZone) {
+    if ((!formatDate.has_value() || formatDate->empty()) &&
+        (!timeZone.has_value() || timeZone->empty())) return std::nullopt;
+    return passedNanoseconds(formatDate.value(), timeZone.value());
+  }
 
-    /* #endregion */
-
-    /* #region 转换为指定的秒数 */
-      uint64_t Date::toSec() { return toSec(tzPtr) ; }
-      uint64_t Date::toSec(const TimeZone*  _tzPtr) {
+  /*┌─────────────────────────────────────────────────────────────────────────────────────┐
+  * │   转换为指定的秒数
+  * └─────────────────────────────────────────────────────────────────────────────────────┘ */
+  uint64_t Date::toSec() { return toSec(tzPtr) ; }
+  uint64_t Date::toSec(const TimeZone*  _tzPtr) {
         uint64_t result = Date::durationCount<seconds>(tzPtr);
         return result;
-      }
-      uint64_t Date::toMilliSec() { return toMilliSec(tzPtr) ; }
-      uint64_t Date::toMilliSec(const TimeZone*  _tzPtr) {
+  }
+  uint64_t Date::toMilliSec() { return toMilliSec(tzPtr) ; }
+  uint64_t Date::toMilliSec(const TimeZone*  _tzPtr) {
         uint64_t result = Date::durationCount<milliseconds>(tzPtr);
         return result;
-      }
-      uint64_t Date::toMicroSec() { return toMicroSec(tzPtr) ; }
-      uint64_t Date::toMicroSec(const TimeZone*  _tzPtr) {
+  }
+  uint64_t Date::toMicroSec() { return toMicroSec(tzPtr) ; }
+  uint64_t Date::toMicroSec(const TimeZone*  _tzPtr) {
         uint64_t result = Date::durationCount<microseconds>(tzPtr);
         return result;
-      }
-      uint64_t Date::toNanoSec() { return toNanoSec(tzPtr) ; }
-      uint64_t Date::toNanoSec(const TimeZone*  _tzPtr) {
+  }
+  uint64_t Date::toNanoSec() { return toNanoSec(tzPtr) ; }
+  uint64_t Date::toNanoSec(const TimeZone*  _tzPtr) {
         uint64_t result = Date::durationCount<nanoseconds>(tzPtr);
         return result;
-      }
-    /* #endregion */
+  }
 
 
 }

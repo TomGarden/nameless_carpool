@@ -9,27 +9,22 @@
 
 namespace nameless_carpool {
 
-  using namespace std;
+  // using namespace std;
 
   /* 按照每一个细分业务进行更进一步的作用域划分 */
 
   /* 登录下相关 */
   namespace Login {
 
-    struct RequestBodyNames {
-      /* 仅仅用于命名属性  */
-      const string className = "RequestBody";
-      const string phone = "phone";
-      const string verify_code = "verify_code";
-    };
     struct RequestBody {
-      optional<string> phone;
-      optional<string> verify_code;
+      std::optional<std::string> phone;
+      std::optional<std::string> verify_code;
+      std::optional<std::string> client_type;
 
       /* 参数合法性校验 
          @return true, 合法 ; 
                  否则 非法 ;    非法情况下 , ssMsg 含有非法信息*/
-      bool legalityCheck(string& msg) {
+      bool legalityCheck(std::string& msg) {
         stringstream ssMsg;
         bool result = true;
 
@@ -63,14 +58,14 @@ namespace nameless_carpool {
   namespace RequestVertifyCode {
 
     struct RequestBody {
-      optional<string> phone;
+      std::optional<std::string> phone;
 
       /** 参数合法性校验 
           @return true, 合法 ; 
                  否则 非法 ;    非法情况下 , ssMsg 含有非法信息
       */
       bool legalityCheck(string& msg) {
-        stringstream ssMsg;
+        std::stringstream ssMsg;
         bool result = true;
 
         { /* 手机号合法性校验 */
@@ -86,31 +81,7 @@ namespace nameless_carpool {
       }
 
       NLOHMANN_DEFINE_TYPE_INTRUSIVE(RequestBody, phone)
-      // NLOHMANN_DEFINE_OPTIONAL_TYPE_INTRUSIVE(RequestBody, phone)
-      // friend void to_json(nlohmann::json &nlohmann_json_j, const RequestBody &nlohmann_json_t)
-      // {
-      //   if (nlohmann_json_t.phone.has_value())
-      //   {
-      //     nlohmann_json_j["phone"] = nlohmann_json_t.phone.value();
-      //   }
-      //   else 
-      //   {
-      //     if(nlohmann_json_j.contains("phone")) {
-      //       nlohmann_json_j.erase("phone");
-      //     }
-      //   }
-      // }
-      // friend void from_json(const nlohmann::json &nlohmann_json_j, RequestBody &nlohmann_json_t)
-      // {
-      //   if (nlohmann_json_j.contains("phone"))
-      //   {
-      //     nlohmann_json_j.at("phone").get_to(nlohmann_json_t.phone);
-      //   } 
-      //   else 
-      //   {
-      //     nlohmann_json_t.phone = std::nullopt;
-      //   }
-      // }
+      
     };
 
     

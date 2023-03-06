@@ -37,7 +37,7 @@ namespace nameless_carpool {
   bool accept(int argc, char **argv, 
               HttpRequest& requestInflate, HttpResponse& responseInflate) {
 
-    logDebug << "进入 accept =============\n";
+    logError << "进入 accept =============\n";
     HttpStatusEnum forLoopStatus = HttpStatusEnum::success; /* 跳出 for 循环的识别标识 */
     string stopLoopAppendMsg;   /* 停止循环并附加信息 */
 
@@ -51,7 +51,7 @@ namespace nameless_carpool {
      *  @param inputFilePath 表示 绝对路径
      */
     auto debugInputFileParse = [&](const std::string& inputFilePath) {
-      logInfo << "配置文件路径:" << inputFilePath << std ::endl;
+      logInfo << "配置文件路径:" << inputFilePath << std ::endl ;
 
       try {
         OrderedJson json = OrderedJson::parse(std::ifstream(inputFilePath));
@@ -59,7 +59,7 @@ namespace nameless_carpool {
         json.get_to<HttpRequest>(requestInflate);
         forLoopStatus = HttpStatusEnum::success;
       } catch (const Json::exception& jsonException) {
-        logDebug << '[' << jsonException.id << ']' << jsonException.what() << endl;
+        logError << '[' << jsonException.id << ']' << jsonException.what() << std::endl;
         forLoopStatus     = HttpStatusEnum::badRequest;
         stopLoopAppendMsg = "请求配置文件内 , json 格式解析失败";
       }

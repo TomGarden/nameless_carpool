@@ -72,6 +72,34 @@ namespace nameless_carpool {
       return result;
     }
 
+    inline std::vector<std::string> nullOrApostrophe(const std::vector<std::optional<std::string>>& optVector) {
+      std::vector<std::string> result;
+      for(const std::optional<std::string>& item : optVector) result.push_back(nullOrApostrophe(item));
+      return result;
+    }
+
+    /* 针对数字 NULL 或 数字字符串 */
+    template <typename _Type>
+    inline std::string nullOrApostrophe(const std::optional<_Type>& optObj) {
+      static_assert(std::is_arithmetic<_Type>::value == true, "只接受算数类型的 optional 参数");
+      if (optObj.has_value()) {
+        return "'" + tom_utils::numToStr(optObj.value()) + "'";
+      } else {
+        return "NULL";
+      }
+    }
+
+    inline std::string allFieldSql(const std::vector<std::string> inStrVector) {
+      if (inStrVector.empty()) return "";
+
+      std::stringstream sqlTmp;
+      for (const std::string& tempStr : inStrVector) {
+        sqlTmp << " \t  " << SqlUtil::backticks(tempStr) << " ,\n";
+      }
+      std::string result = sqlTmp.str();
+      return result.erase(result.size() - 2, 1);
+    }
+
     /** @return 'str' */
     std::string apostrophe(const std::string& str);
 

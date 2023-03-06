@@ -43,7 +43,7 @@ namespace nameless_carpool {
       };
 
       
-      int type = static_cast<int>(value.getType());;
+      int type = static_cast<int>(value.getType());
       switch (type) {
         case ValueType::ARRAY:      return throwLogicError();
         case ValueType::DOCUMENT:   return throwLogicError();
@@ -202,7 +202,7 @@ namespace nameless_carpool {
       return objResult.dateFormatStr();
     }
     std::string rawDateParse(const mysqlx::bytes& inByteVector) {
-      // logDebug << "!!!!> " << "inByteVector.second = " << inByteVector.second << std::endl;
+      // logInfo << "!!!!> " << "inByteVector.second = " << inByteVector.second << std::endl;
       const mysqlx::byte*  srcBegin         = inByteVector.first;
       const mysqlx::byte*  srcEnd           = inByteVector.first + inByteVector.second;
       const uint8_t*       destinationBegin = reinterpret_cast<const uint8_t*>(srcBegin);

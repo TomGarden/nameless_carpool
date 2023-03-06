@@ -27,10 +27,10 @@ namespace nameless_carpool {
 
 namespace nameless_carpool::Common::Config { /* 全局配置 */
   /* 验证码失效时间 */
-  const uint64_t VERTIFY_CODE_LIFE_TIME_SECOND       = 5 * 60; /* 五分钟 */
-  const uint64_t VERTIFY_CODE_LIFE_TIME_MILLISECONDS = VERTIFY_CODE_LIFE_TIME_SECOND * 1000;
-  const uint64_t VERTIFY_CODE_LIFE_TIME_MICROSECONDS = VERTIFY_CODE_LIFE_TIME_SECOND * 1000000;
-  const uint64_t VERTIFY_CODE_LIFE_TIME_NANOSECONDS  = VERTIFY_CODE_LIFE_TIME_SECOND * 1000000000;
+  extern const uint64_t VERTIFY_CODE_LIFE_TIME_SECOND       ;
+  extern const uint64_t VERTIFY_CODE_LIFE_TIME_MILLISECONDS ;
+  extern const uint64_t VERTIFY_CODE_LIFE_TIME_MICROSECONDS ;
+  extern const uint64_t VERTIFY_CODE_LIFE_TIME_NANOSECONDS  ;
 }
 
 struct nameless_carpool::Common::RegexVals { /* 正则 */
@@ -100,15 +100,15 @@ class nameless_carpool::Common::Date {
 
      private:
       /* 对于类似 tzPtr 和 timePoint , 定义变量的顺序和 构造函数初始化变量的顺序如果不同 , 编译器会抱怨的 */
-      const TimeZone*   tzPtr;
-      SysClockTimePoint timePoint;
-      static std::string     defFormatStr;
+      const TimeZone*    tzPtr;
+      SysClockTimePoint  timePoint;
 
      public: /* static member */
+      static std::string defFormatStr;
       /* 获取一个新的 Date 对象 */
-      static Date newInstance(const std::string&    tzName,
+      static Date newInstance(const std::string&       tzName,
                               const SysClockTimePoint& _timePoint = SystemClock::now());
-      static Date newInstance(const TimeZone*  _tzPtr     = date::current_zone(),
+      static Date newInstance(const TimeZone*          _tzPtr     = date::current_zone(),
                               const SysClockTimePoint& _timePoint = SystemClock::now());
       /* 判断时区是否合法 */
       static bool tzLegal(const std::string& tzName);
@@ -175,99 +175,108 @@ class nameless_carpool::Common::Date {
       template <typename _Duration>
       static constexpr __get_string_if_is_duration<_Duration> 
       formatDef(const timespec& timeT, const std::string& format = defFormatStr) {
-        std::chrono::nanoseconds durNano = std::chrono::seconds{timeT.tv_sec} + std::chrono::nanoseconds{timeT.tv_sec};
+        std::chrono::nanoseconds durNano = std::chrono::seconds{timeT.tv_sec} + std::chrono::nanoseconds{timeT.tv_nsec};
         date::local_time<std::chrono::nanoseconds> localTime        {durNano};
         return formatDef<_Duration>(durNano, format);
       }
 
+      /** @description: 当前时间点比入参时间点过去了多少 纳秒
+       * @param {string&} formatDate
+       * @param {string&} timeZone
+       * @return {*} ' > 0 ' 当前时间点比入参时间点在时间线上更接近未来
+       */
+      static int64_t passedNanoseconds(const std::string& formatDate, const std::string& timeZone);
+      static std::optional<int64_t> passedNanoseconds(const std::optional<std::string>& formatDate, const std::optional<std::string>& timeZone);
 
-     public:
+     public: /* constructor  */
       Date(const TimeZone*          _tzPtr     = date::current_zone(),
            const SysClockTimePoint& _timePoint = SystemClock::now())
           : tzPtr(_tzPtr), timePoint(_timePoint){};
 
      public:
-      /* #region 转换为指定单位的 duration 对象 */
-        /* 将 timePoint 对应的 duration 根据模板变量做出相应的转换并 返回结果
-          可以通过 duration_cast<duration>().count() 得到相应单位的值
+      /** 获取时区的字符串表示方式  */
+      inline std::string getTzName() { return tzPtr->name(); }
 
-          以上操作可以直接通过 durationCount() 完成 .
-          >*/
+      /*┌─────────────────────────────────────────────────────────────────────────────────────┐
+      * │ 转换为指定单位的 duration 对象
+      * └─────────────────────────────────────────────────────────────────────────────────────┘ */
+      /* 将 timePoint 对应的 duration 根据模板变量做出相应的转换并 返回结果
+        可以通过 duration_cast<duration>().count() 得到相应单位的值
 
-        /* 包装 std::chrono::duration_cast
-          模板参数类型限定为 std::chrono::duration
-          返回值类型与模板参数类型一致  */
-        template <typename _ToDur>
-        constexpr __enable_if_is_duration<_ToDur> /* 此编译时语句用于限定模板入参类型 */
-        durationCast(const TimeZone* _tzPtr) {
+        以上操作可以直接通过 durationCount() 完成 .
+        >*/
 
-          std::chrono::nanoseconds duration;
+      /* 包装 std::chrono::duration_cast
+        模板参数类型限定为 std::chrono::duration
+        返回值类型与模板参数类型一致  */
+      template <typename _ToDur>
+      constexpr __enable_if_is_duration<_ToDur> /* 此编译时语句用于限定模板入参类型 */
+      durationCast(const TimeZone* _tzPtr) {
+        std::chrono::nanoseconds duration;
 
-          if(nullptr == _tzPtr){
-            duration = timePoint.time_since_epoch();
-          } else {
-            duration = date::make_zoned(_tzPtr, timePoint).get_local_time().time_since_epoch();
-          }
-
-          return duration_cast<_ToDur>(duration);
+        if (nullptr == _tzPtr) {
+          duration = timePoint.time_since_epoch();
+        } else {
+          duration = date::make_zoned(_tzPtr, timePoint).get_local_time().time_since_epoch();
         }
-        template <typename _ToDur>
-        constexpr __enable_if_is_duration<_ToDur> /* 此编译时语句用于限定模板入参类型 */
-        durationCast() { return durationCast<_ToDur>(tzPtr); }
 
-        /* 转换未包含时区修正动作 */
-        template <typename _ToDur>
-        constexpr __get_int_if_is_duration<_ToDur>
-        durationCount(const TimeZone* _tzPtr) { return durationCast<_ToDur>(_tzPtr).count(); }
-        template <typename _ToDur>
-        constexpr __get_int_if_is_duration<_ToDur>
-        durationCount() { return durationCount<_ToDur>(tzPtr).count(); }
+        return duration_cast<_ToDur>(duration);
+      }
+      template <typename _ToDur>
+      constexpr __enable_if_is_duration<_ToDur> /* 此编译时语句用于限定模板入参类型 */
+      durationCast() { return durationCast<_ToDur>(tzPtr); }
 
-      /* #endregion */
+      /* 转换未包含时区修正动作 */
+      template <typename _ToDur>
+      constexpr __get_int_if_is_duration<_ToDur>
+      durationCount(const TimeZone* _tzPtr) { return durationCast<_ToDur>(_tzPtr).count(); }
+      template <typename _ToDur>
+      constexpr __get_int_if_is_duration<_ToDur>
+      durationCount() { return durationCount<_ToDur>(tzPtr).count(); }
 
-      /* #region 转换为指定的秒数 */
-        /*************************************************************************
-         * 度量 Unix 时间（从协调世界时 (UTC) 1970-1-1 00:00:00 开始的时间，不计闰秒）
-         ************************************************************************/
-        /*  秒表示  : 1970-01-01 00:00:00   ,  withTzInfo= true, 按时区( tz )修正*/
-        uint64_t toSec();
-        uint64_t toSec(const TimeZone*  _tzPtr);
-        /* 毫秒表示 : 1970-01-01 00:00:00.000   ,  withTzInfo= true, 按时区( tz )修正*/
-        uint64_t toMilliSec();
-        uint64_t toMilliSec(const TimeZone*  _tzPtr);
-        /* 微秒表示 : 1970-01-01 00:00:00.000000   ,  withTzInfo= true, 按时区( tz )修正*/
-        uint64_t toMicroSec();
-        uint64_t toMicroSec(const TimeZone*  _tzPtr);
-        /* 纳秒表示 : 1970-01-01 00:00:00.000000000   ,  withTzInfo= true, 按时区( tz )修正*/
-        uint64_t toNanoSec();
-        uint64_t toNanoSec(const TimeZone*  _tzPtr);
-      /* #endregion */
+      /*┌─────────────────────────────────────────────────────────────────────────────────────┐
+      * │ 转换为指定的秒数
+      * └─────────────────────────────────────────────────────────────────────────────────────┘ */
+      /*************************************************************************
+       * 度量 Unix 时间（从协调世界时 (UTC) 1970-1-1 00:00:00 开始的时间，不计闰秒）
+       ************************************************************************/
+      /*  秒表示  : 1970-01-01 00:00:00   ,  withTzInfo= true, 按时区( tz )修正*/
+      uint64_t toSec();
+      uint64_t toSec(const TimeZone* _tzPtr);
+      /* 毫秒表示 : 1970-01-01 00:00:00.000   ,  withTzInfo= true, 按时区( tz )修正*/
+      uint64_t toMilliSec();
+      uint64_t toMilliSec(const TimeZone* _tzPtr);
+      /* 微秒表示 : 1970-01-01 00:00:00.000000   ,  withTzInfo= true, 按时区( tz )修正*/
+      uint64_t toMicroSec();
+      uint64_t toMicroSec(const TimeZone* _tzPtr);
+      /* 纳秒表示 : 1970-01-01 00:00:00.000000000   ,  withTzInfo= true, 按时区( tz )修正*/
+      uint64_t toNanoSec();
+      uint64_t toNanoSec(const TimeZone* _tzPtr);
 
-      /* #region 格式化到字符串 , 3/6/9 表示后缀的毫秒/微秒/纳秒*/
-        /** 
-            1970-01-01 00:00:00             std::chrono::seconds
-            1970-01-01 00:00:00.000         std::chrono::milliseconds
-            1970-01-01 00:00:00.000000      std::chrono::microseconds
-            1970-01-01 00:00:00.000000000   std::chrono::nanoseconds
-          */
-
-        template <typename duration>
-        constexpr __get_string_if_is_duration<duration> 
-        formatStr() { return formatStr<duration>(tzPtr); }
-        template <typename duration>
-        /* constexpr  */__get_string_if_is_duration<duration> 
-        formatStr(const TimeZone* tzP) {
-          uint64_t sec;
-          if(nullptr == tzP) {
-            sec = timePoint.time_since_epoch().count();
-          } else {
-            date::zoned_time zonedTime = date::make_zoned(tzP, timePoint);
-            sec = zonedTime.get_local_time().time_since_epoch().count();
-          }
-          return formatDef<duration>(sec);
+      /*┌─────────────────────────────────────────────────────────────────────────────────────┐
+      * │ 格式化到字符串 , 3/6/9 表示后缀的毫秒/微秒/纳秒
+      * └─────────────────────────────────────────────────────────────────────────────────────┘ */
+      /**
+          1970-01-01 00:00:00             std::chrono::seconds
+          1970-01-01 00:00:00.000         std::chrono::milliseconds
+          1970-01-01 00:00:00.000000      std::chrono::microseconds
+          1970-01-01 00:00:00.000000000   std::chrono::nanoseconds
+        */
+      template <typename duration>
+      constexpr __get_string_if_is_duration<duration>
+      formatStr() { return formatStr<duration>(tzPtr); }
+      template <typename duration>
+      /* constexpr  */ __get_string_if_is_duration<duration>
+      formatStr(const TimeZone* tzP) {
+        uint64_t sec;
+        if (nullptr == tzP) {
+          sec = timePoint.time_since_epoch().count();
+        } else {
+          date::zoned_time zonedTime = date::make_zoned(tzP, timePoint);
+          sec                        = zonedTime.get_local_time().time_since_epoch().count();
         }
-      /* #endregion */
-
+        return formatDef<duration>(sec);
+      }
 };
 
 struct nameless_carpool::Common::Number {

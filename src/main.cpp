@@ -17,11 +17,11 @@
 #include "utils/json/include_json.h"
 #include "utils/log_utils.h"
 #include "utils/tom_string_utils.h"
-#include "utils/http_util.h"
+#include "http_util.h"
 #include "utils/linux_os.h"
 #include "utils/common.h"
 #include "net/api.h"
-#include "net/api/authenticate_m.h"
+// #include "net/api/authenticate_m.h"
 
 #include "db/sql/db_manager.h"
 
@@ -66,19 +66,19 @@ void optNetData(int argc, char **argv) {
 
       string requestIn;
       { /* 打印从 nginx 读取到的部分内容 */
-        logInfo << "requestId : " << request.requestId << endl;
-        logInfo << "role : " << request.role << endl;
+        logInfo << "requestId : " << request.requestId << std::endl;
+        logInfo << "role : " << request.role << std::endl;
         char **envp = request.envp;
         for (int index = 0; *envp; index++, envp++) {
-          logInfo << "[" << index << "]\t" << *envp << endl;
+          logInfo << "[" << index << "]\t" << *envp << std::endl;
         }
 
                requestIn  = fcgxStreamRead(request.in);
         string requestOut = fcgxStreamRead(request.out);
         string requestErr = fcgxStreamRead(request.err);
-        logInfo << "request.in : " << requestIn << endl;
-        logInfo << "request.out : " << requestOut << endl;
-        logInfo << "request.err : " << requestErr << endl;
+        logInfo << "request.in : " << requestIn << std::endl;
+        logInfo << "request.out : " << requestOut << std::endl;
+        logInfo << "request.err : " << requestErr << std::endl;
       }
 
       HttpResponse httpResponse;
@@ -107,7 +107,7 @@ void optNetData(int argc, char **argv) {
         try {
           httpRequest.setBody(requestIn);
         } catch (const Json::exception& jsonException) {
-          logError << jsonException.what() << endl;
+          logError << jsonException.what() << std::endl;
           httpResponse.inflateResponse(HttpStatusEnum::badRequest, constantStr.bodyFormatErr);
         }
 
@@ -123,10 +123,10 @@ void optNetData(int argc, char **argv) {
       FCGX_FPrintF(request.out, strResponse.c_str());
 
       httpResponse.printSelf();
-      logInfo << endl << strResponse << endl;
+      logInfo << std::endl << strResponse << std::endl;
 
     } catch (const exception & except) {
-      logError << "程序异常:" << except.what() << "\n" << getStackTrace() << endl;
+      logError << "程序异常:" << except.what() << "\n" << getStackTrace() << std::endl;
     }
 
     logFlush();
@@ -135,6 +135,82 @@ void optNetData(int argc, char **argv) {
   }
 }
 
+
+void testSql() {
+  std::string sqlTmp1 = 
+      "START TRANSACTION ;                                    \n"
+      " INSERT INTO `nameless_carpool`.`user` (               \n"
+      "          `id` ,                                       \n"
+      "          `id_card_num` ,                              \n"
+      "          `name` ,                                     \n"
+      "          `gender` ,                                   \n"
+      "          `birth_date` ,                               \n"
+      "          `birth_date_tz` ,                            \n"
+      "          `create_time` ,                              \n"
+      "          `create_time_tz` ,                           \n"
+      "          `update_time` ,                              \n"
+      "          `update_time_tz` ,                           \n"
+      "          `del_time` ,                                 \n"
+      "          `del_time_tz`                                \n"
+      " )                                                     \n"
+      " VALUES                                                \n"
+      "        (                                              \n"
+      "                 NULL ,                                \n"
+      "                 NULL ,                                \n"
+      "                 NULL ,                                \n"
+      "                 NULL ,                                \n"
+      "                 NULL ,                                \n"
+      "                 NULL ,                                \n"
+      "                 '2023-03-06 12:16:45.774661' ,        \n"
+      "                 'Asia/Shanghai' ,                     \n"
+      "                 '2023-03-06 12:16:45.774661' ,        \n"
+      "                 'Asia/Shanghai' ,                     \n"
+      "                 NULL ,                                \n"
+      "                 NULL                                  \n"
+      "        ) ;                                            \n"
+      " SET @last_insert_user_id = (SELECT LAST_INSERT_ID()); \n"
+      " INSERT INTO `nameless_carpool`.`user_tel` (           \n"
+      "          `user_id` ,                                  \n"
+      "          `telephone_id` ,                             \n"
+      "          `desc` ,                                     \n"
+      "          `flag` ,                                     \n"
+      "          `create_time` ,                              \n"
+      "          `create_time_tz` ,                           \n"
+      "          `update_time` ,                              \n"
+      "          `update_time_tz` ,                           \n"
+      "          `del_time` ,                                 \n"
+      "          `del_time_tz`                                \n"
+      " )                                                     \n"
+      " VALUES                                                \n"
+      "        (                                              \n"
+      "                 @last_insert_user_id ,                \n"
+      "                 '1' ,                                 \n"
+      "                 NULL ,                                \n"
+      "                 '00000001' ,                          \n"
+      "                 '2023-03-06 12:16:45.774661' ,        \n"
+      "                 'Asia/Shanghai' ,                     \n"
+      "                 '2023-03-06 12:16:45.774661' ,        \n"
+      "                 'Asia/Shanghai' ,                     \n"
+      "                 NULL ,                                \n"
+      "                 NULL                                  \n"
+      "        ) ;                                            \n"
+      " SELECT @last_insert_user_id ;                         \n"
+      "COMMIT ;                                               \n";
+
+  std::string sqlTmp2 =
+      "START TRANSACTION ;                                    \n"
+      "  SELECT * FROM `nameless_carpool`.`user`;             \n"
+      "  SELECT * FROM `nameless_carpool`.`telephone`;        \n"
+      "  SELECT * FROM `nameless_carpool`.`user_tel`;         \n"
+      "COMMIT ;                                               \n";
+
+  std::vector<std::string> sqlTmp3 = {
+      "  SELECT * FROM `nameless_carpool`.`user`;        ",
+      "  SELECT * FROM `nameless_carpool`.`telephone`;   ",
+      "  SELECT * FROM `nameless_carpool`.`user_tel`;    "};
+
+  DbManager::getInstance().executeTransactionSql(sqlTmp3);
+}
 
 /**
  kill -9 NULL && \
@@ -151,10 +227,10 @@ int main(int argc, char ** argv) {
   setlocale(LC_CTYPE, tom_utils::defLocalStr); //必须在 initGlog 之前设置完成
   initGlog(argv[0]);
 
-  logDebug << "Main 开始执行" ;
+  logInfo << "Main 开始执行" ;
 
   for (int i = 0; i < argc; i++) {
-    logInfo << argv[i] << endl;
+    logInfo << argv[i] << std::endl;
   }
 
   bool isDebug = contentDebugParam(argc, argv);
