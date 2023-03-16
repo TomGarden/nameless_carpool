@@ -58,10 +58,10 @@ message(↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
         ↓"                           运行异常可以取消注释  , 观察详细信息                              "↓\n
         ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓)
 # get_property(RESULT_INCLUDE_DIR_LIST DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-# message_list("${RESULT_INCLUDE_DIR_LIST}"   "##-include-dir->")     # 当前的 include 信息
-# message_list("${CODE_DIR}"                  "()-code-dir->")        # 给定根目录以及根目录下的所有 子目录们
-# message_list("${CODE_FILE}"                 "++-all-file->")        # 给定根目录以及根目录下的所有子 文件 , 不区分文件类型 , 没有目录
-# message_list("${SOURCE_CODE_LIST}"          "&&>-source-file-")     # 给定根目录以及根目录下的所有 源文件 们 , 通过 `aux_source_directory` 指令获取的
+ message_list("${RESULT_INCLUDE_DIR_LIST}"   "##-include-dir->")     # 当前的 include 信息
+ message_list("${CODE_DIR}"                  "()-code-dir->")        # 给定根目录以及根目录下的所有 子目录们
+ message_list("${CODE_FILE}"                 "++-all-file->")        # 给定根目录以及根目录下的所有子 文件 , 不区分文件类型 , 没有目录
+ message_list("${SOURCE_CODE_LIST}"          "&&>-source-file-")     # 给定根目录以及根目录下的所有 源文件 们 , 通过 `aux_source_directory` 指令获取的
 
 if (CMAKE_SYSTEM_NAME MATCHES ${PLATEFROM_LINUX})
   set(EXECUTABLE_ARG_LIST ${SOURCE_CODE_LIST})
@@ -87,6 +87,8 @@ list(APPEND EXECUTABLE_ARG_LIST ${LIB_DIR}/date_3.0.1/src/tz.cpp)
 
 add_executable(${CMAKE_PROJECT_NAME}  ${EXECUTABLE_ARG_LIST})  
 
+
+find_package(rxcpp CONFIG)
 
 # 动态库 在 g++ 使用 -lLibName 指令
 target_link_libraries(${CMAKE_PROJECT_NAME} 

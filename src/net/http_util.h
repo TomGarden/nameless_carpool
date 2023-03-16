@@ -13,6 +13,7 @@
 #include <iostream>
 #include <ios>
 #include <any>
+#include <boost/algorithm/string.hpp>
 
 #include "tom_string_utils.h"
 #include "fcgi_util.h"
@@ -169,7 +170,7 @@ namespace nameless_carpool {
     Json body;
 
     HttpContent& addHeader(string key, std::string val) {
-      headers.push_back({key, val});
+      headers[key] = val;
       return *this;
     }
     HttpContent& setBody(Json jsonBody) {
@@ -280,28 +281,25 @@ namespace nameless_carpool {
     std::string toString(bool withDefHeader = true) {
       std::stringstream ss;
 
-      /* 状态码 */   {
-        if(status >= 0) {
-          ss << "Status: " << status << std::endl;
-        }
-      }
+      const std::string formatEndLine = "\r\n";
+
+      /* 状态码 */ ss << "Status: " << status << formatEndLine;
       /* header */  {
-        Json headersTmp = headers; /* 拷贝赋值 */
+        std::map<std::string, std::string> headersMap;
+        if (!headers.is_null() && !headers.empty()) headers.get_to(headersMap);
         if(withDefHeader) {
-          headersTmp[httpHeaderNames.contentType] = mediaType.json + "; charset=utf-8";
-          headersTmp[httpHeaderNames.pid] = std::to_string(getpid());
+          headersMap[httpHeaderNames.contentType] = mediaType.json + "; charset=utf-8";
+          headersMap[httpHeaderNames.pid] = std::to_string(getpid());
         }
-
-        ss << "Headers: " << headersTmp.dump(2);
-
-        ss << std::endl;
+        for (const std::pair<std::string, std::string>& objPair : headersMap) {
+          ss << objPair.first << ":" << objPair.second << formatEndLine;
+        }
       }
-      /* body */    {
-        ss << body.dump(2) ;
-      }
+      /*空行*/ ss << formatEndLine;
+      /* body */ ss << body.dump(2);
       std::string result = ss.str();
-      ss.str("");
-      ss.clear();
+
+      logInfo << "替换换行字符完成\n"<< result << std::endl;
 
       return result;
     }
@@ -329,13 +327,11 @@ namespace nameless_carpool {
         case HttpStatusEnum::requestHelp  : {
           logInfo << "****************   Response [" << status << "] ↑↑↑  ***************" << std::endl 
                   << Json(*this).dump(2) << std::endl;
-          break;
-        }
+        } break;
         default: {
           logInfo << "****************   Response [" << status << "] ×××  ***************" << std::endl 
                   << Json(*this).dump(2) << std::endl;
-          break;
-        }
+        } break;
       }
       logInfo << "****************   Response [" << status << "] done  ***************" << std::endl ;
     }

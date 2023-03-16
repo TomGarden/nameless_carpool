@@ -29,7 +29,7 @@ class nameless_carpool::DbManager {
  private:
   mysqlx::Client client = mysqlx::Client(mysqlx::SessionOption::USER, "root",
                                          mysqlx::SessionOption::PWD, "root",
-                                         mysqlx::SessionOption::HOST, "172.17.0.4",
+                                         mysqlx::SessionOption::HOST, "172.17.0.3",
                                          mysqlx::SessionOption::PORT, 33060,
                                          mysqlx::SessionOption::DB, SqlUtil::dbName);
 

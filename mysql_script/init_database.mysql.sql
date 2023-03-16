@@ -25,6 +25,9 @@ CREATE DATABASE IF NOT EXISTS `nameless_carpool` ;
 -- 使用数据库 
 USE `nameless_carpool` ;
 
+
+/*--------------------------------------------------------------------------------*/
+
 CREATE TABLE IF NOT EXISTS `user` (
   `id`                  INTEGER           NOT NULL  AUTO_INCREMENT  COMMENT '主键 id 自增',
   `id_card_num`         VARCHAR(255)          NULL                  COMMENT '身份证号',
@@ -41,10 +44,6 @@ CREATE TABLE IF NOT EXISTS `user` (
 
   PRIMARY KEY (`id`)
 ) COMMENT '用户基础信息';
-
--- INSERT INTO nameless_carpool.user
---           (name,     gender,    birth_date,             birth_date_tz,    register_time,          register_time_tz,   update_time,           update_time_tz)
--- VALUES ROW('姓名',     1,        '1990-09-01 11:23:00',   8,               '2022-07-01 16:32:00',   8,                 '2022-07-01 16:32:00',  8             );
 
 
 CREATE TABLE IF NOT EXISTS `wc_user` (
@@ -139,7 +138,47 @@ CREATE TABLE IF NOT EXISTS `user_tel` (
 /*--------------------------------------------------------------------------------*/
 
 
+CREATE TABLE IF NOT EXISTS `session` (
+  `id`                            INTEGER             NOT NULL  AUTO_INCREMENT  COMMENT '主键 id 自增',
+  `client_more_info`              VARCHAR(255)            NULL                  COMMENT '更多设备信息描述',
+  `client_type`                   VARCHAR(255)        NOT NULL                  COMMENT '客户端类型',
+  `token`                         VARCHAR(128)        NOT NULL                  COMMENT 'token 登录成功生成',
+  `max_age`                       INTEGER             NOT NULL                  COMMENT '单位 秒 ; 失效时间 , 同一时区登录时间 + 失效持续描述 与当前时间做对比',
+  `from_where`                    VARCHAR(128)            NULL                  COMMENT '从哪里来到网站登录的 , 不确定能否采集到此信息',
+  `auth_method`                   VARCHAR(128)            NULL                  COMMENT '登录获取此 session 的验证方式 , 比如手机验证码 , 或者微信授权 , 或者其他',
+  `token_update_time`             DATETIME(6)         NOT NULL                  COMMENT 'token 更新时间',
+  `token_update_time_tz`          VARCHAR(255)        NOT NULL                  COMMENT 'token 更新时区',
 
+  `create_time`                   DATETIME(6)         NOT NULL                  COMMENT '创建时间',
+  `create_time_tz`                VARCHAR(255)        NOT NULL                  COMMENT '时区',
+  `update_time`                   DATETIME(6)         NOT NULL                  COMMENT '更新时间',
+  `update_time_tz`                VARCHAR(255)        NOT NULL                  COMMENT '时区',
+  `del_time`                      DATETIME(6)             NULL                  COMMENT '删除时间',
+  `del_time_tz`                   VARCHAR(255)            NULL                  COMMENT '时区',
+
+  PRIMARY KEY (`id`) ,
+  INDEX `token` (`token`)
+) COMMENT '登录会话';
+
+CREATE TABLE IF NOT EXISTS `user_session` (
+  `user_id`                     INTEGER             NOT NULL                                COMMENT '外键:用户基础信息 id',
+  `session_id`                  INTEGER             NOT NULL                                COMMENT '外键 会话 id ',
+
+  `create_time`                 DATETIME(6)         NOT NULL                                COMMENT '创建时间',
+  `create_time_tz`              VARCHAR(255)        NOT NULL                                COMMENT '时区',
+  `update_time`                 DATETIME(6)         NOT NULL                                COMMENT '更新时间',
+  `update_time_tz`              VARCHAR(255)        NOT NULL                                COMMENT '时区',
+  `del_time`                    DATETIME(6)             NULL                                COMMENT '删除时间',
+  `del_time_tz`                 VARCHAR(255)            NULL                                COMMENT '时区',
+
+  FOREIGN KEY (`user_id`)               REFERENCES `user`(`id`)               ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  FOREIGN KEY (`session_id`)            REFERENCES `session`(`id`)            ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  PRIMARY KEY (`user_id` , `session_id`)
+) COMMENT '关联表 : 用户 & 登录会话';
+
+
+
+/*--------------------------------------------------------------------------------*/
 
 
 CREATE TABLE IF NOT EXISTS `car` (
@@ -149,8 +188,15 @@ CREATE TABLE IF NOT EXISTS `car` (
   `model`                     VARCHAR(255)            NULL                  COMMENT '型号',
   `age`                       VARCHAR(255)            NULL                  COMMENT '车龄',
   `passenger_capacity`        INTEGER             NOT NULL                  COMMENT '客容量(不含司机)',
-  `freight_capacity`          INTEGER             NOT NULL                  COMMENT '货容量',
-  `freight_capacity_unity`    VARCHAR(255)        NOT NULL                  COMMENT '货容量描述单位',
+  `size_length`               DECIMAL(6,1)            NULL                  COMMENT '长'
+  `size_width`                DECIMAL(6,1)            NULL                  COMMENT '宽'
+  `size_height`               DECIMAL(6,1)            NULL                  COMMENT '高'
+  `size_unity`                VARCHAR(24)             NULL                  COMMENT '尺寸单位(cm/m)'
+  `capacity_volume`           DECIMAL(6,1)            NULL                  COMMENT '货容量:体积'
+  `capacity_volume_unit`      VARCHAR(24)             NULL                  COMMENT '货容量单位:体积(L/m³)'
+  `capacity_weight`           DECIMAL(6,1)            NULL                  COMMENT '货重量:重量'
+  `capacity_weight_unit`      VARCHAR(24)             NULL                  COMMENT '货重量单位:重量(KG/T)'
+  `main_transport_type`       VARCHAR(24)         NOT NULL                  COMMENT '主力运输类型(goods/passenger)'
 
   `create_time`               DATETIME(6)         NOT NULL                  COMMENT '创建时间',
   `create_time_tz`            VARCHAR(255)        NOT NULL                  COMMENT '时区',
@@ -165,58 +211,12 @@ CREATE TABLE IF NOT EXISTS `car` (
 
 CREATE TABLE IF NOT EXISTS `user_car` (
   `user_id`             INTEGER             NOT NULL                COMMENT '外键:用户基础信息 id',
-  `car_id`              INTEGER             NOT NULL                COMMENT '外键 手机号 id ',
+  `car_id`              INTEGER             NOT NULL                COMMENT '外键 汽车 id ',
 
   FOREIGN KEY (`user_id`)       REFERENCES `user`(`id`)       ON UPDATE CASCADE  ON DELETE RESTRICT ,
-  FOREIGN KEY (`car_id`)        REFERENCES `car`(`id`)  ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  FOREIGN KEY (`car_id`)        REFERENCES `car`(`id`)        ON UPDATE CASCADE  ON DELETE RESTRICT ,
   PRIMARY KEY (`user_id` , `car_id`)
 ) COMMENT '关联表 : 用户 & 汽车';
-
-
-
-/*--------------------------------------------------------------------------------*/
-
-
-
-
-
-CREATE TABLE IF NOT EXISTS `area` (
-  `id`                        INTEGER             NOT NULL  AUTO_INCREMENT  COMMENT '主键 id 自增',
-  `fullname`                  VARCHAR(255)            NULL                  COMMENT '中文全名',
-  `pinyin`                    VARCHAR(255)            NULL                  COMMENT '拼音全名',
-  `longitude`                 DECIMAL(18,15)          NULL                  COMMENT '经度(数字最长 18 位, 小数点后最多15 位)',
-  `latitude`                  DECIMAL(18,15)          NULL                  COMMENT '纬度(数字最长 18 位, 小数点后最多15 位)',
-  `cidx`                      JSON                    NULL                  COMMENT '下级地区 id 数组',
-  `pid`                       INTEGER                 NULL                  COMMENT '上级地区 id ',
-  `deep`                      INTEGER             NOT NULL                  COMMENT '深度,行政级别0:省,1:市,2:区,3:镇,4:村  需要进一步分析"街道级别',
-  
-  `create_time`               DATETIME(6)         NOT NULL                  COMMENT '创建时间',
-  `create_time_tz`            VARCHAR(255)        NOT NULL                  COMMENT '时区',
-  `update_time`               DATETIME(6)         NOT NULL                  COMMENT '更新时间',
-  `update_time_tz`            VARCHAR(255)        NOT NULL                  COMMENT '时区',
-  `del_time`                  DATETIME(6)             NULL                  COMMENT '删除时间',
-  `del_time_tz`               VARCHAR(255)            NULL                  COMMENT '时区',
-
-  PRIMARY KEY (`id`)
-) COMMENT '地区';
-
-
-CREATE TABLE IF NOT EXISTS `user_area` (
-  `user_id`                   INTEGER             NOT NULL                  COMMENT '外键, 用户 ID',
-  `area_id`                   INTEGER             NOT NULL                  COMMENT '外键, 地区 id',
-  `history_areas`             JSON                    NULL                  COMMENT '用户历史地区们, json 数组',
-  
-  `create_time`               DATETIME(6)         NOT NULL                  COMMENT '创建时间',
-  `create_time_tz`            VARCHAR(255)        NOT NULL                  COMMENT '时区',
-  `update_time`               DATETIME(6)         NOT NULL                  COMMENT '更新时间',
-  `update_time_tz`            VARCHAR(255)        NOT NULL                  COMMENT '时区',
-  `del_time`                  DATETIME(6)             NULL                  COMMENT '删除时间',
-  `del_time_tz`               VARCHAR(255)            NULL                  COMMENT '时区',
-
-  FOREIGN KEY (`user_id`)       REFERENCES `user`(`id`)  ON UPDATE CASCADE  ON DELETE RESTRICT ,
-  FOREIGN KEY (`area_id`)       REFERENCES `area`(`id`)  ON UPDATE CASCADE  ON DELETE RESTRICT ,
-  PRIMARY KEY (`user_id` , `area_id`)
-) COMMENT '关联表 : 用户 & 地区';
 
 
 /*--------------------------------------------------------------------------------*/
@@ -224,10 +224,20 @@ CREATE TABLE IF NOT EXISTS `user_area` (
 
 CREATE TABLE IF NOT EXISTS `goods_info` (
   `id`                            INTEGER             NOT NULL  AUTO_INCREMENT  COMMENT '主键 id 自增',
+
+  `size_length`                   DECIMAL(6,1)            NULL                  COMMENT '长'
+  `size_width`                    DECIMAL(6,1)            NULL                  COMMENT '宽'
+  `size_height`                   DECIMAL(6,1)            NULL                  COMMENT '高'
+  `size_unity`                    VARCHAR(24)             NULL                  COMMENT '尺寸单位(cm/m)'
+  `volume`                        DECIMAL(6,1)            NULL                  COMMENT '体积'
+  `volume_unit`                   VARCHAR(24)             NULL                  COMMENT '体积单位(L/m³)'
+
+  `weight`                        DECIMAL(6,1)            NULL                  COMMENT '重量'
+  `weight_unit`                   VARCHAR(24)             NULL                  COMMENT '重量单位(KG/T)'
+
+  `number`                        INTEGER                 NULL                  COMMENT '件数'
+  `tag`                           VARCHAR(255)            NULL                  COMMENT '形态; 性质: 易碎/贵重/时效; 等等'
   `desc`                          VARCHAR(255)            NULL                  COMMENT '货物描述信息',
-  `weight`                        DECIMAL(6,1)            NULL                  COMMENT '重量, 单位(千克) , 一共6 位, 小数点后1 位',
-  `volume`                        DECIMAL(6,1)            NULL                  COMMENT '体积',
-  `volume_unity`                  VARCHAR(10)             NULL                  COMMENT '体积单位',
 
   `create_time`                   DATETIME(6)         NOT NULL                  COMMENT '创建时间',
   `create_time_tz`                VARCHAR(255)        NOT NULL                  COMMENT '时区',
@@ -238,6 +248,18 @@ CREATE TABLE IF NOT EXISTS `goods_info` (
 
   PRIMARY KEY (`id`)
 ) COMMENT '货物信息描述';
+
+CREATE TABLE IF NOT EXISTS `user_goods` (
+  `user_id`             INTEGER             NOT NULL                COMMENT '外键:用户基础信息 id',
+  `goods_info_id`       INTEGER             NOT NULL                COMMENT '外键 货物 id ',
+
+  FOREIGN KEY (`user_id`)       REFERENCES `user`(`id`)       ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  FOREIGN KEY (`goods_info_id`) REFERENCES `user_goods`(`id`) ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  PRIMARY KEY (`user_id` , `goods_info_id`)
+) COMMENT '关联表 : 用户 & 货物';
+
+
+/*--------------------------------------------------------------------------------*/
 
 
 CREATE TABLE IF NOT EXISTS `find_car` (
@@ -317,40 +339,46 @@ CREATE TABLE IF NOT EXISTS `car_bind_customers` (
 ) COMMENT '人车绑定表单';
 
 
-CREATE TABLE IF NOT EXISTS `session` (
-  `id`                            INTEGER             NOT NULL  AUTO_INCREMENT  COMMENT '主键 id 自增',
-  `client_more_info`              VARCHAR(255)            NULL                  COMMENT '更多设备信息描述',
-  `client_type`                   VARCHAR(255)        NOT NULL                  COMMENT '客户端类型',
-  `token`                         VARCHAR(128)        NOT NULL                  COMMENT 'token 登录成功生成',
-  `max_age`                       INTEGER             NOT NULL                  COMMENT '单位 秒 ; 失效时间 , 同一时区登录时间 + 失效持续描述 与当前时间做对比',
-  `from_where`                    VARCHAR(128)            NULL                  COMMENT '从哪里来到网站登录的 , 不确定能否采集到此信息',
-  `auth_method`                   VARCHAR(128)            NULL                  COMMENT '登录获取此 session 的验证方式 , 比如手机验证码 , 或者微信授权 , 或者其他',
-  `token_update_time`             DATETIME(6)         NOT NULL                  COMMENT 'token 更新时间',
-  `token_update_time_tz`          VARCHAR(255)        NOT NULL                  COMMENT 'token 更新时区',
+/*--------------------------------------------------------------------------------*/
 
-  `create_time`                   DATETIME(6)         NOT NULL                  COMMENT '创建时间',
-  `create_time_tz`                VARCHAR(255)        NOT NULL                  COMMENT '时区',
-  `update_time`                   DATETIME(6)         NOT NULL                  COMMENT '更新时间',
-  `update_time_tz`                VARCHAR(255)        NOT NULL                  COMMENT '时区',
-  `del_time`                      DATETIME(6)             NULL                  COMMENT '删除时间',
-  `del_time_tz`                   VARCHAR(255)            NULL                  COMMENT '时区',
 
-  PRIMARY KEY (`id`) ,
-  INDEX `token` (`token`)
-) COMMENT '登录会话';
+CREATE TABLE IF NOT EXISTS `area` (
+  `id`                        INTEGER             NOT NULL  AUTO_INCREMENT  COMMENT '主键 id 自增',
+  `fullname`                  VARCHAR(255)            NULL                  COMMENT '中文全名',
+  `pinyin`                    VARCHAR(255)            NULL                  COMMENT '拼音全名',
+  `longitude`                 DECIMAL(18,15)          NULL                  COMMENT '经度(数字最长 18 位, 小数点后最多15 位)',
+  `latitude`                  DECIMAL(18,15)          NULL                  COMMENT '纬度(数字最长 18 位, 小数点后最多15 位)',
+  `cidx`                      JSON                    NULL                  COMMENT '下级地区 id 数组',
+  `pid`                       INTEGER                 NULL                  COMMENT '上级地区 id ',
+  `deep`                      INTEGER             NOT NULL                  COMMENT '深度,行政级别0:省,1:市,2:区,3:镇,4:村  需要进一步分析"街道级别',
+  
+  `create_time`               DATETIME(6)         NOT NULL                  COMMENT '创建时间',
+  `create_time_tz`            VARCHAR(255)        NOT NULL                  COMMENT '时区',
+  `update_time`               DATETIME(6)         NOT NULL                  COMMENT '更新时间',
+  `update_time_tz`            VARCHAR(255)        NOT NULL                  COMMENT '时区',
+  `del_time`                  DATETIME(6)             NULL                  COMMENT '删除时间',
+  `del_time_tz`               VARCHAR(255)            NULL                  COMMENT '时区',
 
-CREATE TABLE IF NOT EXISTS `user_session` (
-  `user_id`                     INTEGER             NOT NULL                                COMMENT '外键:用户基础信息 id',
-  `session_id`                  INTEGER             NOT NULL                                COMMENT '外键 会话 id ',
+  PRIMARY KEY (`id`)
+) COMMENT '地区';
 
-  `create_time`                 DATETIME(6)         NOT NULL                                COMMENT '创建时间',
-  `create_time_tz`              VARCHAR(255)        NOT NULL                                COMMENT '时区',
-  `update_time`                 DATETIME(6)         NOT NULL                                COMMENT '更新时间',
-  `update_time_tz`              VARCHAR(255)        NOT NULL                                COMMENT '时区',
-  `del_time`                    DATETIME(6)             NULL                                COMMENT '删除时间',
-  `del_time_tz`                 VARCHAR(255)            NULL                                COMMENT '时区',
 
-  FOREIGN KEY (`user_id`)               REFERENCES `user`(`id`)               ON UPDATE CASCADE  ON DELETE RESTRICT ,
-  FOREIGN KEY (`session_id`)            REFERENCES `session`(`id`)            ON UPDATE CASCADE  ON DELETE RESTRICT ,
-  PRIMARY KEY (`user_id` , `session_id`)
-) COMMENT '关联表 : 用户 & 登录会话';
+CREATE TABLE IF NOT EXISTS `user_area` (
+  `user_id`                   INTEGER             NOT NULL                  COMMENT '外键, 用户 ID',
+  `area_id`                   INTEGER             NOT NULL                  COMMENT '外键, 地区 id',
+  `history_areas`             JSON                    NULL                  COMMENT '用户历史地区们, json 数组',
+  
+  `create_time`               DATETIME(6)         NOT NULL                  COMMENT '创建时间',
+  `create_time_tz`            VARCHAR(255)        NOT NULL                  COMMENT '时区',
+  `update_time`               DATETIME(6)         NOT NULL                  COMMENT '更新时间',
+  `update_time_tz`            VARCHAR(255)        NOT NULL                  COMMENT '时区',
+  `del_time`                  DATETIME(6)             NULL                  COMMENT '删除时间',
+  `del_time_tz`               VARCHAR(255)            NULL                  COMMENT '时区',
+
+  FOREIGN KEY (`user_id`)       REFERENCES `user`(`id`)  ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  FOREIGN KEY (`area_id`)       REFERENCES `area`(`id`)  ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  PRIMARY KEY (`user_id` , `area_id`)
+) COMMENT '关联表 : 用户 & 地区';
+
+
+

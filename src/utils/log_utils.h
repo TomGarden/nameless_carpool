@@ -12,6 +12,7 @@ namespace nameless_carpool {
   /* https://stackoverflow.com/a/58556021/7707781 */
   #define GET_LINE_INFO()  boost::str(boost::format("%1%:%2%") % __FILE__ % __LINE__)
   #define WITH_LINE_INFO(msg) boost::str(boost::format("(%1%):%2%") % GET_LINE_INFO() % msg)
+  #define GET_PID() getpid()
   // #define WITH_LINE_INFO(msg) boost::str(boost::format("(%1%):%2%") % GET_LINE_INFO() % msg);
 
   /* 标示符 : 如果定义了这个宏 , 那就说明在 debug 模式下 */
@@ -66,10 +67,10 @@ namespace nameless_carpool {
   // #define logFatal    LogStreamForward(google::FATAL   , LOG_COLOR_FG_LIGHT_RED BG_BLACK) << "FATAL : "
   
   #define logEndl                                                                         LOG_COLOR_RESET                    << std::endl
-  #define logInfo     google::LogMessage(__FILE__, __LINE__, google::INFO).stream()    << LOG_COLOR_DEFAULT                  << " | INFO  : "
-  #define logError    google::LogMessage(__FILE__, __LINE__, google::ERROR).stream()   << LOG_COLOR_FG_LIGHT_RED             << " | ERROR : "
-  #define logWarning  google::LogMessage(__FILE__, __LINE__, google::WARNING).stream() << LOG_COLOR_FG_LIGHT_ORANGE          << " | WARN  : "
-  #define logFatal    google::LogMessage(__FILE__, __LINE__, google::FATAL).stream()   << LOG_COLOR_FG_LIGHT_RED << BG_BLACK << " | FATAL : "
+  #define logInfo     google::LogMessage(__FILE__, __LINE__, google::INFO).stream()    << "[ " << GET_PID() << " ]" << LOG_COLOR_DEFAULT                  << " | INFO  : "
+  #define logError    google::LogMessage(__FILE__, __LINE__, google::ERROR).stream()   << "[ " << GET_PID() << " ]" << LOG_COLOR_FG_LIGHT_RED             << " | ERROR : "
+  #define logWarning  google::LogMessage(__FILE__, __LINE__, google::WARNING).stream() << "[ " << GET_PID() << " ]" << LOG_COLOR_FG_LIGHT_ORANGE          << " | WARN  : "
+  #define logFatal    google::LogMessage(__FILE__, __LINE__, google::FATAL).stream()   << "[ " << GET_PID() << " ]" << LOG_COLOR_FG_LIGHT_RED << BG_BLACK << " | FATAL : "
   #ifdef DEBUG_MODEL
     #define logDebug    logFatal
   #else

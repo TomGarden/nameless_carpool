@@ -10,6 +10,8 @@ tmp_dir
 .DS_Store
 # cmake 自动生成的文件夹
 build
+*-build-*
 # clangd 生成的文件
 .cache
 .history
+.idea

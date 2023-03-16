@@ -91,7 +91,7 @@ run :
 reload_cgi :
 >	 $(call log_rad,重启 CGI)
 >  ssh -i /mount_point/data/_beyourself/_global_config_file/ssh/login_remote_ssh  \
-				tom@172.17.0.3 /mount_point/data/_document/nginx_web_server/fcgi_reload.sh 	
+				tom@172.17.0.2 /mount_point/data/_document/nginx_web_server/fcgi_reload.sh
 
 
 test :

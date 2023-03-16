@@ -13,6 +13,22 @@
     "method": "POST",
     "headers": {
       "time_zone": "Asia/Shanghai",
+      "token": "47b4ac7f-e720-4f49-b4f5-0e0a62305afd"
+    },
+    "uri": "/fcgi_test/nameless_carpool/publish",
+    "body": {
+      "phone": "15912341234",
+      "verify_code": "790179",
+      "client_type" :"[ Unknow, Android, iOS, web, microProgram ]"
+    },
+    "desc": [
+      "发布信息, 相关细节暂未确定"
+    ]
+  },
+  {
+    "method": "POST",
+    "headers": {
+      "time_zone": "Asia/Shanghai",
       "headerTwo": "two"
     },
     "uri": "/fcgi_test/nameless_carpool/login",
