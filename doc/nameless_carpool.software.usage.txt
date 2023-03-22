@@ -10,7 +10,7 @@
 
 2. nameless_carpool --input_file=filePath
    filePath 指定文件的绝对路径
-   如果没有 filePath  , 默认使用 nameless_carpool 相同目录下的 ./tom_doc_file_dir/debugInput.json 文件
+   如果没有 filePath  , 默认使用 nameless_carpool 相同目录下的 ./tom_manual_dir/doc/debugInput.json 文件
    其中 filePath 格式
       {
         "is_help"  : false,

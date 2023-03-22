@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sql_util.h"
+#include "src/db/sql_util.h"
 #include <boost/format.hpp>
 #include <initializer_list>
 #include <optional>
@@ -8,8 +8,8 @@
 #include <vector>
 
 #include "libs/mysql_connector_arm_static/include/mysqlx/devapi/document.h"
-#include "log_utils.h"
-#include "tom_string_utils.h"
+#include "src/utils/log_utils.h"
+#include "src/utils/tom_string_utils.h"
 
 namespace nameless_carpool {
   namespace SqlUtil {

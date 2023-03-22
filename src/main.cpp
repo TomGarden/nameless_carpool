@@ -5,22 +5,24 @@
 #include <iostream>
 #include <typeinfo>
 
-#include "db/sql/db_manager.h"
-#include "http_util.h"
-#include "net/api.h"
-#include "text_rxcxx.h"
-#include "utils/constant.h"
-#include "utils/input_check.h"
-#include "utils/json/include_json.h"
-#include "utils/linux_os.h"
-#include "utils/log_utils.h"
-#include "utils/tom_string_utils.h"
+#include "drogon/drogon.h"
+#include "src/db/sql/db_manager.h"
+#include "src/net/api.h"
+#include "src/net/drogon_proxy/web_client.h"
+#include "src/net/drogon_proxy/web_server.h"
+#include "src/net/http_util.h"
+#include "src/utils/constant.h"
+#include "src/utils/input_check.h"
+#include "src/utils/json/include_json.h"
+#include "src/utils/linux_os.h"
+#include "src/utils/log_utils.h"
+#include "src/utils/tom_string_utils.h"
+#include "test_drogon.h"
+#include "tz.h"
 
 
 
-using namespace std;
 using namespace nameless_carpool;
-using namespace google;
 
 /** 真正处理 request 请求 */
 void optRequest(const HttpRequest& requestInput, HttpResponse& responseOutput) {
@@ -43,7 +45,7 @@ void optLocaleData(int argc, char** argv) {
   httpResponse.printSelf();
 }
 
-/* 操作网络数据 */
+/* 操作网络数据 , 这里使用的 是 fast_cgi 来接收网络请求 , 但是接收到之后的事件派发逻辑我们没有实现所以转而寻求 web 框架的帮助 */
 void optNetData(int argc, char** argv) {
   FCGX_Request request;
   FCGX_Init();
@@ -94,9 +96,9 @@ void optNetData(int argc, char** argv) {
         /* 排除入参非法的可能性 */
         try {
           httpRequest.setBody(requestIn);
-        } catch (const Json::exception& jsonException) {
+        } catch (const nlohmann::json::exception& jsonException) {
           logError << jsonException.what() << std::endl;
-          httpResponse.inflateResponse(HttpStatusEnum::badRequest, constantStr.bodyFormatErr);
+          httpResponse.inflateResponse(HttpStatus::Enum::badRequest, constantStr.bodyFormatErr);
         }
 
         httpRequest.printSelf();
@@ -235,9 +237,15 @@ spawn-fcgi  \
  *
 */
 int main(int argc, char** argv) {
+//  date::set_install("~/Downloads/tzdata");
   setlocale(LC_CTYPE, tom_utils::defLocalStr);  // 必须在 initGlog 之前设置完成
   initGlog(argv[0]);
   logInfo << "可执行文件路径: " << std::filesystem::current_path() << endl;
+
+//  WebClient webClient;
+//  webClient.test();
+//  testDrogonServer();
+//  return 0 ;
 
   for (int i = 0; i < argc; i++) {
     logInfo << argv[i] << std::endl;
@@ -246,9 +254,14 @@ int main(int argc, char** argv) {
   bool isDebug = contentDebugParam(argc, argv);
 
   if (isDebug) {
+    logInfo << "进入本地入参调试逻辑" << logEndl;
     optLocaleData(argc, argv);
   } else {
-    optNetData(argc, argv);
+    //optNetData(argc, argv);
+
+    logInfo << "进入 drogon 调试逻辑" << logEndl;
+    WebServer webServer;
+    webServer.run();
   }
 
   return 0;

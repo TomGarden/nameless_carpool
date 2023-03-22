@@ -14,7 +14,7 @@
 #include <rxcpp/subjects/rx-synchronize.hpp>
 #include <thread>
 
-#include "log_utils.h"
+#include "src/utils/log_utils.h"
 
 namespace nameless_carpool {
 
@@ -133,7 +133,7 @@ namespace nameless_carpool {
     while (true) {
       logInfo << std::boolalpha << lifetime.is_subscribed() << std::endl;
       if (lifetime.is_subscribed()) {
-        this_thread::sleep_for(2000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
       } else {
         break;
       }
@@ -200,7 +200,7 @@ namespace nameless_carpool {
       while (!runLoop.empty() && runLoop.peek().when <= runLoop.now()) runLoop.dispatch(); /* 手动事件分发 */
       logInfo << std::boolalpha << lifetime.is_subscribed() << std::endl;
       if (!runLoop.empty()) runLoop.dispatch();
-      this_thread::sleep_for(2000ms);
+      std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     }
     logInfo << std::boolalpha << lifetime.is_subscribed() << std::endl;
 

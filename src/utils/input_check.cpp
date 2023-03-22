@@ -4,13 +4,13 @@
 #include <fstream>
 #include <ios>
 
-#include "include_json.h"
+#include "src/utils/json/include_json.h"
 #include "input_check.h"
-#include "response_body.h"
-#include "http_util.h"
-#include "fcgi_util.h"
-#include "common.h"
-#include "log_utils.h"
+#include "src/net/http_util.h"
+#include "src/net/http_util.h"
+#include "src/net/http_util.h"
+#include "src/utils/common.h"
+#include "src/utils/log_utils.h"
 #include "linux_os.h"
 
 namespace nameless_carpool {
@@ -37,13 +37,13 @@ namespace nameless_carpool {
   bool accept(int argc, char **argv, 
               HttpRequest& requestInflate, HttpResponse& responseInflate) {
 
-    logError << "进入 accept =============\n";
-    HttpStatusEnum forLoopStatus = HttpStatusEnum::success; /* 跳出 for 循环的识别标识 */
+    logError << "进入 accept =============" << logEndl;
+    HttpStatus::Enum forLoopStatus = HttpStatus::Enum::success; /* 跳出 for 循环的识别标识 */
     string stopLoopAppendMsg;   /* 停止循环并附加信息 */
 
     /** 标记 InputFile 读取失败 */
     auto debugInputFileReadFailed = [&](const std::string& str) {
-      forLoopStatus = HttpStatusEnum::wrongFormat;
+      forLoopStatus = HttpStatus::Enum::wrongFormat;
       stopLoopAppendMsg = inputParam.getName(InputParamEnum::inputFile) + "  " + str;
     };
 
@@ -54,13 +54,13 @@ namespace nameless_carpool {
       logInfo << "配置文件路径:" << inputFilePath << std ::endl ;
 
       try {
-        OrderedJson json = OrderedJson::parse(std::ifstream(inputFilePath));
+        nlohmann::ordered_json json = nlohmann::ordered_json::parse(std::ifstream(inputFilePath));
         json             = json[1];
         json.get_to<HttpRequest>(requestInflate);
-        forLoopStatus = HttpStatusEnum::success;
-      } catch (const Json::exception& jsonException) {
+        forLoopStatus = HttpStatus::Enum::success;
+      } catch (const nlohmann::json::exception& jsonException) {
         logError << '[' << jsonException.id << ']' << jsonException.what() << std::endl;
-        forLoopStatus     = HttpStatusEnum::badRequest;
+        forLoopStatus     = HttpStatus::Enum::badRequest;
         stopLoopAppendMsg = "请求配置文件内 , json 格式解析失败";
       }
 
@@ -72,7 +72,7 @@ namespace nameless_carpool {
 
       /* 确保 入参 键值对 必然是有值的字符串 */
       if(kvStr.size() < 0) {
-        forLoopStatus = HttpStatusEnum::parsingFailed;
+        forLoopStatus = HttpStatus::Enum::parsingFailed;
         stopLoopAppendMsg = "存在空属性";
         break;
       }
@@ -80,7 +80,7 @@ namespace nameless_carpool {
       /* 确保入参是 "--" 开始的字符串 */
       int rightStartFlag = kvStr.compare(0,2, paramPrefix);
       if(rightStartFlag != 0) { /* 字符串非 -- 打头 , 被认为是格式异常 */
-        forLoopStatus = HttpStatusEnum::wrongFormat;
+        forLoopStatus = HttpStatus::Enum::wrongFormat;
         stopLoopAppendMsg = "属性只接受 '--' 开始的字符串";
         break;
       }
@@ -93,14 +93,14 @@ namespace nameless_carpool {
         
         shared_ptr<InputParamEnum> inputParamPtr = inputParam.getEnum(key);
         if(inputParamPtr == nullptr) {
-          forLoopStatus = HttpStatusEnum::wrongFormat;
+          forLoopStatus = HttpStatus::Enum::wrongFormat;
           stopLoopAppendMsg = "未知入参1:" + key;
         } else switch(*inputParamPtr) {
           case InputParamEnum::help       : {
-            forLoopStatus = HttpStatusEnum::requestHelp;
+            forLoopStatus = HttpStatus::Enum::requestHelp;
             string helpInfo;
             Common::getContent(helpInfo, "nameless_carpool.software.usage.txt", "意外: 读取帮助信息失败");
-            responseInflate.inflateResponse(HttpStatusEnum::success, helpInfo);
+            responseInflate.inflateResponse(HttpStatus::Enum::success, helpInfo);
             break;
           }
           case InputParamEnum::inputFile  : {
@@ -109,7 +109,7 @@ namespace nameless_carpool {
             if( getCurExeFd(exeFileFd) ) {
               exeFileFd
                   .append(&std::filesystem::path::preferred_separator)
-                  .append("tom_doc_file_dir/debugInput.json");
+                  .append("tom_manual_dir/doc/debugInput.json");
               debugInputFileParse(exeFileFd);
             } else {
               debugInputFileReadFailed("没有 入参 值 , 获取默认文件路径失败");
@@ -117,20 +117,20 @@ namespace nameless_carpool {
             break;
           }
           default :                     {
-            forLoopStatus = HttpStatusEnum::wrongFormat;
+            forLoopStatus = HttpStatus::Enum::wrongFormat;
             stopLoopAppendMsg = "未知入参2:" + key;
             break;
           }
         }
       }
 
-      if(forLoopStatus != HttpStatusEnum::success) { 
+      if(forLoopStatus != HttpStatus::Enum::success) {
         break;
       }
     }
 
-    if(forLoopStatus != HttpStatusEnum::success) {
-      responseInflate.setStatus(static_cast<int>(forLoopStatus));
+    if(forLoopStatus != HttpStatus::Enum::success) {
+      responseInflate.setStatus(forLoopStatus);
       if(!stopLoopAppendMsg.empty()) {
         responseInflate.inflateResponse(forLoopStatus, stopLoopAppendMsg);
       }

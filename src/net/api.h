@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "authenticate.h"
-#include "http_util.h"
+#include "src/net/api/authenticate.h"
+#include "src/net/http_util.h"
 
 namespace nameless_carpool {
   class Api;

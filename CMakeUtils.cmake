@@ -23,9 +23,11 @@ function(unix_get_path_list ARG_CMD ARG_CMD_ARG RESULT_PATH_LIST )
   ###使用 tree 命令获取文件夹路径们
     execute_process(COMMAND  ${ARG_CMD} ${ARG_CMD_ARG} OUTPUT_VARIABLE OUTPUT_STRING)
   ###替换换行 , 将文件夹们放到 列表中
+    #message(===> ${OUTPUT_STRING})
     string(REPLACE "\n" ";" SOURCE_DIR_LIST ${OUTPUT_STRING})
   ###列表末尾有 tree 命令的统计信息 , 删除他们
     list(LENGTH SOURCE_DIR_LIST LIST_LENGTH)
+    #message(list_length ===> ${LIST_LENGTH})
     math(EXPR LIST_LENGTH "${LIST_LENGTH} - 3" OUTPUT_FORMAT DECIMAL)
     list(SUBLIST SOURCE_DIR_LIST 0 ${LIST_LENGTH} SOURCE_DIR_LIST)
     set(${RESULT_PATH_LIST} ${SOURCE_DIR_LIST} PARENT_SCOPE)
@@ -33,6 +35,10 @@ endfunction(unix_get_path_list ARG_CMD ARG_CMD_ARG RESULT_PATH_LIST )
 
 ### unix 通过给定的根目录递归获取根目录下的所有目录 , 并输出到 RESULT_DIR_LIST 列表中 (含根目录)
 function(unix_get_dir_list ARG_ROOT_DIR RESULT_DIR_LIST)
+  IF(NOT EXISTS ${ARG_ROOT_DIR})
+    MESSAGE("Path not exist ===>" ${ARG_ROOT_DIR})
+    RETURN()
+  ENDIF()
   set(ARG_CMD tree )
   set(ARG_CMD_ARG "${ARG_ROOT_DIR} -d -f -i")
   string(REPLACE " " ";" ARG_CMD_ARG ${ARG_CMD_ARG})    # 把字符串转换为列表 , 并转义 列表分隔符

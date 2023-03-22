@@ -12,12 +12,12 @@
 #include <type_traits>
 #include <vector>
 
-#include "common.h"
+#include "src/utils/common.h"
 #include "libs/mysql_connector_arm_static/include/mysqlx/devapi/common.h"
 #include "libs/mysql_connector_arm_static/include/mysqlx/devapi/result.h"
 #include "libs/mysql_connector_arm_static/include/mysqlx/xdevapi.h"
-#include "sql_util.h"
-#include "user_info.h"
+#include "src/db/sql_util.h"
+#include "src/db/model/user_info.h"
 
 namespace nameless_carpool {
   class DbManager;

@@ -1,5 +1,5 @@
 
-#include "user_info.h"
+#include "src/db/model/user_info.h"
 
 #include <boost/uuid/uuid.hpp>             // uuid class
 #include <boost/uuid/uuid_generators.hpp>  // generators
@@ -11,13 +11,10 @@
 #include <string>
 
 #include "base_time.h"
-#include "common.h"
-#include "date.h"
+#include "src/utils/common.h"
+#include "libs/date_3.0.1/include/date/date.h"
 #include "libs/date_3.0.1/include/date/tz.h"
-#include "libs/mysql_connector_arm_static/include/mysqlx/devapi/common.h"
-#include "log_utils.h"
-#include "sql_util.h"
-#include "tom_string_utils.h"
+#include "src/db/sql_util.h"
 
 
 namespace nameless_carpool {

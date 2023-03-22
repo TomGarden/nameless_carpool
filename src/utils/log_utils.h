@@ -67,10 +67,10 @@ namespace nameless_carpool {
   // #define logFatal    LogStreamForward(google::FATAL   , LOG_COLOR_FG_LIGHT_RED BG_BLACK) << "FATAL : "
   
   #define logEndl                                                                         LOG_COLOR_RESET                    << std::endl
-  #define logInfo     google::LogMessage(__FILE__, __LINE__, google::INFO).stream()    << "[ " << GET_PID() << " ]" << LOG_COLOR_DEFAULT                  << " | INFO  : "
+  #define logInfo     google::LogMessage(__FILE__, __LINE__, google::INFO).stream()    << "[ " << GET_PID() << " ]" << LOG_COLOR_FG_LIGHT_GRAY            << " | INFO  : "
   #define logError    google::LogMessage(__FILE__, __LINE__, google::ERROR).stream()   << "[ " << GET_PID() << " ]" << LOG_COLOR_FG_LIGHT_RED             << " | ERROR : "
   #define logWarning  google::LogMessage(__FILE__, __LINE__, google::WARNING).stream() << "[ " << GET_PID() << " ]" << LOG_COLOR_FG_LIGHT_ORANGE          << " | WARN  : "
-  #define logFatal    google::LogMessage(__FILE__, __LINE__, google::FATAL).stream()   << "[ " << GET_PID() << " ]" << LOG_COLOR_FG_LIGHT_RED << BG_BLACK << " | FATAL : "
+  #define logFatal    google::LogMessage(__FILE__, __LINE__, google::FATAL).stream()   << "[ " << GET_PID() << " ]" << LOG_COLOR_FG_LIGHT_RED << LOG_COLOR_BG_BLACK << " | FATAL : "
   #ifdef DEBUG_MODEL
     #define logDebug    logFatal
   #else

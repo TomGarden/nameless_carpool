@@ -1,9 +1,8 @@
 #pragma once
 
 #include <string>
-#include "net/model/authenticate.h"
-#include "http_util.h"
-// #include "authenticate_m.h"
+#include "src/net/model/authenticate.h"
+#include "src/net/http_util.h"
 
 namespace nameless_carpool {
 
@@ -28,9 +27,9 @@ namespace nameless_carpool {
      *  @param {string&} timeZone
      *  @param {string&} internalMsg    用于开发者内部分享的异常信息
      *  @param {string&} externalMsg    用于面向用户提醒的异常信息
-     *  @return {*} HttpStatusEnum::success, 操作成功
+     *  @return {*} HttpStatus::Enum::success, 操作成功
      */
-    HttpStatusEnum requestVertifyCode(const string& phoneNumber, const string& timeZone,
+    HttpStatus::Enum requestVertifyCode(const string& phoneNumber, const string& timeZone,
                             string& internalMsg, string& externalMsg);
 
     

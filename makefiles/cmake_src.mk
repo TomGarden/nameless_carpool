@@ -10,11 +10,7 @@
 make_file_path      = $(dir $(word 1,$(MAKEFILE_LIST)))
 pro_dir             = $(realpath $(make_file_path)..)
 cmake_output_dir	  = $(pro_dir)/build
-tom_doc_file_dir    = $(cmake_output_dir)/tom_doc_file_dir
 executable_run_dir  = $(pro_dir)/tmp_dir/run_path
-
-debugInputFileName  = debugInput.json
-
 
 
 
@@ -49,9 +45,10 @@ all :
   -DCMAKE_BUILD_TYPE:STRING=Debug \
   -DCMAKE_C_COMPILER:FILEPATH=/usr/bin/aarch64-linux-gnu-gcc \
   -DCMAKE_CXX_COMPILER:FILEPATH=/usr/bin/aarch64-linux-gnu-g++ \
+  -DINSTALL=$(cmake_output_dir)/tom_manual_dir/tzdata \
   -S$(pro_dir) \
   -B$(cmake_output_dir) \
-   -G "Unix Makefiles" 
+  -G "Unix Makefiles"
 
 >	 $(call log_rad,cmake 执行完毕 ; 开始执行 make 动作,生成可执行文件[$(cmake_output_dir)])
 # 进入 cmake 输出文件目录 , 并执行 make 指令生成可执行文件
@@ -70,28 +67,26 @@ clean_log:
 >	 $(call log_rad,清空软件执行日志)
 >  rm -rf $(pro_dir)/tmp_dir/run_log/*
 
-copy_doc:
-
-
->	 $(call log_rad,拷贝文档到编译目录 [$(tom_doc_file_dir)])
-
->	 $(call create_dir,$(tom_doc_file_dir))
->  cp $(pro_dir)/doc/nameless_carpool.software.usage.txt   $(tom_doc_file_dir)
->  cp $(pro_dir)/doc/$(debugInputFileName)  			 				 $(tom_doc_file_dir)
-
 # 执行编译结果
 run :
 >	 $(call log_rad,启动可执行文件)
 >  cd $(executable_run_dir)
-# >  $(cmake_output_dir)/NamelessCarpool.run  --input_file=$(tom_doc_file_dir)/$(debugInputFileName)
+# >  $(cmake_output_dir)/NamelessCarpool.run  --input_file=$(cmake_output_dir)/tom_manual_dir/doc/debugInput.json
 >  $(cmake_output_dir)/NamelessCarpool.run  --input_file
+
+# 执行编译结果
+run_clion_build_result :
+>	 $(call log_rad,启动可执行文件)
+>  cd $(executable_run_dir)
+>  $(pro_dir)/cmake-build-debug-docker/NamelessCarpool.run  --input_file
+
 
 
 # 进入 nginx 容器 ifconfig 即可查看容器 ip
 reload_cgi :
 >	 $(call log_rad,重启 CGI)
 >  ssh -i /mount_point/data/_beyourself/_global_config_file/ssh/login_remote_ssh  \
-				tom@172.17.0.2 /mount_point/data/_document/nginx_web_server/fcgi_reload.sh
+				tom@172.17.0.4 /mount_point/data/_document/nginx_web_server/fcgi_reload.sh
 
 
 test :
@@ -119,9 +114,9 @@ sub___________________________________reload_cgi__run :
 
 
 
-#		clear && make --file=makefiles/cmake_src.mk clean all copy_doc clean_log reload_cgi run       
-#		clear && make --file=makefiles/cmake_src.mk clean all copy_doc clean_log            run
-#		clear && make --file=makefiles/cmake_src.mk       all copy_doc clean_log            run       
-#		clear && make --file=makefiles/cmake_src.mk       all copy_doc clean_log reload_cgi run       
-#		clear && make --file=makefiles/cmake_src.mk       all copy_doc           reload_cgi run       
-#		clear && make --file=makefiles/cmake_src.mk                              reload_cgi run       
+#		clear && make --file=makefiles/cmake_src.mk clean all clean_log reload_cgi run
+#		clear && make --file=makefiles/cmake_src.mk clean all clean_log            run
+#		clear && make --file=makefiles/cmake_src.mk       all clean_log            run
+#		clear && make --file=makefiles/cmake_src.mk       all clean_log reload_cgi run
+#		clear && make --file=makefiles/cmake_src.mk       all           reload_cgi run
+#		clear && make --file=makefiles/cmake_src.mk                     reload_cgi run

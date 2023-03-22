@@ -1,18 +1,18 @@
 
 #include "api.h"
-#include "response_body.h"
-#include "http_util.h"
-#include "constant.h"
+#include "src/net/model/response_body.h"
+#include "src/net/http_util.h"
+#include "src/utils/constant.h"
 
 namespace nameless_carpool {
 
   void Api::optRequest(const HttpRequest& requestInput, HttpResponse& responseOutput) {
-    const string& methodUri = requestInput.methodUri();
+    const std::string& methodUri = requestInput.methodUri();
 
     { /* 请求合法性校验 */
       if (!requestInput.headers.contains(httpHeaderNames.timeZone)) { /* 请求头非法 */
-        string internalMsg = constantStr.headerMissErr + httpHeaderNames.timeZone;
-        responseOutput.inflateResponse(HttpStatusEnum::badRequest, internalMsg);
+        std::string internalMsg = constantStr.headerMissErr + httpHeaderNames.timeZone;
+        responseOutput.inflateResponse(HttpStatus::Enum::badRequest, internalMsg);
         return;
       }
 
@@ -21,7 +21,7 @@ namespace nameless_carpool {
         else if(AuthApi::requestVertifyCodeUri().compare(methodUri) == 0) { /* empty */ }
         else {
         std::string internalMsg = constantStr.headerMissErr + httpHeaderNames.token;
-        responseOutput.inflateResponse(HttpStatusEnum::badRequest, internalMsg);
+        responseOutput.inflateResponse(HttpStatus::Enum::badRequest, internalMsg);
         return;
         }
       }
@@ -38,12 +38,12 @@ namespace nameless_carpool {
   }
 
   void Api::unknownRequest(const HttpRequest& requestInput, HttpResponse& responseOutput) {
-    string statusName = httpStatus.getName(HttpStatusEnum::requestUndefined);
-    string statusDesc = httpStatus.getDesc(HttpStatusEnum::requestUndefined);
-    responseOutput.status = static_cast<int>(HttpStatusEnum::requestUndefined);
+    std::string statusName = httpStatus.getName(HttpStatus::Enum::requestUndefined);
+    std::string statusDesc = httpStatus.getDesc(HttpStatus::Enum::requestUndefined);
+    responseOutput.status = HttpStatus::Enum::requestUndefined;
 
     ResponseBody bodyObj;
-    bodyObj.status = responseOutput.status;
+    bodyObj.status = responseOutput.getIntStatus();
     bodyObj.internalMsg = statusName + " : " + statusDesc;
     
     responseOutput.setBody(bodyObj);

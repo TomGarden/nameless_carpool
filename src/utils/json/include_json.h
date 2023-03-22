@@ -3,17 +3,13 @@
 
 #include <optional>
 #include <exception>
-#include "linux_os.h"
-#include "log_utils.h"
+#include "src/utils/linux_os.h"
+#include "src/utils/log_utils.h"
 
 /* 提供更详细的异常信息 https://json.nlohmann.me/api/macros/json_diagnostics/#examples  */
 # define JSON_DIAGNOSTICS 1           
-#include "json.hpp"
+#include "libs/nlohmann_json_3.10.5/json.hpp"
 
-namespace nameless_carpool {
-  using Json      = nlohmann::json;
-  using OrderedJson = nlohmann::ordered_json;
-}
 
 /* 定义自己的宏 用来 简便完成 to_json from_json , 拷贝修改自 json.hpp*/
 

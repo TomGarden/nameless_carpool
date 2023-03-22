@@ -1,4 +1,4 @@
-#include "db_manager.h"
+#include "src/db/sql/db_manager.h"
 
 #include <bitset>
 #include <boost/format.hpp>
@@ -21,11 +21,11 @@
 #include <boost/format.hpp>
 #include <thread>
 
-#include "common.h"
-#include "container.h"
-#include "log_utils.h"
+#include "src/utils/common.h"
+#include "src/utils/container.h"
+#include "src/utils/log_utils.h"
 #include "libs/mysql_connector_arm_static/include/mysqlx/devapi/common.h"
-#include "user_info.h"
+#include "src/db/model/user_info.h"
 
 namespace nameless_carpool {
 
@@ -78,7 +78,7 @@ namespace nameless_carpool {
   }
 
   mysqlx::SqlResult DbManager::executeSql(const std::string& sqlTmp) {
-    logInfoTrace << sqlTmp << std::endl;
+    logInfo << sqlTmp << std::endl;
 
     /* 分开函数逐个调用 , 不会导致中间对象被回收 */
     mysqlx::Client&      client       = DbManager::getClient();

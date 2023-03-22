@@ -1,11 +1,11 @@
 
-#include "authenticate.h"
+#include "src/net/api/authenticate.h"
 
 #include <string>
 
 #include "db_proxy.h"
-#include "http_util.h"
-#include "log_utils.h"
+#include "src/net/http_util.h"
+#include "src/utils/log_utils.h"
 // #include "authenticate_m.h"
 #include "net/model/authenticate.h"
 
@@ -33,14 +33,14 @@ namespace nameless_carpool {
     try {
       requestInput.body.get_to<RequestVertifyCode::RequestBody>(body);
       bodyLegal = body.legalityCheck(inlegalDesc);
-    } catch (const Json::exception& objException) {
+    } catch (const nlohmann::json::exception& objException) {
       bodyLegal   = false;
       inlegalDesc = objException.what();
       logInfo << inlegalDesc << endl;
     }
 
     if (!bodyLegal) { /* 请求体 非法 */
-      outResponse.inflateResponse(HttpStatusEnum::badRequest, inlegalDesc);
+      outResponse.inflateResponse(HttpStatus::Enum::badRequest, inlegalDesc);
       return;
     }
     /* httpHeaderNames.timeZone 请求头 在 Api::optRequest 统一校验了 */
@@ -49,7 +49,7 @@ namespace nameless_carpool {
     string externalMsg;
     string timeZone = requestInput.headers[httpHeaderNames.timeZone].get<string>();
 
-    const HttpStatusEnum& result = DbProxy::getInstance().requestVertifyCode(
+    const HttpStatus::Enum& result = DbProxy::getInstance().requestVertifyCode(
         body.phone.value(), timeZone, internalMsg, externalMsg);
 
     outResponse.inflateResponse(result, internalMsg, externalMsg);
@@ -66,14 +66,14 @@ namespace nameless_carpool {
     try {
       requestInput.body.get_to<Login::RequestBody>(loginBody);
       bodyLegal = loginBody.legalityCheck(inlegalDesc);
-    } catch (const Json::exception& e) {
+    } catch (const nlohmann::json::exception& e) {
       bodyLegal   = false;
       inlegalDesc = e.what();
       logInfo << inlegalDesc << endl;
     }
 
     if (!bodyLegal) {
-      outResponse.inflateResponse(HttpStatusEnum::badRequest, inlegalDesc);
+      outResponse.inflateResponse(HttpStatus::Enum::badRequest, inlegalDesc);
       return;
     }
 
@@ -84,7 +84,7 @@ namespace nameless_carpool {
     if(loginSuccess) {
 
     } else {
-      if (outResponse.isEmpty()) outResponse.inflateResponse(HttpStatusEnum::unknowErr);
+      if (outResponse.isEmpty()) outResponse.inflateResponse(HttpStatus::Enum::unknowErr);
     }
 
 

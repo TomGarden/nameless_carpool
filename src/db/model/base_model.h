@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 #include "libs/mysql_connector_arm_static/include/mysqlx/devapi/result.h"
-#include "sql_util.h"
+#include "src/db/sql_util.h"
 
 
 /*

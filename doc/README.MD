@@ -1,1 +1,265 @@
 项目使用过程中的文档若干
+
+
+- oat++ 的构建是以开发为目的构建的 , 真正发布的时候需要考虑重新构建它
+```
+# oatpp 和 oatpp-swagger 的安装都是如下命令 , 一个路数
+➜  oatpp-1.3.0 $ cmake -S . -B ./build_2023-03-16  
+➜  oatpp-1.3.0 $ cd build_2023-03-16 
+➜  build_2023-03-16 $ sudo make install
+Install the project...
+-- Install configuration: ""c
+-- Installing: /usr/local/lib/oatpp-1.3.0/*
+-- Installing: /usr/local/include/oatpp-1.3.0/*
+-- Installing: /usr/local/lib/cmake/oatpp-1.3.0/*
+--------------------------------------------------
+Install the project...
+-- Install configuration: ""
+-- Installing: /usr/local/lib/oatpp-1.3.0/liboatpp.a
+-- Installing: /usr/local/lib/oatpp-1.3.0/liboatpp-test.a
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/algorithm
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/algorithm/CRC.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/ApiClient_define.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/ApiClient_undef.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/ApiController_define.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/ApiController_undef.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/DTO_define.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/DTO_undef.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/DbClient_define.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/DbClient_undef.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/api_controller
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/api_controller/auth_define.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/api_controller/auth_undef.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/api_controller/base_define.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/api_controller/base_undef.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/api_controller/bundle_define.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/api_controller/bundle_undef.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/api_controller/cors_define.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/api_controller/cors_undef.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/dto
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/dto/base_define.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/dto/base_undef.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/dto/enum_define.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/codegen/dto/enum_undef.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/IODefinitions.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/Types.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async/Coroutine.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async/CoroutineWaitList.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async/Error.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async/Executor.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async/Lock.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async/Processor.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async/utils
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async/utils/FastQueue.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async/worker
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async/worker/IOEventWorker.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async/worker/IOWorker.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async/worker/TimerWorker.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/async/worker/Worker.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/base
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/base/CommandLineArguments.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/base/Config.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/base/Countable.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/base/Environment.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/base/ObjectHandle.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/concurrency
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/concurrency/SpinLock.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/concurrency/Thread.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/Bundle.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/buffer
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/buffer/FIFOBuffer.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/buffer/IOBuffer.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/buffer/Processor.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/ObjectMapper.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/TypeResolver.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/type
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/type/Any.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/type/Collection.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/type/Enum.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/type/List.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/type/Map.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/type/Object.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/type/PairList.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/type/Primitive.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/type/Type.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/type/UnorderedMap.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/type/UnorderedSet.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/mapping/type/Vector.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/resource
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/resource/File.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/resource/InMemoryData.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/resource/Resource.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/resource/TemporaryFile.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/share
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/share/LazyStringMap.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/share/MemoryLabel.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/share/StringTemplate.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/stream
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/stream/BufferStream.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/stream/FIFOStream.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/stream/FileStream.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/stream/Stream.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/data/stream/StreamBufferedProxy.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/macro
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/macro/basic.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/macro/codegen.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/macro/component.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/parser
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/parser/Caret.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/parser/ParsingError.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/provider
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/provider/Invalidator.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/provider/Pool.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/provider/Provider.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/utils
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/utils/Binary.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/utils/ConversionUtils.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/utils/Random.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/core/utils/String.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/encoding
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/encoding/Base64.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/encoding/Hex.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/encoding/Unicode.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/Address.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/ConnectionHandler.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/ConnectionPool.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/ConnectionProvider.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/ConnectionProviderSwitch.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/Server.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/Url.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/monitor
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/monitor/ConnectionInactivityChecker.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/monitor/ConnectionMaxAgeChecker.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/monitor/ConnectionMonitor.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/monitor/MetricsChecker.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/monitor/StatCollector.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/tcp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/tcp/Connection.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/tcp/client
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/tcp/client/ConnectionProvider.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/tcp/server
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/tcp/server/ConnectionProvider.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/virtual_
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/virtual_/Interface.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/virtual_/Pipe.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/virtual_/Socket.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/virtual_/client
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/virtual_/client/ConnectionProvider.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/virtual_/server
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/network/virtual_/server/ConnectionProvider.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/orm
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/orm/Connection.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/orm/DbClient.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/orm/Executor.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/orm/QueryResult.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/orm/SchemaMigration.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/orm/Transaction.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/parser
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/parser/json
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/parser/json/Beautifier.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/parser/json/Utils.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/parser/json/mapping
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/parser/json/mapping/Deserializer.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/parser/json/mapping/ObjectMapper.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/parser/json/mapping/Serializer.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/client
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/client/ApiClient.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/client/HttpRequestExecutor.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/client/RequestExecutor.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/client/RetryPolicy.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/mime
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/mime/multipart
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/mime/multipart/FileProvider.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/mime/multipart/InMemoryDataProvider.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/mime/multipart/Multipart.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/mime/multipart/Part.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/mime/multipart/PartList.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/mime/multipart/PartReader.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/mime/multipart/Reader.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/mime/multipart/StatefulParser.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/mime/multipart/TemporaryFileProvider.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/CommunicationError.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/Http.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/encoding
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/encoding/Chunked.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/encoding/EncoderProvider.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/encoding/ProviderCollection.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/incoming
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/incoming/BodyDecoder.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/incoming/Request.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/incoming/RequestHeadersReader.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/incoming/Response.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/incoming/ResponseHeadersReader.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/incoming/SimpleBodyDecoder.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/outgoing
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/outgoing/Body.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/outgoing/BufferBody.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/outgoing/MultipartBody.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/outgoing/Request.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/outgoing/Response.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/outgoing/ResponseFactory.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/outgoing/StreamingBody.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/utils
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/protocol/http/utils/CommunicationUtils.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/AsyncHttpConnectionHandler.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/HttpConnectionHandler.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/HttpProcessor.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/HttpRequestHandler.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/HttpRouter.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/api
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/api/ApiController.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/api/Endpoint.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/handler
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/handler/AuthorizationHandler.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/handler/ErrorHandler.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/interceptor
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/interceptor/AllowCorsGlobal.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/interceptor/RequestInterceptor.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/server/interceptor/ResponseInterceptor.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/url
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/url/mapping
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/url/mapping/Pattern.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp/web/url/mapping/Router.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp-test
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp-test/Checker.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp-test/UnitTest.hpp
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp-test/web
+-- Up-to-date: /usr/local/include/oatpp-1.3.0/oatpp/oatpp-test/web/ClientServerTestRunner.hpp
+-- Installing: /usr/local/lib/cmake/oatpp-1.3.0/oatppTargets.cmake
+-- Installing: /usr/local/lib/cmake/oatpp-1.3.0/oatppTargets-noconfig.cmake
+-- Installing: /usr/local/lib/cmake/oatpp-1.3.0/oatppConfig.cmake
+-- Installing: /usr/local/lib/cmake/oatpp-1.3.0/oatppConfigVersion.cmake
+```
+
+- dragon 的安装过程
+```
+# Linux源码安装
+# 注意 : 如果有必要 , 需要自行下载 trantor 替换源码包中的空文件夹
+# 默认是编译debug版本 , 如果想编译release版本 : [cmake -DCMAKE_BUILD_TYPE=Release ..]
+sudo apt install libjsoncpp-dev uuid-dev openssl libssl-dev zlib1g-dev googletest
+# 未安装的内容 c-ares libbrotli 
+➜  drogon-1.8.3 cmake -S . -B ./build_2023-03-16 
+➜  drogon-1.8.3 cd build_2023-03-16 
+➜  build_2023-03-16 sudo make install
+Install the project...
+-- Install configuration: ""
+-- Installing: /usr/local/lib/libdrogon.a
+-- Installing: /usr/local/include/drogon/*
+-- Installing: /usr/local/lib/cmake/Drogon/*.cmake
+-- Installing: /usr/local/lib/libtrantor.a
+-- Installing: /usr/local/include/trantor/*
+-- Installing: /usr/local/lib/cmake/Trantor/*.cmake
+-- Installing: /usr/local/bin/drogon_ctl
+-- Installing: /usr/local/bin/dg_ctl
+```

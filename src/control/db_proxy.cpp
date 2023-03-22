@@ -1,21 +1,23 @@
 
 #include "db_proxy.h"
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <string>
 
-#include "authenticate.h"
-#include "base_model.h"
-#include "db_manager.h"
-#include "common.h"
-#include "log_utils.h"
-#include "constant.h"
-#include "user_info.h"
-#include "http_util.h"
-#include "sql_util.h"
-#include "user_info.h"
+#include "src/db/model/base_model.h"
+#include "src/db/model/user_info.h"
+#include "src/db/sql/db_manager.h"
+#include "src/db/sql_util.h"
+#include "src/net/api/authenticate.h"
+#include "src/net/model/authenticate.h"
+#include "src/utils/common.h"
+#include "src/utils/constant.h"
+#include "src/utils/json/include_json.h"
+#include "src/utils/log_utils.h"
+#include "src/net/http_util.h"
 
 namespace nameless_carpool {
 
@@ -26,7 +28,7 @@ namespace nameless_carpool {
     return dbProxy;
   }
 
-  HttpStatusEnum DbProxy::requestVertifyCode(const string& phoneNumber, const string& timeZone,
+  HttpStatus::Enum DbProxy::requestVertifyCode(const string& phoneNumber, const string& timeZone,
                                              string& internalMsg, string& externalMsg) {
     /* telephone 表内一个手机号可以查到几行 */
     // const vector<Telephone>& telVector = DbManager::getInstance().queryTelephone(phoneNumber);
@@ -35,7 +37,7 @@ namespace nameless_carpool {
     const std::string& whereStr = db.where(SqlUtil::backticks(telephoneNames.number), SqlUtil::nullOrApostrophe(phoneNumber), false);
     const vector<Telephone>& telVector = db.query<Telephone>(whereStr);
 
-    Json telVectorJson = Json(telVector);
+    nlohmann::json telVectorJson = nlohmann::json(telVector);
     logInfo << telVectorJson.dump(2) << std::endl;
 
     if (telVector.size() > 1) {
@@ -43,7 +45,7 @@ namespace nameless_carpool {
       externalMsg = constantStr.serverErr;
       logInfo << boost::str(boost::format("tel 数量异常 , 预计有一条数据 , 实际有 %1%") % telVector.size()) << std::endl;
 
-      return HttpStatusEnum::unknowErr;
+      return HttpStatus::Enum::unknowErr;
 
     } else if (telVector.size() < 1) {
       Telephone telObj;
@@ -62,7 +64,7 @@ namespace nameless_carpool {
       }
 
       db.insert<Telephone>(telObj);
-      return HttpStatusEnum::success;
+      return HttpStatus::Enum::success;
     }
 
     Telephone curTel = telVector[0];
@@ -78,19 +80,19 @@ namespace nameless_carpool {
       db.update<Telephone>(curTel);
     }
 
-    return HttpStatusEnum::success;
+    return HttpStatus::Enum::success;
   }
 
   bool DbProxy::login(const HttpRequest& inRequest, const Login::RequestBody& inBody, HttpResponse& outResponse) {
     auto serverLogicError = [&](const std::string& input) {
       const std::string& errMsg = input;
       logInfo << errMsg << std::endl;
-      outResponse.inflateResponse(HttpStatusEnum::serverLogicError, errMsg, constantStr.serverErr);
+      outResponse.inflateResponse(HttpStatus::Enum::serverLogicError, errMsg, constantStr.serverErr);
     };
     // auto serverLogicError = [&](const boost::basic_format<char>& input) {
     //   const std::string& errMsg = boost::str(input);
     //   logInfo << errMsg << std::endl;
-    //   outResponse.inflateResponse(HttpStatusEnum::serverLogicError, errMsg, constantStr.serverErr);
+    //   outResponse.inflateResponse(HttpStatus::Enum::serverLogicError, errMsg, constantStr.serverErr);
     // };
 
     DbManager& db = DbManager::getInstance();
@@ -102,12 +104,12 @@ namespace nameless_carpool {
 
       /* 异常处理 */ {
         if (telVector.size() > 1) {
-          outResponse.inflateResponse(HttpStatusEnum::unknowErr, WITH_LINE_INFO(constantStr.logicException), constantStr.serverErr);
+          outResponse.inflateResponse(HttpStatus::Enum::unknowErr, WITH_LINE_INFO(constantStr.logicException), constantStr.serverErr);
           return false;
 
         } else if (telVector.size() < 1) {
           /* 没找到当前手机号 , 手机号未注册 */
-          outResponse.inflateResponse(HttpStatusEnum::badRequest, WITH_LINE_INFO(constantStr.telNotRegister), constantStr.pleaseRetry);
+          outResponse.inflateResponse(HttpStatus::Enum::badRequest, WITH_LINE_INFO(constantStr.telNotRegister), constantStr.pleaseRetry);
           return false;
 
         } else /* telVector.size() == 1 */ {
@@ -115,13 +117,13 @@ namespace nameless_carpool {
           telPtr = std::make_shared<Telephone>(telVector[0]);
 
           if (telPtr->vcIsExpired()) { /* 验证码已过期 */
-            outResponse.inflateResponse(HttpStatusEnum::badRequest, WITH_LINE_INFO(constantStr.vertifyCodeExpired), constantStr.pleaseReapplyVc);
+            outResponse.inflateResponse(HttpStatus::Enum::badRequest, WITH_LINE_INFO(constantStr.vertifyCodeExpired), constantStr.pleaseReapplyVc);
             return false;
           }
 
           if (!telPtr->vertify_code.has_value() || !inBody.verify_code.has_value() ||
               !boost::algorithm::equals(telPtr->vertify_code.value(), inBody.verify_code.value())) {
-            outResponse.inflateResponse(HttpStatusEnum::badRequest, WITH_LINE_INFO(constantStr.vertifyCodeErr), constantStr.pleaseRetry);
+            outResponse.inflateResponse(HttpStatus::Enum::badRequest, WITH_LINE_INFO(constantStr.vertifyCodeErr), constantStr.pleaseRetry);
             return false;
           }
 
@@ -248,11 +250,11 @@ namespace nameless_carpool {
          一是通过先序列化后反序列化的方式 
          二是 : https://stackoverflow.com/a/35778400/7707781
       */
-      response.user = Json(*userPtr).get<Login::Response::User_>();
-      response.session = Json(*sessionPtr).get<Login::Response::Session_>();
+      response.user = nlohmann::json(*userPtr).get<Login::Response::User_>();
+      response.session = nlohmann::json(*sessionPtr).get<Login::Response::Session_>();
     }
 
-    outResponse.inflateResponse(HttpStatusEnum::success).inflateBodyData(response);
+    outResponse.inflateResponse(HttpStatus::Enum::success).inflateBodyData(response);
     return true;
   }
 }  // namespace nameless_carpool
