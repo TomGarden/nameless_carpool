@@ -1,61 +1,68 @@
-START TRANSACTION ; 
- INSERT INTO `nameless_carpool`.`user` ( 
-          `id` ,
-          `id_card_num` ,
-          `name` ,
-          `gender` ,
-          `birth_date` ,
-          `birth_date_tz` ,
-          `create_time` ,
-          `create_time_tz` ,
-          `update_time` ,
-          `update_time_tz` ,
-          `del_time` ,
-          `del_time_tz` 
- )
- VALUES 
-        (
-                 NULL ,
-                 NULL ,
-                 NULL ,
-                 NULL ,
-                 NULL ,
-                 NULL ,
-                 '2023-03-06 12:16:45.774661' ,
-                 'Asia/Shanghai' ,
-                 '2023-03-06 12:16:45.774661' ,
-                 'Asia/Shanghai' ,
-                 NULL ,
-                 NULL 
-        ) ;
- SET @last_insert_user_id = (SELECT LAST_INSERT_ID());
- INSERT INTO `nameless_carpool`.`user_tel` ( 
-          `user_id` ,
-          `telephone_id` ,
-          `desc` ,
-          `flag` ,
-          `create_time` ,
-          `create_time_tz` ,
-          `update_time` ,
-          `update_time_tz` ,
-          `del_time` ,
-          `del_time_tz` 
- )
- VALUES 
-        (
-                 @last_insert_user_id ,
-                 '1' ,
-                 NULL ,
-                 '00000001' ,
-                 '2023-03-06 12:16:45.774661' ,
-                 'Asia/Shanghai' ,
-                 '2023-03-06 12:16:45.774661' ,
-                 'Asia/Shanghai' ,
-                 NULL ,
-                 NULL 
-        ) ;
- SELECT @last_insert_user_id ;
-COMMIT ; 
+
+-- 更新表的某一列列名
+-- ALTER TABLE nameless_carpool.telephone RENAME COLUMN vertify_code TO verify_code;
+
+
+
+
+-- START TRANSACTION ; 
+--  INSERT INTO `nameless_carpool`.`user` ( 
+--           `id` ,
+--           `id_card_num` ,
+--           `name` ,
+--           `gender` ,
+--           `birth_date` ,
+--           `birth_date_tz` ,
+--           `create_time` ,
+--           `create_time_tz` ,
+--           `update_time` ,
+--           `update_time_tz` ,
+--           `del_time` ,
+--           `del_time_tz` 
+--  )
+--  VALUES 
+--         (
+--                  NULL ,
+--                  NULL ,
+--                  NULL ,
+--                  NULL ,
+--                  NULL ,
+--                  NULL ,
+--                  '2023-03-06 12:16:45.774661' ,
+--                  'Asia/Shanghai' ,
+--                  '2023-03-06 12:16:45.774661' ,
+--                  'Asia/Shanghai' ,
+--                  NULL ,
+--                  NULL 
+--         ) ;
+--  SET @last_insert_user_id = (SELECT LAST_INSERT_ID());
+--  INSERT INTO `nameless_carpool`.`user_tel` ( 
+--           `user_id` ,
+--           `telephone_id` ,
+--           `desc` ,
+--           `flag` ,
+--           `create_time` ,
+--           `create_time_tz` ,
+--           `update_time` ,
+--           `update_time_tz` ,
+--           `del_time` ,
+--           `del_time_tz` 
+--  )
+--  VALUES 
+--         (
+--                  @last_insert_user_id ,
+--                  '1' ,
+--                  NULL ,
+--                  '00000001' ,
+--                  '2023-03-06 12:16:45.774661' ,
+--                  'Asia/Shanghai' ,
+--                  '2023-03-06 12:16:45.774661' ,
+--                  'Asia/Shanghai' ,
+--                  NULL ,
+--                  NULL 
+--         ) ;
+--  SELECT @last_insert_user_id ;
+-- COMMIT ; 
 
 
 /* 时间转换 */

@@ -13,18 +13,6 @@
     "method": "POST",
     "headers": {
       "time_zone": "Asia/Shanghai",
-      "headerTwo": "two"
-    },
-    "uri": "/fcgi_test/nameless_carpool/request_verify_code",
-    "body": {
-      "phone": "15912341111"
-    },
-    "desc": "申请验证码"
-  },
-  {
-    "method": "POST",
-    "headers": {
-      "time_zone": "Asia/Shanghai",
       "token": "47b4ac7f-e720-4f49-b4f5-0e0a62305afd"
     },
     "uri": "/fcgi_test/nameless_carpool/publish",

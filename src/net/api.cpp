@@ -20,21 +20,18 @@ namespace nameless_carpool {
         if (AuthApi::loginUri().compare(methodUri) == 0) {                     /* empty */
         } else if (AuthApi::requestVerifyCodeUri().compare(methodUri) == 0) { /* empty */
         } else {
-          std::string internalMsg = constantStr.headerMissErr + httpHeaderNames.token;
-          responseOutput.inflateResponse(HttpStatus::Enum::badRequest, internalMsg);
+          std::string internalMsg = httpStatus.getDesc(HttpStatus::Enum::requestUndefined) + " 确认下是错别字还是未定义";
+          responseOutput.inflateResponse(HttpStatus::Enum::requestUndefined, WITH_LINE_INFO(internalMsg));
           return;
         }
       }
     }
 
-    if(AuthApi::loginUri().compare(methodUri) == 0) {
-      AuthApi::login(requestInput, responseOutput);
-    } else if(AuthApi::requestVerifyCodeUri().compare(methodUri) == 0) {
-      AuthApi::requestVC(requestInput, responseOutput);
-    }
-    else {
-      Api::unknownRequest(requestInput, responseOutput);
-    }
+    if (/**/ methodUri.compare(AuthApi::loginUri()) == 0) AuthApi::login(requestInput, responseOutput);
+    else if (methodUri.compare(AuthApi::requestVerifyCodeUri()) == 0) AuthApi::requestVC(requestInput, responseOutput);
+    else Api::unknownRequest(requestInput, responseOutput);
+
+    responseOutput.appendDefaultHeaders();
   }
 
   void Api::unknownRequest(const HttpRequest& requestInput, HttpResponse& responseOutput) {

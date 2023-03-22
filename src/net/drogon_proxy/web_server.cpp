@@ -8,6 +8,7 @@
 
 #include "api.h"
 #include "http_util.h"
+#include "log_utils.h"
 
 namespace nameless_carpool {
 
@@ -20,7 +21,9 @@ namespace nameless_carpool {
   void WebServer::convert(const nameless_carpool::HttpResponse& inNamelessHttpResponse, const drogon::HttpResponsePtr& outDrogonHttpResponsePtr) {
     outDrogonHttpResponsePtr->setCustomStatusCode(inNamelessHttpResponse.getIntStatus(), inNamelessHttpResponse.getStatusNameView());
     for (auto& header :inNamelessHttpResponse.headers.items()) {
-      outDrogonHttpResponsePtr->addHeader(header.key(),header.value());
+      if (header.key().compare(httpHeaderNames.contentType) == 0) {
+        outDrogonHttpResponsePtr->setContentTypeString(header.value().get<std::string>());
+      } else outDrogonHttpResponsePtr->addHeader(header.key(), header.value());
     }
     outDrogonHttpResponsePtr->setBody(inNamelessHttpResponse.body.dump(2));
   }
@@ -42,9 +45,11 @@ namespace nameless_carpool {
       logWarning << "☞☞☞☞  http request convert done" << logEndl;
 
       if (httpResponse.isEmpty()) Api::optRequest(httpRequest, httpResponse);
+
       logWarning << "☞☞☞☞  httpResponse generate done " << logEndl;
       auto resp = drogon::HttpResponse::newHttpResponse();
       convert(httpResponse, resp);
+
       logWarning << "☞☞☞☞  httpResponse convert done " << logEndl;
       callback(resp);
       httpResponse.printSelf();
@@ -57,6 +62,8 @@ namespace nameless_carpool {
 
   void WebServer::run(){
     withHandler();
+
+    if (isDebugModel()) drogon::app().setIdleConnectionTimeout(0); /* 默认 60s ; 设置 0 , 意味着 永远不会超时 */
 
     drogon::app()
         .setLogPath("/mount_point/data/_document/c_cpp_program/nameless_carpool/tmp_dir/drogon_log")

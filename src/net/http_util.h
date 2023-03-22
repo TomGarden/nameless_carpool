@@ -1,27 +1,27 @@
 #pragma once
 
-#include <cstdlib>
 #include <unistd.h>
-#include <string>
-#include <map>
-#include <iterator>
+
+#include <any>
+#include <boost/algorithm/string.hpp>
+#include <cmath>
+#include <cstdlib>
+#include <ios>
 #include <iostream>
+#include <iterator>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <cmath>
-#include <iostream>
-#include <ios>
-#include <any>
-#include <boost/algorithm/string.hpp>
+#include <thread>
 
-#include "src/utils/tom_string_utils.h"
-#include "src/utils/fcgi_util.h"
-#include "src/utils/log_utils.h"
 #include "glog/logging.h"
-#include "src/utils/json/include_json.h"
 #include "src/net/model/response_body.h"
 #include "src/utils/constant.h"
+#include "src/utils/fcgi_util.h"
+#include "src/utils/json/include_json.h"
+#include "src/utils/log_utils.h"
+#include "src/utils/tom_string_utils.h"
 
 extern int flag;
 
@@ -168,6 +168,7 @@ namespace nameless_carpool {
     const std::string token       = "token";
     const std::string contentType = "Content-type";
     const std::string pid         = "PID";
+    const std::string tid         = "Thread-id";
   };
   extern HttpHeaderNames httpHeaderNames;
 
@@ -209,9 +210,7 @@ namespace nameless_carpool {
     virtual bool isEmpty() {
       return headers.empty() && body.empty();
     }
-    virtual void printSelf() {
-      /* empty */
-    }
+    virtual void printSelf() { /* empty */ }
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpContent, headers, body);
     // NLOHMANN_DEFINE_NORMAL_TYPE_INTRUSIVE(HttpContent, headers, body);
@@ -288,6 +287,12 @@ namespace nameless_carpool {
 
     HttpStatus::Enum status = HttpStatus::Enum::unsetErr;
 
+    void appendDefaultHeaders() {
+      if (!headers.contains(httpHeaderNames.contentType)) headers[httpHeaderNames.contentType] = mediaType.json + "; charset=utf-8";
+      if (!headers.contains(httpHeaderNames.pid)) headers[httpHeaderNames.pid] = std::to_string(getpid());
+      if (!headers.contains(httpHeaderNames.tid)) headers[httpHeaderNames.tid] = boost::str(boost::format("%1%") % std::this_thread::get_id());
+    }
+
     HttpResponse& setStatus(const HttpStatus::Enum& enumStatus) {
       this->status = enumStatus;
       return *this;
@@ -296,30 +301,19 @@ namespace nameless_carpool {
     std::string getStatusName() const { return httpStatus.getName(status); }
     std::string_view getStatusNameView() const { return httpStatus.getNameView(status); }
 
-    std::string toString(bool withDefHeader = true) {
+    std::string toString() {
       std::stringstream ss;
 
       const std::string formatEndLine = "\r\n";
 
       /* 状态码 */ ss << "Status: " << httpStatus.getName(status) << formatEndLine;
-      /* header */  {
-        std::map<std::string, std::string> headersMap;
-        if (!headers.is_null() && !headers.empty()) headers.get_to(headersMap);
-        if(withDefHeader) {
-          headersMap[httpHeaderNames.contentType] = mediaType.json + "; charset=utf-8";
-          headersMap[httpHeaderNames.pid] = std::to_string(getpid());
-        }
-        for (const std::pair<std::string, std::string>& objPair : headersMap) {
-          ss << objPair.first << ":" << objPair.second << formatEndLine;
-        }
+      /* header */ for (const auto& objPair : headers.items()) {
+        ss << objPair.key() << ":" << objPair.value() << formatEndLine;
       }
       /*空行*/ ss << formatEndLine;
       /* body */ ss << body.dump(2);
-      std::string result = ss.str();
 
-      logInfo << "替换换行字符完成\n"<< result << std::endl;
-
-      return result;
+      return ss.str();
     }
 
     wstring toWString() {

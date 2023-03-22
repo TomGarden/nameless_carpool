@@ -11,20 +11,9 @@
 
 namespace nameless_carpool {
 
-  using namespace std;
-
-  const std::string AuthApi::uriPrefix = "/fcgi_test/nameless_carpool";
-
   extern HttpMethodUtil  httpMethodUtil;
   extern HttpHeaderNames httpHeaderNames;
 
-  std::string AuthApi::getUri(const HttpMethodEnum& method, const std::string& path) {
-    return httpMethodUtil.getName(method) + AuthApi::uriPrefix + path;
-  }
-
-  std::string AuthApi::requestVerifyCodeUri() {
-    return getUri(HttpMethodEnum::POST, "/request_verify_code");
-  }
   void AuthApi::requestVC(const HttpRequest& requestInput, HttpResponse& outResponse) {
     std::string                          inlegalDesc; /* 非法内容描述 */
     bool                            bodyLegal;   /* true : body 合法 */
@@ -55,9 +44,6 @@ namespace nameless_carpool {
     outResponse.inflateResponse(result, internalMsg, externalMsg);
   }
 
-  std::string AuthApi::loginUri() {
-    return getUri(HttpMethodEnum::POST, "/login");
-  }
   void AuthApi::login(const HttpRequest& requestInput, HttpResponse& outResponse) {
     std::string             inlegalDesc; /* 非法内容描述 */
     bool               bodyLegal;
