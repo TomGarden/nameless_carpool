@@ -15,7 +15,7 @@
       "time_zone": "Asia/Shanghai",
       "headerTwo": "two"
     },
-    "uri": "/fcgi_test/nameless_carpool/request_vertify_code",
+    "uri": "/fcgi_test/nameless_carpool/request_verify_code",
     "body": {
       "phone": "15912341111"
     },
@@ -61,7 +61,7 @@
       "time_zone": "Asia/Shanghai",
       "headerTwo": "two"
     },
-    "uri": "/fcgi_test/nameless_carpool/request_vertify_code",
+    "uri": "/fcgi_test/nameless_carpool/request_verify_code",
     "body": {
       "phone": "15912341234"
     },

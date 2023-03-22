@@ -13,25 +13,25 @@ namespace nameless_carpool {
 
   using namespace std;
 
-  const string AuthApi::uriPrefix = "/fcgi_test/nameless_carpool";
+  const std::string AuthApi::uriPrefix = "/fcgi_test/nameless_carpool";
 
   extern HttpMethodUtil  httpMethodUtil;
   extern HttpHeaderNames httpHeaderNames;
 
-  string AuthApi::getUri(const HttpMethodEnum& method, const string& path) {
+  std::string AuthApi::getUri(const HttpMethodEnum& method, const std::string& path) {
     return httpMethodUtil.getName(method) + AuthApi::uriPrefix + path;
   }
 
-  const string AuthApi::requestVertifyCodeUri() {
-    return getUri(HttpMethodEnum::POST, "/request_vertify_code");
+  std::string AuthApi::requestVerifyCodeUri() {
+    return getUri(HttpMethodEnum::POST, "/request_verify_code");
   }
   void AuthApi::requestVC(const HttpRequest& requestInput, HttpResponse& outResponse) {
-    string                          inlegalDesc; /* 非法内容描述 */
+    std::string                          inlegalDesc; /* 非法内容描述 */
     bool                            bodyLegal;   /* true : body 合法 */
-    RequestVertifyCode::RequestBody body;
+    RequestVerifyCode::RequestBody body;
 
     try {
-      requestInput.body.get_to<RequestVertifyCode::RequestBody>(body);
+      requestInput.body.get_to<RequestVerifyCode::RequestBody>(body);
       bodyLegal = body.legalityCheck(inlegalDesc);
     } catch (const nlohmann::json::exception& objException) {
       bodyLegal   = false;
@@ -45,21 +45,21 @@ namespace nameless_carpool {
     }
     /* httpHeaderNames.timeZone 请求头 在 Api::optRequest 统一校验了 */
 
-    string internalMsg;
-    string externalMsg;
-    string timeZone = requestInput.headers[httpHeaderNames.timeZone].get<string>();
+    std::string internalMsg;
+    std::string externalMsg;
+    std::string timeZone = requestInput.headers[httpHeaderNames.timeZone].get<std::string>();
 
-    const HttpStatus::Enum& result = DbProxy::getInstance().requestVertifyCode(
+    const HttpStatus::Enum& result = DbProxy::getInstance().requestVerifyCode(
         body.phone.value(), timeZone, internalMsg, externalMsg);
 
     outResponse.inflateResponse(result, internalMsg, externalMsg);
   }
 
-  const string AuthApi::loginUri() {
+  std::string AuthApi::loginUri() {
     return getUri(HttpMethodEnum::POST, "/login");
   }
   void AuthApi::login(const HttpRequest& requestInput, HttpResponse& outResponse) {
-    string             inlegalDesc; /* 非法内容描述 */
+    std::string             inlegalDesc; /* 非法内容描述 */
     bool               bodyLegal;
     Login::RequestBody loginBody;
 

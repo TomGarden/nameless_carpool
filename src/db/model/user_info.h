@@ -151,7 +151,7 @@ struct nameless_carpool::Telephone : public BaseTime {
 
     const std::string id                 = "id"                 ;
     const std::string number             = "number"             ;
-    const std::string vertify_code       = "vertify_code"       ;
+    const std::string verify_code       = "verify_code"       ;
     const std::string vc_update_time     = "vc_update_time"     ;
     const std::string vc_update_time_tz  = "vc_update_time_tz"  ;
 
@@ -159,7 +159,7 @@ struct nameless_carpool::Telephone : public BaseTime {
     virtual const std::vector<std::string> getPrimaryKeyNameVector() const override { return {id}; }
     virtual std::vector<std::string>       getSubUnPrimaryKeyNameVector() const override {
       return {number,
-              vertify_code,
+              verify_code,
               vc_update_time,
               vc_update_time_tz};
     }
@@ -167,14 +167,14 @@ struct nameless_carpool::Telephone : public BaseTime {
 
   std::optional<uint64_t>      id                = std::nullopt;
   std::optional<std::string>   number            = std::nullopt;
-  std::optional<std::string>   vertify_code      = std::nullopt;
+  std::optional<std::string>   verify_code      = std::nullopt;
   std::optional<std::string>   vc_update_time    = std::nullopt;
   std::optional<std::string>   vc_update_time_tz = std::nullopt;
 
   NLOHMANN_DEFINE_TYPE_INTRUSIVE(Telephone          ,
                                  id                 ,
                                  number             ,
-                                 vertify_code       ,
+                                 verify_code       ,
                                  vc_update_time     ,
                                  vc_update_time_tz  ,
 
@@ -202,7 +202,7 @@ struct nameless_carpool::Telephone : public BaseTime {
   virtual std::vector<std::optional<std::string>>
   getSubUnPrimaryKeyValVector() const override {
     return {number,
-            vertify_code,
+            verify_code,
             vc_update_time,
             vc_update_time_tz};
   }
@@ -329,7 +329,7 @@ struct nameless_carpool::Session :public BaseTime {
 
   struct AuthMethod {
     const std::string unknow            = "unknow";
-    const std::string telMsgVertifyCode = "tel_msg_vertify_code";
+    const std::string telMsgVerifyCode  = "tel_msg_verify_code";
   };
 
   std::optional<uint64_t>    id                   = std::nullopt; /*  */

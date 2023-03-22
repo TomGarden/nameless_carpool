@@ -41,7 +41,7 @@ WHERE  `telephone`.`number` = '123123'
 INSERT LOW_PRIORITY INTO `telephone` (
         `id`                  ,
         `number`              ,
-        `vertify_code`        ,
+        `verify_code`        ,
         `vc_update_time`      ,
         `vc_update_time_tz`   ,
         `create_time`         ,
@@ -62,7 +62,7 @@ VALUES (
 INSERT LOW_PRIORITY INTO `telephone`(
         `number`            ,
         `for_login`         ,
-        `vertify_code`      ,
+        `verify_code`      ,
         `desc`              ,
         `vc_update_time`    ,
         `vc_update_time_tz` ,
@@ -75,7 +75,7 @@ INSERT LOW_PRIORITY INTO `telephone`(
         VALUES (
                 {}                        //  number
                 true                      //  for_login
-                NULL                        //  vertify_code
+                NULL                        //  verify_code
                 NULL                    //  desc
                                         //  vc_update_time
                                         //  vc_update_time_tz

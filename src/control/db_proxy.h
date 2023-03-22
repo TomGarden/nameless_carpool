@@ -29,14 +29,14 @@ namespace nameless_carpool {
      *  @param {string&} externalMsg    用于面向用户提醒的异常信息
      *  @return {*} HttpStatus::Enum::success, 操作成功
      */
-    HttpStatus::Enum requestVertifyCode(const string& phoneNumber, const string& timeZone,
+    HttpStatus::Enum requestVerifyCode(const string& phoneNumber, const string& timeZone,
                             string& internalMsg, string& externalMsg);
 
     
     /** @description: 登录动作
      * @param {string&} phoneNumber
      * @param {string&} timeZone
-     * @param {string&} vertifyCode
+     * @param {string&} verifyCode
      * @param {string&} internalMsg
      * @param {string&} externalMsg
      * @return {*}  true, 操作成功, 结果有效

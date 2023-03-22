@@ -17,19 +17,19 @@ namespace nameless_carpool {
       }
 
       if (!requestInput.headers.contains(httpHeaderNames.token)) {
-        if(AuthApi::loginUri().compare(methodUri) == 0) { /* empty */ }
-        else if(AuthApi::requestVertifyCodeUri().compare(methodUri) == 0) { /* empty */ }
-        else {
-        std::string internalMsg = constantStr.headerMissErr + httpHeaderNames.token;
-        responseOutput.inflateResponse(HttpStatus::Enum::badRequest, internalMsg);
-        return;
+        if (AuthApi::loginUri().compare(methodUri) == 0) {                     /* empty */
+        } else if (AuthApi::requestVerifyCodeUri().compare(methodUri) == 0) { /* empty */
+        } else {
+          std::string internalMsg = constantStr.headerMissErr + httpHeaderNames.token;
+          responseOutput.inflateResponse(HttpStatus::Enum::badRequest, internalMsg);
+          return;
         }
       }
     }
 
     if(AuthApi::loginUri().compare(methodUri) == 0) {
       AuthApi::login(requestInput, responseOutput);
-    } else if(AuthApi::requestVertifyCodeUri().compare(methodUri) == 0) {
+    } else if(AuthApi::requestVerifyCodeUri().compare(methodUri) == 0) {
       AuthApi::requestVC(requestInput, responseOutput);
     }
     else {

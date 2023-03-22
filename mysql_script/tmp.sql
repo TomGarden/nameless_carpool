@@ -74,7 +74,7 @@ FROM   `nameless_carpool`.`telephone`  WHERE  `telephone`.`number` = '1591234123
 /* INSERT LOW_PRIORITY INTO `nameless_carpool`.`telephone` ( 
          `id`                  ,
          `number`              ,
-         `vertify_code`        ,
+         `verify_code`        ,
          `vc_update_time`      ,
          `vc_update_time_tz`   ,
          `create_time`         ,
@@ -118,7 +118,7 @@ WHERE  `telephone`.`number` = '--123123' ; */
 -- INSERT INTO `nameless_carpool`.`telephone` (
 --                   `id`                  ,
 --                   `number`              ,
---                   `vertify_code`        ,
+--                   `verify_code`        ,
 --                   `vc_update_time`      ,
 --                   `vc_update_time_tz`   ,
 --                   `create_time`         ,
@@ -130,7 +130,7 @@ WHERE  `telephone`.`number` = '--123123' ; */
 --             VALUES (
 --                         NULL            ,
 --                         '17611111111'   ,
---                         'vertify_code'  ,
+--                         'verify_code'  ,
 --                         '2022-09-22 19:28:00.123456'    ,
 --                         'Asia/Shanghai'             ,
 --                         '2022-09-22 19:28:00.123456'    ,
@@ -163,7 +163,7 @@ WHERE  `telephone`.`number` = '--123123' ; */
 --                                WHEN '1' THEN '15111111111'                                                            
 --                                WHEN '2' THEN '15122222222'                                                            
 --                                END,                                                            
---        `vertify_code`        = CASE `id`                                                            
+--        `verify_code`        = CASE `id`
 --                                WHEN '1' THEN 'vvv11111111'                                                            
 --                                WHEN '2' THEN 'vvv22222222'                                                            
 --                                END                                                            
@@ -175,7 +175,7 @@ WHERE  `telephone`.`number` = '--123123' ; */
 --                                WHEN '1' THEN '15111111111'                                                            
 --                                WHEN '2' THEN '15122222222'                                                            
 --                                END,                                                            
---        `vertify_code`        = CASE `id`                                                            
+--        `verify_code`        = CASE `id`
 --                                WHEN '1' THEN 'vvv11111111'                                                            
 --                                WHEN '2' THEN 'vvv22222222'                                                            
 --                                END                                                            
@@ -288,7 +288,7 @@ WHERE  `telephone`.`number` = '--123123' ; */
 
 -- SELECT     `id` ,
 --           `number` ,
---           `vertify_code` ,
+--           `verify_code` ,
 --           `vc_update_time` ,
 --           `vc_update_time_tz` ,
 --           `create_time` ,

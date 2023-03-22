@@ -173,7 +173,7 @@ class nameless_carpool::DbManager {
       -- INSERT INTO `nameless_carpool`.`telephone` (
       --                   `id`                  ,
       --                   `number`              ,
-      --                   `vertify_code`        ,
+      --                   `verify_code`        ,
       --                   `vc_update_time`      ,
       --                   `vc_update_time_tz`   ,
       --                   `create_time`         ,
@@ -185,7 +185,7 @@ class nameless_carpool::DbManager {
       --             VALUES (
       --                         NULL            ,
       --                         '17611111111'   ,
-      --                         'vertify_code'  ,
+      --                         'verify_code'  ,
       --                         '2022-09-22 19:28:00.123456'    ,
       --                         'Asia/Shanghai'             ,
       --                         '2022-09-22 19:28:00.123456'    ,

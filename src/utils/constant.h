@@ -17,10 +17,10 @@ namespace nameless_carpool {
 
     const std::string pleaseRetry = "请重试";
 
-    const std::string vertifyCode        = "验证码";
-    const std::string pleaseReapplyVc    = "请重新申请" + vertifyCode;
-    const std::string vertifyCodeErr     = vertifyCode + "错误";
-    const std::string vertifyCodeExpired = vertifyCode + "已到期";
+    const std::string verifyCode        = "验证码";
+    const std::string pleaseReapplyVc    = "请重新申请" + verifyCode;
+    const std::string verifyCodeErr     = verifyCode + "错误";
+    const std::string verifyCodeExpired = verifyCode + "已到期";
 
     const std::string telNumber      = "手机号";
     const std::string telNotRegister = boost::str(boost::format("未用手机号[%1%]接受验证码") % telNumber);

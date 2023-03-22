@@ -28,7 +28,7 @@ namespace nameless_carpool {
     return dbProxy;
   }
 
-  HttpStatus::Enum DbProxy::requestVertifyCode(const string& phoneNumber, const string& timeZone,
+  HttpStatus::Enum DbProxy::requestVerifyCode(const string& phoneNumber, const string& timeZone,
                                              string& internalMsg, string& externalMsg) {
     /* telephone 表内一个手机号可以查到几行 */
     // const vector<Telephone>& telVector = DbManager::getInstance().queryTelephone(phoneNumber);
@@ -53,7 +53,7 @@ namespace nameless_carpool {
         string timeStemp = Common::Date::newInstance(timeZone).formatStr<std::chrono::microseconds>();
 
         telObj.number            = phoneNumber;
-        telObj.vertify_code      = to_string(Common::Number::randomInt(100000, 999999));
+        telObj.verify_code      = to_string(Common::Number::randomInt(100000, 999999));
         telObj.vc_update_time    = timeStemp;
         telObj.vc_update_time_tz = timeZone;
 
@@ -72,7 +72,7 @@ namespace nameless_carpool {
     bool updateVC = curTel.vcIsExpired();
 
     if (updateVC) {
-      curTel.vertify_code      = to_string(Common::Number::randomInt(100000, 999999));
+      curTel.verify_code      = to_string(Common::Number::randomInt(100000, 999999));
       curTel.vc_update_time    = Common::Date::newInstance(timeZone).formatStr<std::chrono::microseconds>();
       curTel.vc_update_time_tz = timeZone;
       curTel.update_time       = curTel.vc_update_time;
@@ -117,13 +117,13 @@ namespace nameless_carpool {
           telPtr = std::make_shared<Telephone>(telVector[0]);
 
           if (telPtr->vcIsExpired()) { /* 验证码已过期 */
-            outResponse.inflateResponse(HttpStatus::Enum::badRequest, WITH_LINE_INFO(constantStr.vertifyCodeExpired), constantStr.pleaseReapplyVc);
+            outResponse.inflateResponse(HttpStatus::Enum::badRequest, WITH_LINE_INFO(constantStr.verifyCodeExpired), constantStr.pleaseReapplyVc);
             return false;
           }
 
-          if (!telPtr->vertify_code.has_value() || !inBody.verify_code.has_value() ||
-              !boost::algorithm::equals(telPtr->vertify_code.value(), inBody.verify_code.value())) {
-            outResponse.inflateResponse(HttpStatus::Enum::badRequest, WITH_LINE_INFO(constantStr.vertifyCodeErr), constantStr.pleaseRetry);
+          if (!telPtr->verify_code.has_value() || !inBody.verify_code.has_value() ||
+              !boost::algorithm::equals(telPtr->verify_code.value(), inBody.verify_code.value())) {
+            outResponse.inflateResponse(HttpStatus::Enum::badRequest, WITH_LINE_INFO(constantStr.verifyCodeErr), constantStr.pleaseRetry);
             return false;
           }
 

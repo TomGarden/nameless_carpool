@@ -51,7 +51,7 @@ namespace nameless_carpool {
     std::optional<int64_t> offset = Common::Date::passedNanoseconds(vc_update_time.value(), vc_update_time_tz.value());
     if (offset == std::nullopt) return true;
     if (offset < 0) return false; /* 小于零的情况认为是未过期 */
-    if (offset <= Common::Config::VERTIFY_CODE_LIFE_TIME_NANOSECONDS) return false;
+    if (offset <= Common::Config::VERIFY_CODE_LIFE_TIME_NANOSECONDS) return false;
     return true;
   }
 
@@ -96,8 +96,8 @@ namespace nameless_carpool {
       this->id = SqlUtil::getOptional<uint64_t>(value);
     } else if (name.compare(names.number            ) == 0) {
       this->number = SqlUtil::getOptional<string>(value);
-    } else if (name.compare(names.vertify_code      ) == 0) {
-      this->vertify_code = SqlUtil::getOptional<string>(value);
+    } else if (name.compare(names.verify_code      ) == 0) {
+      this->verify_code = SqlUtil::getOptional<string>(value);
     } else if (name.compare(names.vc_update_time    ) == 0) {
       this->vc_update_time = SqlUtil::getOptionalDate(value);
     } else if (name.compare(names.vc_update_time_tz ) == 0) {

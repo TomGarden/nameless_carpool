@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS `wc_user` (
 CREATE TABLE IF NOT EXISTS `telephone` (
   `id`                  INTEGER             NOT NULL  AUTO_INCREMENT                COMMENT '主键 id 自增',
   `number`              VARCHAR(99)             NULL                                COMMENT '手机号',
-  `vertify_code`        VARCHAR(20)             NULL                                COMMENT '验证码',
+  `verify_code`        VARCHAR(20)             NULL                                COMMENT '验证码',
   `vc_update_time`      DATETIME(6)             NULL                                COMMENT '验证码更新时间',
   `vc_update_time_tz`   VARCHAR(255)            NULL                                COMMENT '时区',
   
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS `telephone` (
 /* INSERT INTO `nameless_carpool`.`telephone` (
                   `id`                  ,
                   `number`              ,
-                  `vertify_code`        ,
+                  `verify_code`        ,
                   `vc_update_time`      ,
                   `vc_update_time_tz`   ,
                   `create_time`         ,
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS `telephone` (
             VALUES (
                   NULL            ,
                   '17611261931'   ,
-                  'vertify_code'  ,
+                  'verify_code'  ,
                   '1663578159'    ,
                   '8'             ,
                   '1663578159'    ,

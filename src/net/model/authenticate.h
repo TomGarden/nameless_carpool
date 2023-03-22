@@ -22,7 +22,7 @@ namespace nameless_carpool {
   }  // namespace Login
 
   /* 请求验证码 */
-  namespace RequestVertifyCode {
+  namespace RequestVerifyCode {
 
     struct RequestBody;
 
@@ -124,7 +124,7 @@ struct nameless_carpool::Login::Response {
 
 
 
-struct nameless_carpool::RequestVertifyCode::RequestBody {
+struct nameless_carpool::RequestVerifyCode::RequestBody {
   std::optional<std::string> phone;
 
   /** 参数合法性校验

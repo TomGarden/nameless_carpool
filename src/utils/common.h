@@ -27,10 +27,10 @@ namespace nameless_carpool {
 
 namespace nameless_carpool::Common::Config { /* 全局配置 */
   /* 验证码失效时间 */
-  extern const uint64_t VERTIFY_CODE_LIFE_TIME_SECOND       ;
-  extern const uint64_t VERTIFY_CODE_LIFE_TIME_MILLISECONDS ;
-  extern const uint64_t VERTIFY_CODE_LIFE_TIME_MICROSECONDS ;
-  extern const uint64_t VERTIFY_CODE_LIFE_TIME_NANOSECONDS  ;
+  extern const uint64_t VERIFY_CODE_LIFE_TIME_SECOND;
+  extern const uint64_t VERIFY_CODE_LIFE_TIME_MILLISECONDS;
+  extern const uint64_t VERIFY_CODE_LIFE_TIME_MICROSECONDS;
+  extern const uint64_t VERIFY_CODE_LIFE_TIME_NANOSECONDS;
 }
 
 struct nameless_carpool::Common::RegexVals { /* 正则 */
@@ -44,7 +44,7 @@ struct nameless_carpool::Common::RegexVals { /* 正则 */
    @return true, 合法 */
   bool isLegal(const std::string& regexStr, const std::string& str);
   bool isLegalPhone(const std::string& phoneNumber);
-  bool isLegalVC(const std::string& vertifyCodeStr);
+  bool isLegalVC(const std::string& verifyCodeStr);
 };
 
 namespace nameless_carpool::Common {/* 文件读取操作 */

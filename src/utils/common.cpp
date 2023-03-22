@@ -14,10 +14,10 @@
 
 namespace nameless_carpool::Common::Config { /* 全局配置 */
   /* 验证码失效时间 */
-  const uint64_t VERTIFY_CODE_LIFE_TIME_SECOND       = 5 * 60; /* 五分钟 */
-  const uint64_t VERTIFY_CODE_LIFE_TIME_MILLISECONDS = VERTIFY_CODE_LIFE_TIME_SECOND * 1'000;
-  const uint64_t VERTIFY_CODE_LIFE_TIME_MICROSECONDS = VERTIFY_CODE_LIFE_TIME_SECOND * 1'000'000;
-  const uint64_t VERTIFY_CODE_LIFE_TIME_NANOSECONDS  = VERTIFY_CODE_LIFE_TIME_SECOND * 1'000'000'000;
+  const uint64_t VERIFY_CODE_LIFE_TIME_SECOND       = 5 * 60; /* 五分钟 */
+  const uint64_t VERIFY_CODE_LIFE_TIME_MILLISECONDS = VERIFY_CODE_LIFE_TIME_SECOND * 1'000;
+  const uint64_t VERIFY_CODE_LIFE_TIME_MICROSECONDS = VERIFY_CODE_LIFE_TIME_SECOND * 1'000'000;
+  const uint64_t VERIFY_CODE_LIFE_TIME_NANOSECONDS  = VERIFY_CODE_LIFE_TIME_SECOND * 1'000'000'000;
 }
 
 
@@ -37,8 +37,8 @@ namespace nameless_carpool::Common {
     return isLegal(phoneNumber, this->phone_zh_CN);
   }
 
-  bool RegexVals::isLegalVC(const std::string& vertifyCodeStr) {
-    return isLegal(vertifyCodeStr, this->verifyCode);
+  bool RegexVals::isLegalVC(const std::string& verifyCodeStr) {
+    return isLegal(verifyCodeStr, this->verifyCode);
   }
 
 

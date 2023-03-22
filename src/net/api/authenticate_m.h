@@ -55,7 +55,7 @@ namespace nameless_carpool {
   }
 
   /* 请求验证码 */
-  namespace RequestVertifyCode {
+  namespace RequestVerifyCode {
 
     struct RequestBody {
       std::optional<std::string> phone;
