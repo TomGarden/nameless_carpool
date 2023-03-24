@@ -23,7 +23,7 @@ namespace nameless_carpool {
     std::optional<std::string> internalMsg; /* 不可对外公开的消息体, 软件内部流转的消息体 */
     std::optional<std::string> externalMsg; /* 可以对外公开的消息体, 比如对用户提示 */
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(ResponseBody, status, statusDesc, data, internalMsg, externalMsg)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(ResponseBody, status, statusDesc, data, internalMsg, externalMsg)
   };
 
 }

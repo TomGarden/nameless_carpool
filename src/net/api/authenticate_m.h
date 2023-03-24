@@ -46,7 +46,7 @@ namespace nameless_carpool {
         return result;
       }
 
-      NLOHMANN_DEFINE_TYPE_INTRUSIVE(RequestBody, phone, verify_code)
+      NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(RequestBody, phone, verify_code)
       // NLOHMANN_DEFINE_OPTIONAL_TYPE_INTRUSIVE(RequestBody, phone, verify_code)
     };
 
@@ -78,7 +78,7 @@ namespace nameless_carpool {
         return result;
       }
 
-      NLOHMANN_DEFINE_TYPE_INTRUSIVE(RequestBody, phone)
+      NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(RequestBody, phone)
       
     };
 

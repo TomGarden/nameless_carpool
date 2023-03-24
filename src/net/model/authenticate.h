@@ -45,7 +45,7 @@ struct nameless_carpool::Login::RequestBody {
   std::optional<std::string> verify_code;
   std::optional<std::string> client_type;
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE(RequestBody, phone, verify_code, client_type)
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(RequestBody, phone, verify_code, client_type)
 
   /* 参数合法性校验
      @return true, 合法 ;
@@ -79,7 +79,7 @@ struct nameless_carpool::Login::RequestBody {
 
 struct nameless_carpool::Login::Response {
   struct User_ : public User {
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(User_,
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(User_,
 
                                    id,
                                    id_card_num,
@@ -96,7 +96,7 @@ struct nameless_carpool::Login::Response {
                                    del_time_tz)
   };
   struct Session_ :public Session {
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Session_,
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Session_,
 
                                    id,
                                    client_more_info,
@@ -119,7 +119,7 @@ struct nameless_carpool::Login::Response {
   std::optional<User_>    user    = std::nullopt;
   std::optional<Session_> session = std::nullopt;
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE(Response, user, session)
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Response, user, session)
 };
 
 
@@ -147,5 +147,5 @@ struct nameless_carpool::RequestVerifyCode::RequestBody {
     return result;
   }
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE(RequestBody, phone)
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(RequestBody, phone)
 };

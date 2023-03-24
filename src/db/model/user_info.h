@@ -58,7 +58,7 @@ struct nameless_carpool::User : public BaseTime {
   std::optional<std::string> birth_date    = std::nullopt; /*  */
   std::optional<std::string> birth_date_tz = std::nullopt; /*  */
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE(User,
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(User,
 
                                  id,
                                  id_card_num,
@@ -114,7 +114,7 @@ struct nameless_carpool::WcUser : public BaseTime {
   std::optional<std::string> wc_uid    = std::nullopt;
   std::optional<std::string> wc_number = std::nullopt;
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE(WcUser,
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(WcUser,
 
                                  user_id,
                                  wc_uid,
@@ -169,7 +169,7 @@ struct nameless_carpool::Telephone : public BaseTime {
   std::optional<std::string>   vc_update_time    = std::nullopt;
   std::optional<std::string>   vc_update_time_tz = std::nullopt;
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE(Telephone          ,
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Telephone          ,
                                  id                 ,
                                  number             ,
                                  verify_code       ,
@@ -340,7 +340,7 @@ struct nameless_carpool::Session :public BaseTime {
   std::optional<std::string> token_update_time    = std::nullopt; 
   std::optional<std::string> token_update_time_tz = std::nullopt;
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE(Session,
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Session,
 
                                  id,
                                  client_more_info,

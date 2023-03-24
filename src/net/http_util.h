@@ -213,7 +213,7 @@ namespace nameless_carpool {
     }
     virtual void printSelf() { /* empty */ }
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpContent, headers, body);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(HttpContent, headers, body);
     // NLOHMANN_DEFINE_NORMAL_TYPE_INTRUSIVE(HttpContent, headers, body);
   };
 
@@ -276,7 +276,7 @@ namespace nameless_carpool {
               << "****************   Request done  ***************" << logEndl;
     }
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpRequest,
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(HttpRequest,
     // NLOHMANN_DEFINE_NORMAL_TYPE_INTRUSIVE(HttpRequest,
                                           method,
                                           uri,
@@ -379,7 +379,7 @@ namespace nameless_carpool {
       return *this;
     }
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpResponse,
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(HttpResponse,
                                    status,
                                    headers,
                                    body );

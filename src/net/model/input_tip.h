@@ -66,7 +66,7 @@ struct nameless_carpool::InputTipItem {
   std::optional<std::string> location = std::nullopt;
   std::optional<std::string> address  = std::nullopt;
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE(InputTipItem,
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(InputTipItem,
                                  id,
                                  name,
                                  district,
@@ -81,7 +81,7 @@ struct nameless_carpool::InputTipResponse {
   std::optional<std::string>          count  = std::nullopt;
   std::map<std::string, InputTipItem> tips;
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE(InputTipResponse,
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(InputTipResponse,
                                  status,
                                  info,
                                  count,

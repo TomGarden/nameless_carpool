@@ -28,7 +28,7 @@ struct nameless_carpool::LocalConfig {
 
   bool isDebugRunModel() const;
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE(LocalConfig,
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(LocalConfig,
                                  run_model,
                                  amap_key)
 };
