@@ -9,8 +9,6 @@
 
 namespace nameless_carpool {
 
-  // using namespace std;
-
   /* 按照每一个细分业务进行更进一步的作用域划分 */
 
   /* 登录下相关 */
@@ -25,14 +23,14 @@ namespace nameless_carpool {
          @return true, 合法 ; 
                  否则 非法 ;    非法情况下 , ssMsg 含有非法信息*/
       bool legalityCheck(std::string& msg) {
-        stringstream ssMsg;
+        std::stringstream ssMsg;
         bool result = true;
 
         { /* 手机号合法性校验 */
           bool isLegalPhone = Common::regexVals.isLegalPhone(phone.value_or(""));
           if(!isLegalPhone) {
               result = false;
-              ssMsg << "phone inlegal :" << phone.value_or("not found field") << endl;
+              ssMsg << "phone inlegal :" << phone.value_or("not found field") << std::endl;
           }
         }
 
@@ -40,7 +38,7 @@ namespace nameless_carpool {
           bool isLegal = Common::regexVals.isLegalVC(verify_code.value_or(""));
           if(!isLegal) {
             result = false;
-            ssMsg << "verify_code inlegal : " << verify_code.value_or("not found field") << endl;
+            ssMsg << "verify_code inlegal : " << verify_code.value_or("not found field") << std::endl;
           }
         }
 
@@ -64,7 +62,7 @@ namespace nameless_carpool {
           @return true, 合法 ; 
                  否则 非法 ;    非法情况下 , ssMsg 含有非法信息
       */
-      bool legalityCheck(string& msg) {
+      bool legalityCheck(std::string& msg) {
         std::stringstream ssMsg;
         bool result = true;
 
@@ -72,7 +70,7 @@ namespace nameless_carpool {
           bool isLegalPhone = Common::regexVals.isLegalPhone(phone.value_or(""));
           if(!isLegalPhone) {
               result = false;
-              ssMsg << "phone inlegal :" << phone.value_or("not found field") << endl;
+              ssMsg << "phone inlegal :" << phone.value_or("not found field") << std::endl;
           }
         }
 

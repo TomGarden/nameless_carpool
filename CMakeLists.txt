@@ -37,7 +37,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeUtils.cmake)
 
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
-set(LIB_JSON_DIR          ${LIB_DIR}/nlohmann_json_3.10.5/include/single_include)
+set(LIB_JSON_DIR          ${LIB_DIR}/nlohmann_json_3.11.2/include/single_include)
 set(LIB_DATE_INCLUDE_DIR  ${LIB_DIR}/date_3.0.1/include)
 set(LIB_MYSQL_INCLUDE_DIR ${LIB_DIR}/mysql_connector_arm_static/include/mysqlx)
 #set(LIB_OATPP_INCLUDE_DIR /usr/local/include/oatpp-1.3.0/oatpp) # 必须精确到这个目录之下 , oatapp 头文件中的引用才能正常解析
@@ -74,7 +74,7 @@ message(↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 get_property(RESULT_INCLUDE_DIR_LIST DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
 # message_list("${RESULT_INCLUDE_DIR_LIST}"   "##-include-dir->")     # 当前的 include 信息
 # message_list("${CODE_DIR}"                  "()-code-dir->")        # 给定根目录以及根目录下的所有 子目录们
-# message_list("${CODE_FILE}"                 "++-all-file->")        # 给定根目录以及根目录下的所有子 文件 , 不区分文件类型 , 没有目录
+ message_list("${CODE_FILE}"                 "++-all-file->")        # 给定根目录以及根目录下的所有子 文件 , 不区分文件类型 , 没有目录
 message_list("${SOURCE_CODE_LIST}"          "&&>-source-file-")     # 给定根目录以及根目录下的所有 源文件 们 , 通过 `aux_source_directory` 指令获取的
 
 if (CMAKE_SYSTEM_NAME MATCHES ${PLATEFROM_LINUX})
@@ -123,7 +123,8 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
   )
 
 # 拷贝文档到编译目录
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc DESTINATION ${TOM_MANUAL_DIR} FOLLOW_SYMLINK_CHAIN)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc          DESTINATION ${TOM_MANUAL_DIR} FOLLOW_SYMLINK_CHAIN)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/local_config DESTINATION ${TOM_MANUAL_DIR} FOLLOW_SYMLINK_CHAIN)
 execute_process(COMMAND  chown --recursive tom:TOM ${CMAKE_CURRENT_SOURCE_DIR})
 
 

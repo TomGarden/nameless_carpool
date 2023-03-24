@@ -27,9 +27,7 @@ extern int flag;
 
 namespace nameless_carpool {
 
-
-
-  // using namespace std;
+  extern std::string getHttpScheme() ;
 
   struct HttpStatus {
 
@@ -45,7 +43,8 @@ namespace nameless_carpool {
 
       success             = 200 ,
 
-      badRequest          = 400 ,
+      badRequest          = 400,
+      forbidden           = 403,
       requestUndefined    = 404 ,
       requestHelp         = 500 ,
       unknowErr           = 501 ,
@@ -64,6 +63,7 @@ namespace nameless_carpool {
         case Enum::unsetErr: /*          */ return "unsetErr";
         case Enum::success: /*           */ return "success";
         case Enum::badRequest: /*        */ return "badRequest";
+        case Enum::forbidden: /*         */ return "forbidden";
         case Enum::requestUndefined: /*  */ return "requestUndefined";
         case Enum::requestHelp: /*       */ return "requestHelp";
         case Enum::unknowErr: /*         */ return "unknowErr";
@@ -80,6 +80,7 @@ namespace nameless_carpool {
         case Enum::unsetErr: /*          */ return "未设置状态码";
         case Enum::success: /*           */ return "解析完成";
         case Enum::badRequest: /*        */ return "Bad Request : 被认为是客户端错误（例如，错误的请求语法、无效的请求消息帧或欺骗性的请求路由），服务器无法或不会处理请求。";
+        case Enum::forbidden: /*         */ return "Permission Denied";
         case Enum::requestUndefined: /*  */ return "404 请求未定义";
         case Enum::requestHelp: /*       */ return "查看帮助信息";
         case Enum::unknowErr: /*         */ return "未知错误, 需要进一步跟进";

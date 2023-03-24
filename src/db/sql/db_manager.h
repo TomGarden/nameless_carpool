@@ -639,3 +639,9 @@ class nameless_carpool::DbManager {
   void testMultipleThread();
 
 };
+
+
+namespace nameless_carpool {
+  inline DbManager& dbManager() { DbManager::getInstance(); }
+  inline DbManager& db() { DbManager::getInstance(); }
+}

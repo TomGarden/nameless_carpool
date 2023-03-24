@@ -66,7 +66,7 @@ namespace nameless_carpool {
   // #define logWarning  LogStreamForward(google::WARNING , LOG_COLOR_FG_LIGHT_ORANGE)       << "WARN  : "
   // #define logFatal    LogStreamForward(google::FATAL   , LOG_COLOR_FG_LIGHT_RED BG_BLACK) << "FATAL : "
   
-  #define logEndl                                                                         LOG_COLOR_RESET                    << std::endl
+  #define logEndl                                                                                            "   "  << LOG_COLOR_RESET                     << std::endl
   #define logInfo     google::LogMessage(__FILE__, __LINE__, google::INFO).stream()    << "[ " << GET_PID() << " ]" << LOG_COLOR_FG_LIGHT_GRAY            << " | INFO  : "
   #define logError    google::LogMessage(__FILE__, __LINE__, google::ERROR).stream()   << "[ " << GET_PID() << " ]" << LOG_COLOR_FG_LIGHT_RED             << " | ERROR : "
   #define logWarning  google::LogMessage(__FILE__, __LINE__, google::WARNING).stream() << "[ " << GET_PID() << " ]" << LOG_COLOR_FG_LIGHT_ORANGE          << " | WARN  : "
@@ -93,14 +93,6 @@ namespace nameless_carpool {
 
   /* https://github.com/boostorg/stacktrace */
   extern inline std::string getStackTrace() { return to_string(boost::stacktrace::stacktrace()); }
-
-  extern bool inline isDebugModel() {
-    #ifdef DEBUG_MODEL
-      return true;
-    #else
-      return false;
-    #endif
-  }
 
   /* Log 装饰 并 流转发 
   // [[deprecated("输出 std::endl 有异常 , 不明白什么原因")]]

@@ -21,15 +21,14 @@
 
 namespace nameless_carpool {
 
-  DbProxy::DbProxy() = default;
-
   DbProxy& DbProxy::getInstance() {
     static DbProxy dbProxy;
     return dbProxy;
   }
 
-  HttpStatus::Enum DbProxy::requestVerifyCode(const string& phoneNumber, const string& timeZone,
-                                             string& internalMsg, string& externalMsg) {
+  HttpStatus::Enum DbProxy::requestVerifyCode(
+      const std::string& phoneNumber, const std::string& timeZone,
+      std::string& internalMsg, std::string& externalMsg) {
     /* telephone 表内一个手机号可以查到几行 */
     // const vector<Telephone>& telVector = DbManager::getInstance().queryTelephone(phoneNumber);
 
@@ -50,7 +49,7 @@ namespace nameless_carpool {
     } else if (telVector.size() < 1) {
       Telephone telObj;
       {
-        string timeStemp = Common::Date::newInstance(timeZone).formatStr<std::chrono::microseconds>();
+        std::string timeStemp = Common::Date::newInstance(timeZone).formatStr<std::chrono::microseconds>();
 
         telObj.number            = phoneNumber;
         telObj.verify_code      = to_string(Common::Number::randomInt(100000, 999999));
@@ -256,5 +255,27 @@ namespace nameless_carpool {
 
     outResponse.inflateResponse(HttpStatus::Enum::success).inflateBodyData(response);
     return true;
+  }
+
+  bool DbProxy::tokenIsLegal(const string& inToken, string& outErrMsg) {
+    const std::string&              whereSessionStr = db().where(SqlUtil::backticks(sessionNames.token), SqlUtil::nullOrApostrophe(inToken), false);
+    std::vector<Session>            sessionVector   = db().query<Session>(whereSessionStr);
+    std::vector<Session>::size_type size            = sessionVector.size();
+
+    bool result = false;
+    if(size > 1) {
+      outErrMsg = boost::str(boost::format("token 校验异常 ; 服务端异常 ; 预期通过 token 只能得到一条 session , 实际得到了 : %1% 条") % size);
+      result    = false;
+    } else if (size < 1) {
+      outErrMsg = "非法 token";
+      result    = false;
+    } else if (sessionVector[0].tokenIsExpired()) {
+      outErrMsg = "token 已过期";
+      result    = false;
+    } else {
+      result = true;
+    }
+
+    return result;
   }
 }  // namespace nameless_carpool

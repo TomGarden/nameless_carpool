@@ -7,16 +7,14 @@
 namespace nameless_carpool {
 
   class DbProxy {
-    using string = std::string;
 
    private:
-    DbProxy(); /* 默认构造 */
-
+    DbProxy()                           = default; /* 默认构造 */
    public:
-    DbProxy(const DbProxy&) = delete;             /* 拷贝构造 */
-    DbProxy& operator=(const DbProxy&) = delete;  /* 拷贝赋值 */
-    DbProxy(const DbProxy&&)           = delete;  /* 移动构造 */
-    DbProxy& operator=(const DbProxy&&) = delete; /* 移动赋值 */
+    DbProxy(const DbProxy&)             = delete;  /* 拷贝构造 */
+    DbProxy(const DbProxy&&)            = delete;  /* 移动构造 */
+    DbProxy& operator=(const DbProxy&)  = delete;  /* 拷贝赋值 */
+    DbProxy& operator=(const DbProxy&&) = delete;  /* 移动赋值 */
 
    public:
     static DbProxy& getInstance();
@@ -42,5 +40,10 @@ namespace nameless_carpool {
      * @return {*}  true, 操作成功, 结果有效
      */
     bool login(const HttpRequest& inRequest, const Login::RequestBody& inBody, HttpResponse& outResponse);
+
+    /* 校验 token 是否合法 */
+    bool tokenIsLegal(const std::string& inToken, std::string& outErrMsg) ;
   };
+
+  inline DbProxy& dbProxy() { return DbProxy::getInstance(); }
 }  // namespace nameless_carpool

@@ -11,9 +11,7 @@
 
 
 namespace nameless_carpool {
-  using namespace std;
-  //using string = std::string;
-  
+
   struct BaseTime;
   struct BaseTimeNames;
 }
@@ -76,7 +74,7 @@ struct nameless_carpool::BaseTime : public BaseModel {
 
 
   /* 构造插入 sql 子串 : 获取所有成员 '值' , 或者 NULL , 用于 insert 语句 ; 获取的值被单引号包围 */
-  const std::string insertAllFieldSql(const std::vector<optional<std::string>> inStrVector) const;
+  const std::string insertAllFieldSql(const std::vector<std::optional<std::string>> inStrVector) const;
   /* 预期 入参是已经 被 '' 包围的字符串们 */
   const std::string insertAllFieldSqlWithoutApostrophe(const std::vector<std::string> inStrVector) const;
 

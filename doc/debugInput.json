@@ -10,6 +10,21 @@
     ]
   },
   {
+    "desc": "地点搜索提示",
+    "desc2": ["高德开发文档 : https://lbs.amap.com/api/webservice/guide/api/inputtips/"],
+    "method": "POST",
+    "headers": {
+      "time_zone": "Asia/Shanghai",
+      "token": "47b4ac7f-e720-4f49-b4f5-0e0a62305afd"
+    },
+    "uri": "/fcgi_test/nameless_carpool/input_position_tip",
+    "body": {
+      "keywords": "小白楼",
+      "location": "1.1,123"
+    }
+  },
+  {
+    "desc": "发布信息, 相关细节暂未确定",
     "method": "POST",
     "headers": {
       "time_zone": "Asia/Shanghai",
@@ -20,12 +35,14 @@
       "phone": "15912341234",
       "verify_code": "790179",
       "client_type" :"[ Unknow, Android, iOS, web, microProgram ]"
-    },
-    "desc": [
-      "发布信息, 相关细节暂未确定"
-    ]
+    }
   },
   {
+    "desc": "通过验证码登录",
+    "desc2": [ "通过验证码登录",
+      "client_type , 表示登录设备的类型",
+      "每个平台的设备最多有一个在线 , 目前我们服务端没有同步逻辑 , 每一个端提交的内容都会覆盖原有内容"
+    ],
     "method": "POST",
     "headers": {
       "time_zone": "Asia/Shanghai",
@@ -36,14 +53,10 @@
       "phone": "15912341234",
       "verify_code": "790179",
       "client_type" :"[ Unknow, Android, iOS, web, microProgram ]"
-    },
-    "desc": [
-      "通过验证码登录",
-      "client_type , 表示登录设备的类型",
-      "每个平台的设备最多有一个在线 , 目前我们服务端没有同步逻辑 , 每一个端提交的内容都会覆盖原有内容"
-    ]
+    }
   },
   {
+    "desc": "申请验证码",
     "method": "POST",
     "headers": {
       "time_zone": "Asia/Shanghai",
@@ -52,7 +65,6 @@
     "uri": "/fcgi_test/nameless_carpool/request_verify_code",
     "body": {
       "phone": "15912341234"
-    },
-    "desc": "申请验证码"
+    }
   }
 ]

@@ -12,6 +12,7 @@
 #include "src/utils/common.h"
 #include "src/utils/log_utils.h"
 #include "linux_os.h"
+#include "application.h"
 
 namespace nameless_carpool {
 
@@ -105,15 +106,7 @@ namespace nameless_carpool {
           }
           case InputParamEnum::inputFile  : {
             /* 没有给定参数的时候查看执行文件所在目录是否有相应文件 */
-            std::string exeFileFd;
-            if( getCurExeFd(exeFileFd) ) {
-              exeFileFd
-                  .append(&std::filesystem::path::preferred_separator)
-                  .append("tom_manual_dir/doc/debugInput.json");
-              debugInputFileParse(exeFileFd);
-            } else {
-              debugInputFileReadFailed("没有 入参 值 , 获取默认文件路径失败");
-            }            
+            debugInputFileParse(app().appDebugInputPath);
             break;
           }
           default :                     {

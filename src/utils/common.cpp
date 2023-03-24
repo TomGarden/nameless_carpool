@@ -66,7 +66,7 @@ namespace nameless_carpool::Common {
   bool getContent(std::string& content, const std::string& srcPath, const std::string& defSrcFileName, const std::string& defContent) {
     std::string defFilePath;
     if(srcPath.empty()) {
-      if( getCurExeFd(defFilePath) ) {
+      if(getCurExeFileDir(defFilePath) ) {
         defFilePath.append("/").append(defSrcFileName);
       } else {
         content = defContent;
@@ -174,7 +174,7 @@ namespace nameless_carpool::Common/* date */ {
   /*┌─────────────────────────────────────────────────────────────────────────────────────┐
   * │   转换为指定的秒数
   * └─────────────────────────────────────────────────────────────────────────────────────┘ */
-  uint64_t Date::toSec() { return toSec(tzPtr) ; }
+  inline uint64_t Date::toSec() { return toSec(tzPtr) ; }
   uint64_t Date::toSec(const TimeZone*  _tzPtr) {
         uint64_t result = Date::durationCount<seconds>(tzPtr);
         return result;

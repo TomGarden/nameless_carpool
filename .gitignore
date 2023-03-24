@@ -15,3 +15,6 @@ build
 .cache
 .history
 .idea
+
+# 本地文件不可示人
+local_config

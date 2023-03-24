@@ -9,6 +9,7 @@
 #include "api.h"
 #include "http_util.h"
 #include "log_utils.h"
+#include "application.h"
 
 namespace nameless_carpool {
 
@@ -63,7 +64,7 @@ namespace nameless_carpool {
   void WebServer::run(){
     withHandler();
 
-    if (isDebugModel()) drogon::app().setIdleConnectionTimeout(0); /* 默认 60s ; 设置 0 , 意味着 永远不会超时 */
+    if (Application::instance().isDebugModel()) drogon::app().setIdleConnectionTimeout(0); /* 默认 60s ; 设置 0 , 意味着 永远不会超时 */
 
     drogon::app()
         .setLogPath("/mount_point/data/_document/c_cpp_program/nameless_carpool/tmp_dir/drogon_log")

@@ -51,14 +51,14 @@ struct nameless_carpool::Login::RequestBody {
      @return true, 合法 ;
              否则 非法 ;    非法情况下 , ssMsg 含有非法信息*/
   bool legalityCheck(std::string& msg) {
-    stringstream ssMsg;
+    std::stringstream ssMsg;
     bool         result = true;
 
     { /* 手机号合法性校验 */
       bool isLegalPhone = Common::regexVals.isLegalPhone(phone.value_or(""));
       if (!isLegalPhone) {
         result = false;
-        ssMsg << "phone inlegal :" << phone.value_or("not found field") << endl;
+        ssMsg << "phone inlegal :" << phone.value_or("not found field") << std::endl;
       }
     }
 
@@ -66,7 +66,7 @@ struct nameless_carpool::Login::RequestBody {
       bool isLegal = Common::regexVals.isLegalVC(verify_code.value_or(""));
       if (!isLegal) {
         result = false;
-        ssMsg << "verify_code inlegal : " << verify_code.value_or("not found field") << endl;
+        ssMsg << "verify_code inlegal : " << verify_code.value_or("not found field") << std::endl;
       }
     }
 
@@ -131,7 +131,7 @@ struct nameless_carpool::RequestVerifyCode::RequestBody {
       @return true, 合法 ;
              否则 非法 ;    非法情况下 , ssMsg 含有非法信息
   */
-  bool legalityCheck(string& msg) {
+  bool legalityCheck(std::string& msg) {
     std::stringstream ssMsg;
     bool              result = true;
 
@@ -139,7 +139,7 @@ struct nameless_carpool::RequestVerifyCode::RequestBody {
       bool isLegalPhone = Common::regexVals.isLegalPhone(phone.value_or(""));
       if (!isLegalPhone) {
         result = false;
-        ssMsg << "phone inlegal :" << phone.value_or("not found field") << endl;
+        ssMsg << "phone inlegal :" << phone.value_or("not found field") << std::endl;
       }
     }
 

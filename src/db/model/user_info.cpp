@@ -61,82 +61,82 @@ namespace nameless_carpool {
   * │                Model inflate
   * └─────────────────────────────────────────────────────────────────────────────────────┘ */
 
-  bool User::inflate(const Names& names, const string& name, const mysqlx::Value& value) {
+  bool User::inflate(const Names& names, const std::string& name, const mysqlx::Value& value) {
     if        (name.compare(names.id                ) == 0) {
       this->id = SqlUtil::getOptional<uint64_t>(value);
     } else if (name.compare(names.id_card_num            ) == 0) {
-      this->id_card_num = SqlUtil::getOptional<string>(value);
+      this->id_card_num = SqlUtil::getOptional<std::string>(value);
     } else if (name.compare(names.name      ) == 0) {
-      this->name = SqlUtil::getOptional<string>(value);
+      this->name = SqlUtil::getOptional<std::string>(value);
     } else if (name.compare(names.gender    ) == 0) {
-      this->gender = SqlUtil::getOptional<string>(value);
+      this->gender = SqlUtil::getOptional<std::string>(value);
     } else if (name.compare(names.birth_date ) == 0) {
       this->birth_date = SqlUtil::getOptionalDate(value);
     } else if (name.compare(names.birth_date_tz ) == 0) {
-      this->birth_date_tz = SqlUtil::getOptional<string>(value);
+      this->birth_date_tz = SqlUtil::getOptional<std::string>(value);
     } BASE_TIME_INFLATE
 
     return true;
   }
   
-  bool WcUser::inflate(const Names& names, const string& name, const mysqlx::Value& value) {
+  bool WcUser::inflate(const Names& names, const std::string& name, const mysqlx::Value& value) {
     if        (name.compare(names.user_id                ) == 0) {
       this->user_id = SqlUtil::getOptional<uint64_t>(value);
     } else if (name.compare(names.wc_uid            ) == 0) {
-      this->wc_uid = SqlUtil::getOptional<string>(value);
+      this->wc_uid = SqlUtil::getOptional<std::string>(value);
     } else if (name.compare(names.wc_number      ) == 0) {
-      this->wc_number = SqlUtil::getOptional<string>(value);
+      this->wc_number = SqlUtil::getOptional<std::string>(value);
     } BASE_TIME_INFLATE
 
     return true;
   }
 
-  bool Telephone::inflate(const Names& names, const string& name, const mysqlx::Value& value)  {
+  bool Telephone::inflate(const Names& names, const std::string& name, const mysqlx::Value& value)  {
     if        (name.compare(names.id                ) == 0) {
       this->id = SqlUtil::getOptional<uint64_t>(value);
     } else if (name.compare(names.number            ) == 0) {
-      this->number = SqlUtil::getOptional<string>(value);
+      this->number = SqlUtil::getOptional<std::string>(value);
     } else if (name.compare(names.verify_code      ) == 0) {
-      this->verify_code = SqlUtil::getOptional<string>(value);
+      this->verify_code = SqlUtil::getOptional<std::string>(value);
     } else if (name.compare(names.vc_update_time    ) == 0) {
       this->vc_update_time = SqlUtil::getOptionalDate(value);
     } else if (name.compare(names.vc_update_time_tz ) == 0) {
-      this->vc_update_time_tz = SqlUtil::getOptional<string>(value);
+      this->vc_update_time_tz = SqlUtil::getOptional<std::string>(value);
     } BASE_TIME_INFLATE
 
     return true;
   }
 
-  bool UserTel::inflate(const Names& names, const string& name, const mysqlx::Value& value) {
+  bool UserTel::inflate(const Names& names, const std::string& name, const mysqlx::Value& value) {
     if (name.compare(names.user_id             ) == 0) {
       this->user_id = SqlUtil::getOptional<uint64_t>(value);
     } else if (name.compare(names.telephone_id ) == 0) {
       this->telephone_id = SqlUtil::getOptional<uint64_t>(value);
     } else if (name.compare(names.desc         ) == 0) {
-      this->desc = SqlUtil::getOptional<string>(value);
+      this->desc = SqlUtil::getOptional<std::string>(value);
     } else if (name.compare(names.flag         ) == 0) {
-      this->flag = SqlUtil::getOptional<string>(value);
+      this->flag = SqlUtil::getOptional<std::string>(value);
     } BASE_TIME_INFLATE
 
     return true;
   }
 
-  bool Session::inflate(const Names &names, const string &name, const mysqlx::Value &value) {
+  bool Session::inflate(const Names &names, const std::string &name, const mysqlx::Value &value) {
     if (name.compare(names.id) == 0)/*                       */this->id = SqlUtil::getOptional<uint64_t>(value);
-    else if (name.compare(names.client_more_info) == 0)/*    */this->client_more_info = SqlUtil::getOptional<string>(value);
-    else if (name.compare(names.client_type) == 0)/*         */this->client_type = SqlUtil::getOptional<string>(value);
-    else if (name.compare(names.token) == 0)/*               */this->token = SqlUtil::getOptional<string>(value);
+    else if (name.compare(names.client_more_info) == 0)/*    */this->client_more_info = SqlUtil::getOptional<std::string>(value);
+    else if (name.compare(names.client_type) == 0)/*         */this->client_type = SqlUtil::getOptional<std::string>(value);
+    else if (name.compare(names.token) == 0)/*               */this->token = SqlUtil::getOptional<std::string>(value);
     else if (name.compare(names.max_age) == 0)/*             */this->max_age = SqlUtil::getOptional<uint64_t>(value);
     else if (name.compare(names.from_where) == 0)/*          */this->from_where = SqlUtil::getOptionalDate(value);
-    else if (name.compare(names.auth_method) == 0)/*         */this->auth_method = SqlUtil::getOptional<string>(value);
+    else if (name.compare(names.auth_method) == 0)/*         */this->auth_method = SqlUtil::getOptional<std::string>(value);
     else if (name.compare(names.token_update_time) == 0)/*   */this->token_update_time = SqlUtil::getOptionalDate(value);
-    else if (name.compare(names.token_update_time_tz) == 0)/**/this->token_update_time_tz = SqlUtil::getOptional<string>(value);
+    else if (name.compare(names.token_update_time_tz) == 0)/**/this->token_update_time_tz = SqlUtil::getOptional<std::string>(value);
     BASE_TIME_INFLATE
 
     return true;
   }
 
-  bool UserSession::inflate(const Names& names, const string& name, const mysqlx::Value& value) {
+  bool UserSession::inflate(const Names& names, const std::string& name, const mysqlx::Value& value) {
     if        (name.compare(names.user_id                ) == 0) {
       this->user_id = SqlUtil::getOptional<uint64_t>(value);
     } else if (name.compare(names.session_id            ) == 0) {
@@ -156,7 +156,8 @@ namespace nameless_carpool /* Session */{
     /* offset 表示 tocken update time 到 当前时刻 经过了多少纳秒 */
     /* maxAgeNs 表示 , 经过的纳秒数最大值 */
 
-    uint64_t maxAgeNs = max_age.value() * 1'000'000'000; /* 秒 转 纳秒 */
+    using namespace std::chrono;
+    int64_t maxAgeNs = duration_cast<nanoseconds>(seconds(max_age.value())).count(); /* 秒 → 纳秒 */
 
     return offset.value() > maxAgeNs;
   }

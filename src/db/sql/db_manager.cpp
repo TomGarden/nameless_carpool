@@ -20,12 +20,14 @@
 #include <vector>
 #include <boost/format.hpp>
 #include <thread>
+#include <chrono>
 
 #include "src/utils/common.h"
 #include "src/utils/container.h"
 #include "src/utils/log_utils.h"
 #include "libs/mysql_connector_arm_static/include/mysqlx/devapi/common.h"
 #include "src/db/model/user_info.h"
+#include "libs/date_3.0.1/include/date/tz.h"
 
 namespace nameless_carpool {
 
@@ -171,7 +173,7 @@ namespace nameless_carpool {
       
       if (toSleepOne) {
         logInfo << boost::format("%1% >> thread [%2%] sleep start") % flag % std::this_thread::get_id() << std::endl;
-        std::this_thread::sleep_for(6000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(6000));
         logInfo << boost::format("%1% >> thread [%2%] sleep end") % flag % std::this_thread::get_id() << std::endl;
       }
 
@@ -196,7 +198,7 @@ namespace nameless_carpool {
 
       if (toSleepTwo) {
         logInfo << boost::format("%1% >> thread [%2%] sleep start") % flag % std::this_thread::get_id() << std::endl;
-        std::this_thread::sleep_for(6000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(6000));
         logInfo << boost::format("%1% >> thread [%2%] sleep end") % flag % std::this_thread::get_id() << std::endl;
       }
 
@@ -222,7 +224,7 @@ namespace nameless_carpool {
     // threadOne.detach();
     threadTwo.detach();
 
-    std::this_thread::sleep_for(60000ms);
+    std::this_thread::sleep_for(std::chrono::milliseconds(60000));
   }
 
   //┌─────────────────────────────────────────────────────────────────────────────────────┐

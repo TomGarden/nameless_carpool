@@ -186,6 +186,7 @@ class nameless_carpool::Common::Date {
        * @return {*} ' > 0 ' 当前时间点比入参时间点在时间线上更接近未来
        */
       static int64_t passedNanoseconds(const std::string& formatDate, const std::string& timeZone);
+      /** 当前时间点比入参时间点过去了多少 纳秒 */
       static std::optional<int64_t> passedNanoseconds(const std::optional<std::string>& formatDate, const std::optional<std::string>& timeZone);
 
      public: /* constructor  */

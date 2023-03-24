@@ -13,6 +13,9 @@ namespace nameless_carpool {
 }  // namespace nameless_carpool
 
 class nameless_carpool::WebClient {
+ private:
+
+
  public:
   void test();
 };

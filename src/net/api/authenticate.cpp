@@ -7,6 +7,9 @@
 #include "src/net/http_util.h"
 #include "src/utils/log_utils.h"
 // #include "authenticate_m.h"
+#include "a_map.h"
+#include "application.h"
+#include "input_tip.h"
 #include "net/model/authenticate.h"
 
 namespace nameless_carpool {
@@ -45,21 +48,21 @@ namespace nameless_carpool {
   }
 
   void AuthApi::login(const HttpRequest& requestInput, HttpResponse& outResponse) {
-    std::string             inlegalDesc; /* 非法内容描述 */
+    std::string        illegalDesc; /* 非法内容描述 */
     bool               bodyLegal;
     Login::RequestBody loginBody;
 
     try {
       requestInput.body.get_to<Login::RequestBody>(loginBody);
-      bodyLegal = loginBody.legalityCheck(inlegalDesc);
+      bodyLegal = loginBody.legalityCheck(illegalDesc);
     } catch (const nlohmann::json::exception& e) {
       bodyLegal   = false;
-      inlegalDesc = e.what();
-      logInfo << inlegalDesc << endl;
+      illegalDesc = e.what();
+      logInfo << illegalDesc << endl;
     }
 
     if (!bodyLegal) {
-      outResponse.inflateResponse(HttpStatus::Enum::badRequest, inlegalDesc);
+      outResponse.inflateResponse(HttpStatus::Enum::badRequest, illegalDesc);
       return;
     }
 
@@ -96,5 +99,18 @@ namespace nameless_carpool {
     2. 没有登录的情况下 , 需要创建登录信息 , 并返回 token
      */
   }
+
+  void AuthApi::inputPositionTip(const HttpRequest& requestInput, HttpResponse& outResponse) {
+    InputTipRequest inputTip  = requestInput.body.get<InputTipRequest>();
+    inputTip.key = app().localConfig.amap_key.value_or("");
+    if (!inputTip.isLegal()) {
+      outResponse.inflateResponse(HttpStatus::Enum::badRequest, WITH_LINE_INFO("必填值无效"));
+      return;
+    }
+
+    nlohmann::json jObj = inputTip;
+    aMap().doPositionInputTip(clearNull(jObj), outResponse);
+  }
+  bool AuthApi::tokenIsLegal(const std::string& inToken, std::string& outErrMsg) { return dbProxy().tokenIsLegal(inToken, outErrMsg); }
 
 }  // namespace nameless_carpool

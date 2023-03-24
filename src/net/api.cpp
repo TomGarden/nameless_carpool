@@ -17,18 +17,26 @@ namespace nameless_carpool {
       }
 
       if (!requestInput.headers.contains(httpHeaderNames.token)) {
-        if (AuthApi::loginUri().compare(methodUri) == 0) {                     /* empty */
-        } else if (AuthApi::requestVerifyCodeUri().compare(methodUri) == 0) { /* empty */
-        } else {
-          std::string internalMsg = httpStatus.getDesc(HttpStatus::Enum::requestUndefined) + " 确认下是错别字还是未定义";
+        if (authApi().loginUri() != methodUri &&
+            authApi().requestVerifyCodeUri() != methodUri) {
+          std::string internalMsg = httpStatus.getDesc(HttpStatus::Enum::requestUndefined) + " 请求未定义 / 请求链接含错别字 / 未携带 token ";
           responseOutput.inflateResponse(HttpStatus::Enum::requestUndefined, WITH_LINE_INFO(internalMsg));
+          return;
+        }
+      } else { /* 其余都是有 token 的 , 需要校验 token 合法性 */
+        const std::string& strToken = requestInput.headers[httpHeaderNames.token];
+        std::string internalMsg;
+        bool legal = authApi().tokenIsLegal(strToken, internalMsg);
+        if(!legal) {
+          responseOutput.inflateResponse(HttpStatus::Enum::forbidden, WITH_LINE_INFO(internalMsg));
           return;
         }
       }
     }
 
-    if (/**/ methodUri.compare(AuthApi::loginUri()) == 0) AuthApi::login(requestInput, responseOutput);
-    else if (methodUri.compare(AuthApi::requestVerifyCodeUri()) == 0) AuthApi::requestVC(requestInput, responseOutput);
+    if (/**/ methodUri == authApi().loginUri()) authApi().login(requestInput, responseOutput);
+    else if (methodUri == authApi().requestVerifyCodeUri()) authApi().requestVC(requestInput, responseOutput);
+    else if (methodUri == authApi().inputPositionTip()) authApi().inputPositionTip(requestInput, responseOutput);
     else Api::unknownRequest(requestInput, responseOutput);
 
     responseOutput.appendDefaultHeaders();

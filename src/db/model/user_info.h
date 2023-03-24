@@ -16,8 +16,6 @@
 
 namespace nameless_carpool {
 
-  // using namespace std;
-
   struct User;        /** 用户基本信息 */
   struct WcUser;      /** 微信用户信息 */
   struct Telephone;   /* 用户手机号 */
@@ -245,7 +243,7 @@ struct nameless_carpool::UserTel : public BaseTime {
              ^  true
              */
   inline bool flagIsLogin() {
-    bitset<8> flagBitset(flag.value_or(""));
+    std::bitset<8> flagBitset(flag.value_or(""));
     return flagBitset[0];
   }
 
@@ -257,7 +255,7 @@ struct nameless_carpool::UserTel : public BaseTime {
             ^  true
              */
   inline bool flagIsContact() {
-    bitset<8> flagBitset(flag.value_or(""));
+    std::bitset<8> flagBitset(flag.value_or(""));
     return flagBitset[1];
   }
 
@@ -336,7 +334,7 @@ struct nameless_carpool::Session :public BaseTime {
   std::optional<std::string> client_more_info     = std::nullopt; /* 更多设备信息描述 */
   std::optional<std::string> client_type          = std::nullopt; /* 客户端类型 */
   std::optional<std::string> token                = std::nullopt; /*  */
-  std::optional<uint64_t>    max_age              = std::nullopt; /* session 有效期 , 从登录时间点开始计时 */
+  std::optional<int64_t>     max_age              = std::nullopt; /* session 有效期 , 从登录时间点开始计时 */
   std::optional<std::string> from_where           = std::nullopt; /*  */
   std::optional<std::string> auth_method          = std::nullopt; /* 登录动作的身份验证方式 */
   std::optional<std::string> token_update_time    = std::nullopt; 
@@ -386,7 +384,9 @@ struct nameless_carpool::Session :public BaseTime {
   * │                业务功能函数
   * └─────────────────────────────────────────────────────────────────────────────────────┘ */
 
-  /** @return true, token 过期了 */
+  /** @return true, token 过期了
+   * @note 如果我们期望一个 token 延长有效期 , 可以更新 token_update_time , 到一个比较靠后的时间点 , 可以必当前时间更靠后
+   * */
   bool tokenIsExpired() const;
 
   /* 重置 token , 含相关时间信息 */

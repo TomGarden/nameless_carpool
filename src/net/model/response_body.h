@@ -17,16 +17,13 @@ namespace nameless_carpool {
     };
 
 
-    optional<int>         status;      /* 状态码 */
-    optional<std::string> data;        /* 真正的数据, 可能为空 */
-    optional<std::string> statusDesc;  /* 状态码解读 */
-    optional<std::string> internalMsg; /* 不可对外公开的消息体, 软件内部流转的消息体 */
-    optional<std::string> externalMsg; /* 可以对外公开的消息体, 比如对用户提示 */
+    std::optional<int>         status;      /* 状态码 */
+    std::optional<std::string> data;        /* 真正的数据, 可能为空 */
+    std::optional<std::string> statusDesc;  /* 状态码解读 */
+    std::optional<std::string> internalMsg; /* 不可对外公开的消息体, 软件内部流转的消息体 */
+    std::optional<std::string> externalMsg; /* 可以对外公开的消息体, 比如对用户提示 */
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(ResponseBody, status, statusDesc, data, internalMsg, externalMsg)
-
-
-
   };
 
 }
