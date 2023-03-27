@@ -116,7 +116,7 @@ namespace nameless_carpool {
       session.commit();
       logInfo << "session.commit();*********************************************" << std::endl;
     } catch (mysqlx::Error& mysqlError) {
-      logError << mysqlError.what() << std::endl;
+      logDebug << mysqlError.what() << std::endl;
       session.rollback();
     }
     session.close();
@@ -255,7 +255,8 @@ namespace nameless_carpool {
          insertUserTelSql,
          boost::str(boost::format(" SELECT %1% ;") % lastInsertUserId)});
 
-    user.id = sqlResult.getAutoIncrementValue();
+    // sqlResult.getAutoIncrementValue(); /* 这个 api 有反馈错误值的情况 */
+    user.id = sqlResult.fetchOne().get(0).get<uint64_t>();
   }
 
   void DbManager::insert(Session& session, UserSession& userSession) {

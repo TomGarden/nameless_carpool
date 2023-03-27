@@ -77,8 +77,8 @@ namespace nameless_carpool {
     else if (name == names.plate /*               */) this->plate /*               */ = SqlUtil::getOptional<std::string>(value);
     else if (name == names.brand /*               */) this->brand /*               */ = SqlUtil::getOptional<std::string>(value);
     else if (name == names.model /*               */) this->model /*               */ = SqlUtil::getOptional<std::string>(value);
-    else if (name == names.age /*                 */) this->age /*                 */ = SqlUtil::getOptional<int8_t>(value);
-    else if (name == names.passenger_capacity /*  */) this->passenger_capacity /*  */ = SqlUtil::getOptional<int8_t>(value);
+    else if (name == names.age /*                 */) this->age /*                 */ = SqlUtil::getOptional<uint8_t>(value);
+    else if (name == names.passenger_capacity /*  */) this->passenger_capacity /*  */ = SqlUtil::getOptional<uint8_t>(value);
     else if (name == names.size_length /*         */) this->size_length /*         */ = SqlUtil::getOptional<double>(value);
     else if (name == names.size_width /*          */) this->size_width /*          */ = SqlUtil::getOptional<double>(value);
     else if (name == names.size_height /*         */) this->size_height /*         */ = SqlUtil::getOptional<double>(value);

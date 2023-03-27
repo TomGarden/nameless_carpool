@@ -121,21 +121,26 @@ namespace nameless_carpool {
     std::string rawDateParse(const mysqlx::bytes& inByteVector) ;
 
     /* 为什么我不能将模板类的定义与其声明分开并将其放入 .cpp 文件中 : https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl*/
-    template<typename Type>
-    std:: optional<Type> getOptional(const mysqlx::Value& value) {
-      if(value.isNull()) {
-        return std::nullopt;
-      } else {
-        return value.get<Type>();
+    template <typename Type>
+    std::optional<Type> getOptional(const mysqlx::Value& value) {
+      if (value.isNull()) return std::nullopt;
+      if(std::is_same<Type, uint8_t>::value) {
+        auto tmp = static_cast<uint8_t>(value.get<unsigned int>());
+        return *reinterpret_cast<Type*>(&tmp);
       }
+      return value.get<Type>(); /* int , unsigned , int64_t , uint64_t , float , double , bool , string */
     }
-    std:: optional<std::string> getOptionalDate(const mysqlx::Value& value);
+//    inline std::optional<uint8_t> getOptional(const mysqlx::Value& value) {
+//      if (value.isNull()) return std::nullopt;
+//      return static_cast<uint8_t>(value.get<uint64_t>());
+//    }
     /* 当需要到其他类型的时候在做新增, 这么做的原因 : https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl */
-    template std::optional<std::string> getOptional(const mysqlx::Value& value);
-    template std::optional<int64_t>     getOptional(const mysqlx::Value& value);
-    template std::optional<uint64_t>    getOptional(const mysqlx::Value& value);
-    template std::optional<uint8_t>     getOptional(const mysqlx::Value& value);
-    template std::optional<double>      getOptional(const mysqlx::Value& value);
+//    template std::optional<std::string> getOptional(const mysqlx::Value& value);
+//    template std::optional<uint64_t>    getOptional(const mysqlx::Value& value);
+//    template std::optional<uint8_t>     getOptional(const mysqlx::Value& value);
+//    template std::optional<double>      getOptional(const mysqlx::Value& value);
+    std::optional<std::string>          getOptionalDate(const mysqlx::Value& value);
+
 
   };  // namespace SqlUtil
 }  // namespace nameless_carpool
