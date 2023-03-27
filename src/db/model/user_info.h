@@ -431,11 +431,7 @@ struct nameless_carpool::UserSession :public BaseTime {
   getSubUnPrimaryKeyValVector() const override { return {}; }
 };
 
-
-
-
 namespace nameless_carpool {
-
   extern const User::Names        userNames;
   extern const WcUser::Names      wcUserNames;
   extern const Telephone::Names   telephoneNames;
@@ -445,40 +441,6 @@ namespace nameless_carpool {
 
   extern const UserTel::FlagConstant userTelFlagConstant;
 
-  template <typename Model, typename ModelNames = typename Model::Names>
-  inline ModelNames getModelNames() {
-    const void* ptr = nullptr;
-    if (std::is_same<User, Model>::value)             ptr = &userNames;
-    else if (std::is_same<WcUser, Model>::value)      ptr = &wcUserNames;
-    else if (std::is_same<Telephone, Model>::value)   ptr = &telephoneNames;
-    else if (std::is_same<UserTel, Model>::value)     ptr = &userTelNames;
-    else if (std::is_same<Session, Model>::value)     ptr = &sessionNames;
-    else if (std::is_same<UserSession, Model>::value) ptr = &userSessionNames;
-
-    else throw std::runtime_error("not implement");
-
-    const ModelNames* result = reinterpret_cast<const ModelNames*>(ptr);
-
-    return *result;
-  }
-
-  /* BaseMode , BaseModelNames , 的 getColumnXxxVector 获取的值应该是一一对应的
-   将此一一对应的值做成 pair 放到 vector */
-  template <typename Model,
-            typename ModelNames = typename Model::Names,
-            typename ResultItem = typename std::pair<std::string, std::optional<std::string>> /*  */>
-  [[deprecated("ANCHOR - 此函数尚未真正使用 , 使用的时候移除此标记")]] 
-  inline std::vector<ResultItem> getColumnValNameMap(const Model& model) {
-    const std::vector<std::string>&                nameVector = getModelNames<Model>().getColumnNameVector();
-    const std::vector<std::optional<std::string>>& valVector  = model.getColumnValVector();
-    if (nameVector.size() != valVector.size()) throw std::logic_error(
-        boost::format("不符合预期 , 两个向量长度不同是异常的 ; nameVector.size = %1% , valVector.size = %2% ") % nameVector.size() % valVector.size());
-    std::vector<ResultItem> result;
-
-    for (int index = 0; index < valVector.size(); index++) {
-      result.push_back(ResultItem{nameVector[index], valVector[index]});
-    }
-
-    return result;
-  }
 };
+
+

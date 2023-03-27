@@ -15,10 +15,12 @@ namespace nameless_carpool {
     jObj.clear();
 
     for (const auto& item : jClone.items()) {
-      if (item.value().is_object()) {
+      if (!item.value().is_null()) {
+        jObj[item.key()] = item.value();
+      } else if (item.value().is_object()) {
         nlohmann::json jSubObj = clearNull(item.value());
         if (!jSubObj.empty()) jObj[item.key()] = jSubObj;
-      } else if (!item.value().is_null()) {
+      } else if(item.value().is_array() && !item.value().empty()) {
         jObj[item.key()] = item.value();
       }
     }

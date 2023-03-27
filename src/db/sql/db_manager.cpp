@@ -26,7 +26,7 @@
 #include "src/utils/container.h"
 #include "src/utils/log_utils.h"
 #include "libs/mysql_connector_arm_static/include/mysqlx/devapi/common.h"
-#include "src/db/model/user_info.h"
+#include "src/db/model/include_db_model.h"
 #include "libs/date_3.0.1/include/date/tz.h"
 
 namespace nameless_carpool {

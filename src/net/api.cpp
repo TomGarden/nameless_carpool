@@ -39,6 +39,7 @@ namespace nameless_carpool {
     else if (methodUri == authApi().inputPositionTip()) authApi().inputPositionTip(requestInput, responseOutput);
     else Api::unknownRequest(requestInput, responseOutput);
 
+    responseOutput.body = clearNull(responseOutput.body);
     responseOutput.appendDefaultHeaders();
   }
 

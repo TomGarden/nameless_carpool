@@ -1,13 +1,11 @@
 
 #include "src/db/model/user_info.h"
 
-#include <boost/uuid/uuid.hpp>             // uuid class
 #include <boost/uuid/uuid_generators.hpp>  // generators
 #include <boost/uuid/uuid_io.hpp>          // streaming operators etc.
 #include <chrono>
 #include <cstdint>
 #include <optional>
-#include <sstream>
 #include <string>
 
 #include "base_time.h"
@@ -18,24 +16,17 @@
 
 
 namespace nameless_carpool {
-
-  #define BASE_TIME_INFLATE \
-    else if (this->BaseTime::inflate(names, name, value)){  \
-      /* empty */                                           \
-    } else {                                                \
-      return false;                                         \
-    }                                                       \
-
-  /* 定义导出的常量们 */
-  const User::Names        userNames          ;
-  const WcUser::Names      wcUserNames        ;
-  const Telephone::Names   telephoneNames     ;
-  const UserTel::Names     userTelNames       ;
-  const Session::Names     sessionNames       ;
-  const UserSession::Names userSessionNames   ;
+  const User::Names        userNames;
+  const WcUser::Names      wcUserNames;
+  const Telephone::Names   telephoneNames;
+  const UserTel::Names     userTelNames;
+  const Session::Names     sessionNames;
+  const UserSession::Names userSessionNames;
 
   const UserTel::FlagConstant userTelFlagConstant;
+}
 
+namespace nameless_carpool {
 
   /*┌─────────────────────────────────────────────────────────────────────────────────────┐
   * │                Telephone

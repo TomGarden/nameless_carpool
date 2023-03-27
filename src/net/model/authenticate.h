@@ -7,7 +7,7 @@
 
 #include "src/utils/common.h"
 #include "src/utils/json/include_json.h"
-#include "src/db/model/user_info.h"
+#include "src/db/model/include_db_model.h"
 
 namespace nameless_carpool {
 

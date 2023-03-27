@@ -120,7 +120,7 @@ namespace nameless_carpool {
     std::string rawDateParse(const std::vector<uint8_t>& inByteVector) ;
     std::string rawDateParse(const mysqlx::bytes& inByteVector) ;
 
-    /* 模板函数 定义 范围 : https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl*/
+    /* 为什么我不能将模板类的定义与其声明分开并将其放入 .cpp 文件中 : https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl*/
     template<typename Type>
     std:: optional<Type> getOptional(const mysqlx::Value& value) {
       if(value.isNull()) {
@@ -131,8 +131,11 @@ namespace nameless_carpool {
     }
     std:: optional<std::string> getOptionalDate(const mysqlx::Value& value);
     /* 当需要到其他类型的时候在做新增, 这么做的原因 : https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl */
-    template std:: optional<std::string> getOptional(const mysqlx::Value& value); 
-    template std:: optional<int64_t> getOptional(const mysqlx::Value& value); 
+    template std::optional<std::string> getOptional(const mysqlx::Value& value);
+    template std::optional<int64_t>     getOptional(const mysqlx::Value& value);
+    template std::optional<uint64_t>    getOptional(const mysqlx::Value& value);
+    template std::optional<uint8_t>     getOptional(const mysqlx::Value& value);
+    template std::optional<double>      getOptional(const mysqlx::Value& value);
 
   };  // namespace SqlUtil
 }  // namespace nameless_carpool

@@ -8,7 +8,7 @@
 #include <string>
 
 #include "src/db/model/base_model.h"
-#include "src/db/model/user_info.h"
+#include "src/db/model/include_db_model.h"
 #include "src/db/sql/db_manager.h"
 #include "src/db/sql_util.h"
 #include "src/net/api/authenticate.h"

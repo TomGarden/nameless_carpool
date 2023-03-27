@@ -6,11 +6,20 @@
 
 #include "src/db/model/base_model.h"
 #include "src/db/sql_util.h"
+#include "include_json.h"
 
 
 
 
 namespace nameless_carpool {
+
+  #define BASE_TIME_INFLATE \
+    else if (this->BaseTime::inflate(names, name, value)){  \
+      /* empty */                                           \
+    } else {                                                \
+      return false;                                         \
+    }                                                       \
+
 
   struct BaseTime;
   struct BaseTimeNames;

@@ -17,7 +17,7 @@
 #include "libs/mysql_connector_arm_static/include/mysqlx/devapi/result.h"
 #include "libs/mysql_connector_arm_static/include/mysqlx/xdevapi.h"
 #include "src/db/sql_util.h"
-#include "src/db/model/user_info.h"
+#include "src/db/model/include_db_model.h"
 
 namespace nameless_carpool {
   class DbManager;
