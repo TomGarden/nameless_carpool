@@ -94,11 +94,3 @@ namespace nameless_carpool {
     return true;
   }
 }  // namespace nameless_carpool
-
-namespace nameless_carpool {
-  const FindCar::Names          findCarNames;
-  const FindCustomers::Names    findCustomersNames;
-  const CarBindCustomers::Names carBindCustomersNames;
-  const GoodsInfo::Names        goodsInfoNames;
-  const Car::Names              carNames;
-}  // namespace nameless_carpool

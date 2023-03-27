@@ -2,6 +2,7 @@
 -- 更新表的某一列列名
 -- ALTER TABLE nameless_carpool.telephone RENAME COLUMN vertify_code TO verify_code;
 
+ALTER TABLE nameless_carpool.user_tel MODIFY COLUMN vertify_code TO verify_code;
 
 
 

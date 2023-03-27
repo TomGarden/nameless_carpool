@@ -5,17 +5,26 @@
 #pragma once
 
 #include "base_time.h"
+#include "enum_util.h"
 
 
 namespace nameless_carpool {
 
+  struct ServiceType; /*枚举 , 作为 FindXxx 的一个成员 */
   struct FindCar;
   struct FindCustomers;
   struct CarBindCustomers;
   struct GoodsInfo;
   struct Car;
-
 }  // namespace nameless_carpool
+
+
+DEFINE_ENUM(nameless_carpool::ServiceType,
+            carpool,         /*拼车*/
+            one_way_charter, /*单程包车*/
+            full_charter     /*全程包车*/
+)
+
 
 /* 人找车 */
 struct nameless_carpool::FindCar : public BaseTime {
@@ -47,6 +56,7 @@ struct nameless_carpool::FindCar : public BaseTime {
                     append_info};
     }
   };
+  GET_NAMES()
 
 
   std::optional<uint64_t>    id                         = std::nullopt; /* 外键 : 货物信息 ID */
@@ -123,6 +133,7 @@ struct nameless_carpool::FindCustomers : public BaseTime {
                     append_info};
     }
   };
+  GET_NAMES()
 
   std::optional<std::string> id                         = std::nullopt; /* 主键 id 自增 */
   std::optional<std::string> start_points_area_list     = std::nullopt; /* 出发点 jons 数组 */
@@ -191,6 +202,7 @@ struct nameless_carpool::CarBindCustomers : public BaseTime {
                     customers_response};
     }
   };
+  GET_NAMES()
 
   std::optional<uint64_t> find_car_id        = std::nullopt; /* 既是主键,又是外键 */
   std::optional<uint64_t> find_customers_id  = std::nullopt; /* 既是主键,又是外键 */
@@ -262,6 +274,7 @@ struct nameless_carpool::GoodsInfo : public BaseTime {
       };
     }
   };
+  GET_NAMES()
 
 
   std::optional<uint64_t>    id          = std::nullopt; /* 主键 id 自增 */
@@ -357,6 +370,7 @@ struct nameless_carpool::Car : public BaseTime {
       };
     }
   };
+  GET_NAMES()
 
   std::optional<uint64_t>    id                   = std::nullopt; /* 主键 id 自增 */
   std::optional<std::string> plate                = std::nullopt; /* 车牌号 */
@@ -418,12 +432,3 @@ struct nameless_carpool::Car : public BaseTime {
   }
 };
 
-
-
-namespace nameless_carpool {
-  extern const FindCar::Names          findCarNames;
-  extern const FindCustomers::Names    findCustomersNames;
-  extern const CarBindCustomers::Names carBindCustomersNames;
-  extern const GoodsInfo::Names        goodsInfoNames;
-  extern const Car::Names              carNames;
-}  // namespace nameless_carpool

@@ -15,16 +15,6 @@
 #include "src/db/sql_util.h"
 
 
-namespace nameless_carpool {
-  const User::Names        userNames;
-  const WcUser::Names      wcUserNames;
-  const Telephone::Names   telephoneNames;
-  const UserTel::Names     userTelNames;
-  const Session::Names     sessionNames;
-  const UserSession::Names userSessionNames;
-
-  const UserTel::FlagConstant userTelFlagConstant;
-}
 
 namespace nameless_carpool {
 

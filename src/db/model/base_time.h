@@ -18,7 +18,10 @@ namespace nameless_carpool {
       /* empty */                                           \
     } else {                                                \
       return false;                                         \
-    }                                                       \
+    }
+
+  #define GET_NAMES() \
+    static Names& names() { static Names names; return names; }
 
 
   struct BaseTime;

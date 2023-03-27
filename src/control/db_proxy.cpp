@@ -33,7 +33,7 @@ namespace nameless_carpool {
     // const vector<Telephone>& telVector = DbManager::getInstance().queryTelephone(phoneNumber);
 
     DbManager& db = DbManager::getInstance();
-    const std::string& whereStr = db.where(SqlUtil::backticks(telephoneNames.number), SqlUtil::nullOrApostrophe(phoneNumber), false);
+    const std::string& whereStr = db.where(SqlUtil::backticks(Telephone::names().number), SqlUtil::nullOrApostrophe(phoneNumber), false);
     const vector<Telephone>& telVector = db.query<Telephone>(whereStr);
 
     nlohmann::json telVectorJson = nlohmann::json(telVector);
@@ -98,7 +98,7 @@ namespace nameless_carpool {
 
     /* ① 查手机号 */
     std::shared_ptr<Telephone> telPtr = nullptr; {
-      const std::string&       whereTelStr = db.where(SqlUtil::backticks(telephoneNames.number), SqlUtil::nullOrApostrophe(inBody.phone), false);
+      const std::string&       whereTelStr = db.where(SqlUtil::backticks(Telephone::names().number), SqlUtil::nullOrApostrophe(inBody.phone), false);
       const vector<Telephone>& telVector   = db.query<Telephone>(whereTelStr);
 
       /* 异常处理 */ {
@@ -134,8 +134,8 @@ namespace nameless_carpool {
     /* ② 查找手机号对应的用户信息 */
     std::shared_ptr<User> userPtr = nullptr; {
       const std::string& whereUserTelStr = db.whereWithAnd(
-          {db.where(SqlUtil::backticks(userTelNames.telephone_id), SqlUtil::nullOrApostrophe(telPtr->id), std::nullopt),
-          db.where(SqlUtil::backticks(userTelNames.flag), SqlUtil::nullOrApostrophe(userTelFlagConstant.forLogIn), std::nullopt)},
+          {db.where(SqlUtil::backticks(UserTel::names().telephone_id), SqlUtil::nullOrApostrophe(telPtr->id), std::nullopt),
+          db.where(SqlUtil::backticks(UserTel::names().flag), SqlUtil::nullOrApostrophe(UserTel::Flag::toString(UserTel::Flag::login)), std::nullopt)},
           false);
       const vector<UserTel>& userTelVector = db.query<UserTel>(whereUserTelStr);
 
@@ -154,7 +154,7 @@ namespace nameless_carpool {
         UserTel userTel; {
           // userTel.user_id = user.id;
           userTel.telephone_id = telPtr->id;
-          userTel.flag = userTelFlagConstant.forLogIn;
+          userTel.flag = UserTel::Flag::toString(UserTel::Flag::login);
           userTel.update_time = userTel.create_time = userPtr->create_time;
           userTel.update_time_tz = userTel.create_time_tz = userPtr->create_time_tz;
         }
@@ -166,7 +166,7 @@ namespace nameless_carpool {
         return false;
       } else /* (userTelVector.size() == 1) */ {
         // curUserPtr = make_shared<User>(userTelVector[0]);
-        const std::string& whereUserStr = db.where(SqlUtil::backticks(userNames.id), SqlUtil::nullOrApostrophe(userTelVector[0].user_id), false);
+        const std::string& whereUserStr = db.where(SqlUtil::backticks(User::names().id), SqlUtil::nullOrApostrophe(userTelVector[0].user_id), false);
         std::vector<User> userVector = db.query<User>(whereUserStr);
         if(userVector.size() == 1) {
           userPtr = make_shared<User>(userVector[0]);
@@ -187,12 +187,12 @@ namespace nameless_carpool {
     */
     std::shared_ptr<Session> sessionPtr = nullptr;  {
       std::string whereSessionSql ; {
-        const std::string& whereUserSession       = db.whereWithPack(userSessionNames.user_id, userPtr->id, false);
-        std::string        queryUserSessionSubSql = db.queryModelSql({userSessionNames.session_id}, userSessionNames.tableName, whereUserSession);
+        const std::string& whereUserSession       = db.whereWithPack(UserSession::names().user_id, userPtr->id, false);
+        std::string        queryUserSessionSubSql = db.queryModelSql({UserSession::names().session_id}, UserSession::names().tableName, whereUserSession);
         auto index = queryUserSessionSubSql.find_last_of(";");
         if(index != std::string::npos) queryUserSessionSubSql = queryUserSessionSubSql.substr(0, index);
 
-        whereSessionSql = boost::str(boost::format("( %1% IN (%2%) )") % sessionNames.id % queryUserSessionSubSql);
+        whereSessionSql = boost::str(boost::format("( %1% IN (%2%) )") % Session::names().id % queryUserSessionSubSql);
         whereSessionSql.append(db.andDelFilter(false));
       }
       std::vector<Session> sessionVector = db.query<Session>(whereSessionSql);
@@ -258,7 +258,7 @@ namespace nameless_carpool {
   }
 
   bool DbProxy::tokenIsLegal(const string& inToken, string& outErrMsg) {
-    const std::string&              whereSessionStr = db().where(SqlUtil::backticks(sessionNames.token), SqlUtil::nullOrApostrophe(inToken), false);
+    const std::string&              whereSessionStr = db().where(SqlUtil::backticks(Session::names().token), SqlUtil::nullOrApostrophe(inToken), false);
     std::vector<Session>            sessionVector   = db().query<Session>(whereSessionStr);
     std::vector<Session>::size_type size            = sessionVector.size();
 

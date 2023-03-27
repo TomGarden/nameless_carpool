@@ -231,7 +231,7 @@ namespace nameless_carpool {
   //│                other insert opt 手写的 sql 语句
   //└─────────────────────────────────────────────────────────────────────────────────────┘
   void DbManager::insert(const Telephone& telephone, User& user, const UserTel& userTel) {
-    int index = Containter::indexOf(userTelNames.getColumnNameVector(), userTelNames.user_id);
+    int index = Containter::indexOf(UserTel::names().getColumnNameVector(), UserTel::names().user_id);
     if (index < 0) throw std::logic_error("BaseMode , BaseModelNames , 的 getColumnXxxVector 获取的值应该是一一对应的 ; 需要进一步校验此处逻辑");
 
     const std::string insertUserSql    = insertModelSql<User>({user});
@@ -241,8 +241,8 @@ namespace nameless_carpool {
       columnValVector[index] = lastInsertUserId;
       std::stringstream sqlTmp;
       sqlTmp /* INSERT INTO user_tel */
-          << " INSERT INTO " << SqlUtil::getDbAndTablename(userTelNames.tableName) << " ( \n"
-          << SqlUtil::allFieldSql(userTelNames.getColumnNameVector()) << " )\n"
+          << " INSERT INTO " << SqlUtil::getDbAndTablename(UserTel::names().tableName) << " ( \n"
+          << SqlUtil::allFieldSql(UserTel::names().getColumnNameVector()) << " )\n"
           << " VALUES \n"
           << " \t(\n" << userTel.BaseTime::insertAllFieldSqlWithoutApostrophe(columnValVector) << " \t) "
           << ';';
@@ -261,14 +261,14 @@ namespace nameless_carpool {
 
   void DbManager::insert(Session& session, UserSession& userSession) {
 
-    int index = Containter::indexOf(userSessionNames.getColumnNameVector(), userSessionNames.session_id);
+    int index = Containter::indexOf(UserSession::names().getColumnNameVector(), UserSession::names().session_id);
     if (index < 0) throw std::logic_error("BaseMode , BaseModelNames , 的 getColumnXxxVector 获取的值应该是一一对应的 ; 需要进一步校验此处逻辑");
 
 
     const std::string insertSessionSql    = insertModelSql<Session>({session});
     const std::string lastInsertSessionId = "@last_insert_session_id";
     std::string       insertUserSessionSql;  {
-      const auto& modelName = userSessionNames;
+      const auto& modelName = UserSession::names();
       const auto& model = userSession;
       std::vector<std::string> columnValVector = SqlUtil::nullOrApostrophe(model.getColumnValVector());
       columnValVector[index] = lastInsertSessionId;

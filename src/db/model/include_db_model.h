@@ -15,19 +15,19 @@ namespace nameless_carpool {
     const void* ptr = nullptr;
 
     // user_info
-    if /**/ (std::is_same<User /*            */, Model>::value) ptr = &userNames;
-    else if (std::is_same<WcUser /*          */, Model>::value) ptr = &wcUserNames;
-    else if (std::is_same<Telephone /*       */, Model>::value) ptr = &telephoneNames;
-    else if (std::is_same<UserTel /*         */, Model>::value) ptr = &userTelNames;
-    else if (std::is_same<Session /*         */, Model>::value) ptr = &sessionNames;
-    else if (std::is_same<UserSession /*     */, Model>::value) ptr = &userSessionNames;
+    if /**/ (std::is_same<User /*            */, Model>::value) ptr = &User::names();
+    else if (std::is_same<WcUser /*          */, Model>::value) ptr = &WcUser::names();
+    else if (std::is_same<Telephone /*       */, Model>::value) ptr = &Telephone::names();
+    else if (std::is_same<UserTel /*         */, Model>::value) ptr = &UserTel::names();
+    else if (std::is_same<Session /*         */, Model>::value) ptr = &Session::names();
+    else if (std::is_same<UserSession /*     */, Model>::value) ptr = &UserSession::names();
 
     // travel_info
-    else if (std::is_same<FindCar /*         */, Model>::value) ptr = &findCarNames;
-    else if (std::is_same<FindCustomers /*   */, Model>::value) ptr = &findCustomersNames;
-    else if (std::is_same<CarBindCustomers /**/, Model>::value) ptr = &carBindCustomersNames;
-    else if (std::is_same<GoodsInfo /*       */, Model>::value) ptr = &goodsInfoNames;
-    else if (std::is_same<Car /*             */, Model>::value) ptr = &carNames;
+    else if (std::is_same<FindCar /*         */, Model>::value) ptr = &FindCar::names();
+    else if (std::is_same<FindCustomers /*   */, Model>::value) ptr = &FindCustomers::names();
+    else if (std::is_same<CarBindCustomers /**/, Model>::value) ptr = &CarBindCustomers::names();
+    else if (std::is_same<GoodsInfo /*       */, Model>::value) ptr = &GoodsInfo::names();
+    else if (std::is_same<Car /*             */, Model>::value) ptr = &Car::names();
 
     else throw std::runtime_error("not implement");
 

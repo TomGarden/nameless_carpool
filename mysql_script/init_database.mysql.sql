@@ -115,11 +115,7 @@ CREATE TABLE IF NOT EXISTS `user_tel` (
   `user_id`             INTEGER UNSIGNED    NOT NULL                                COMMENT '外键:用户基础信息 id',
   `telephone_id`        INTEGER UNSIGNED    NOT NULL                                COMMENT '外键 手机号 id ',
   `desc`                VARCHAR(255)            NULL                                COMMENT '描述信息',
-  `flag`                VARCHAR(8)              NULL                                COMMENT '标识符 , 8 位二进制数 , 不同的用户对同一个手机号的标示可能是不同的
-                                                                                              0000 0001 第一位: 表示可用于登录 , 
-                                                                                              0000 0010 第二位: 表示在自己的数据中 , 这个号码作为联系人出现过
-                                                                                                        其他位: 待用 , 有需要时再填充
-                                                                                              ',
+  `flag`                VARCHAR(20)             NULL                                COMMENT '枚举 login,标记此手机号作为登录账号 ; connect,标记此手机号作为联系人号码 ',
 
   `create_time`         DATETIME(6)         NOT NULL                                COMMENT '创建时间',
   `create_time_tz`      VARCHAR(255)        NOT NULL                                COMMENT '时区',

@@ -13,6 +13,7 @@
 #include "base_time.h"
 #include "src/utils/json/include_json.h"
 #include "src/db/sql_util.h"
+#include "enum_util.h"
 
 namespace nameless_carpool {
 
@@ -50,6 +51,7 @@ struct nameless_carpool::User : public BaseTime {
               birth_date_tz};
     }
   };
+  GET_NAMES()
 
   std::optional<uint64_t>    id            = std::nullopt; /*  */
   std::optional<std::string> id_card_num   = std::nullopt; /* 身份证 */
@@ -109,6 +111,7 @@ struct nameless_carpool::WcUser : public BaseTime {
               wc_number};
     }
   };
+  GET_NAMES()
 
   std::optional<uint64_t>    user_id   = std::nullopt;
   std::optional<std::string> wc_uid    = std::nullopt;
@@ -162,6 +165,7 @@ struct nameless_carpool::Telephone : public BaseTime {
               vc_update_time_tz};
     }
   };
+  GET_NAMES()
 
   std::optional<uint64_t>      id                = std::nullopt;
   std::optional<std::string>   number            = std::nullopt;
@@ -222,11 +226,12 @@ struct nameless_carpool::UserTel : public BaseTime {
               flag};
     }
   };
+  GET_NAMES()
 
-  struct FlagConstant {
-    const std::string forLogIn   = "00000001"; /* 标记此手机号作为登录账号 */
-    const std::string forConnect = "00000010"; /* 标记此手机号作为联系人号码 */
-  };
+  DEFINE_ENUM(Flag,   /* 成员字符长度不能超过 20 , 因为要转换成字符串存到数据库中 */
+              login,  /* 标记此手机号作为登录账号 */
+              connect /* 标记此手机号作为联系人号码 */
+  )
 
   std::optional<uint64_t>    user_id      = std::nullopt;
   std::optional<uint64_t>    telephone_id = std::nullopt;
@@ -235,29 +240,11 @@ struct nameless_carpool::UserTel : public BaseTime {
 
 
 
-  /* 看此手机号是否作为 *登录* 手机号的
-     查看指定位的值 , 其他位不关心  
-     0000 0000 
-             ^  false
-     0000 0001 
-             ^  true
-             */
-  inline bool flagIsLogin() {
-    std::bitset<8> flagBitset(flag.value_or(""));
-    return flagBitset[0];
-  }
+  /* 看此手机号是否作为 *登录* 手机号的 */
+  inline bool flagIsLogin() { return flag == Flag::toString(Flag::login); }
 
-  /* 看此手机号是否作为 *联系人* 手机号的
-     查看指定位的值 , 其他位不关心  
-     0000 0000 
-            ^  false
-     0000 0010 
-            ^  true
-             */
-  inline bool flagIsContact() {
-    std::bitset<8> flagBitset(flag.value_or(""));
-    return flagBitset[1];
-  }
+  /* 看此手机号是否作为 *联系人* 手机号的 */
+  inline bool flagIsContact() { return flag == Flag::toString(Flag::connect); }
 
   bool inflate(const Names& names, const std::string& name, const mysqlx::Value& value);
 
@@ -302,6 +289,7 @@ struct nameless_carpool::Session :public BaseTime {
               token_update_time_tz};
     }
   };
+  GET_NAMES()
 
   /* 客户端类型枚举 */
   struct ClientType {
@@ -416,6 +404,7 @@ struct nameless_carpool::UserSession :public BaseTime {
     /* ANCHOR - 只获取当前子类的 un primary key , 归并的动作交给 BaseTimeNames::getUnPrimaryKeyNameVector 完成 */
     virtual std::vector<std::string> getSubUnPrimaryKeyNameVector() const override { return {}; }
   };
+  GET_NAMES()
 
   std::optional<uint64_t> user_id    = std::nullopt; 
   std::optional<uint64_t> session_id = std::nullopt; 
@@ -431,16 +420,5 @@ struct nameless_carpool::UserSession :public BaseTime {
   getSubUnPrimaryKeyValVector() const override { return {}; }
 };
 
-namespace nameless_carpool {
-  extern const User::Names        userNames;
-  extern const WcUser::Names      wcUserNames;
-  extern const Telephone::Names   telephoneNames;
-  extern const UserTel::Names     userTelNames;
-  extern const Session::Names     sessionNames;
-  extern const UserSession::Names userSessionNames;
-
-  extern const UserTel::FlagConstant userTelFlagConstant;
-
-};
 
 

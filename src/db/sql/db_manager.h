@@ -585,7 +585,7 @@ class nameless_carpool::DbManager {
     if (std::nullopt == isDel) return "";
 
     /* 由于都是 BaseTime 的基类 , 所以这里实际上是那个 ModelNames 都不是紧要的 */
-    const User::Names& modelNames = userNames;
+    const User::Names& modelNames = User::names();
 
     if (isDel.value()) {
       auto delSql = boost::format("  AND  ( %1% IS NOT NULL  OR  %2% IS NOT NULL )") % SqlUtil::backticks(modelNames.del_time) % SqlUtil::backticks(modelNames.del_time_tz);
