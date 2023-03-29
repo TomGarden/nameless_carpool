@@ -5,12 +5,14 @@
 #pragma once
 
 #include "base_time.h"
-#include "enum_util.h"
+#include "src/utils/macro/enum_util.h"
 
 
 namespace nameless_carpool {
 
-  struct ServiceType; /*枚举 , 作为 FindXxx 的一个成员 */
+
+  struct FindBase; /* FindXxx 共用 enum */
+
   struct FindCar;
   struct FindCustomers;
   struct CarBindCustomers;
@@ -18,16 +20,34 @@ namespace nameless_carpool {
   struct Car;
 }  // namespace nameless_carpool
 
+struct nameless_carpool::FindBase {
 
-DEFINE_ENUM(nameless_carpool::ServiceType,
-            carpool,         /*拼车*/
-            one_way_charter, /*单程包车*/
-            full_charter     /*全程包车*/
-)
+  std::optional<uint64_t>    id                         = std::nullopt; /* 外键 : 货物信息 ID */
+  std::optional<std::string> departure_time_range_start = std::nullopt; /* 发车时间范围起点 */
+  std::optional<std::string> departure_time_range_end   = std::nullopt; /* 发车时间范围终点 */
+  std::optional<std::string> pick_up_point              = std::nullopt; /* 接送点 附近(nearby), 上门(door to door) */
+  std::optional<uint8_t>     people_number              = std::nullopt; /* 跟车人数 */
+  std::optional<uint64_t>    goods_info_id              = std::nullopt; /* 外键 : 货物信息 ID */
+  std::optional<std::string> append_info                = std::nullopt; /* 附加信息 , 最多 255 个字  */
+
+
+  /* 枚举 , 作为 FindXxx 的一个成员 */
+  ENUM_UTIL_DEFINE_ENUM(ServiceType,
+              carpool,         /*拼车*/
+              one_way_charter, /*单程包车*/
+              full_charter     /*全程包车*/
+  )
+
+  /* 上车地点选择 */
+  ENUM_UTIL_DEFINE_ENUM(PickUpPoint,
+              nearby,      /* 附近上车 */
+              door_to_door /* 上门接 */
+  )
+};
 
 
 /* 人找车 */
-struct nameless_carpool::FindCar : public BaseTime {
+struct nameless_carpool::FindCar : public BaseTime, public FindBase {
   struct Names : virtual BaseTimeNames {
     const std::string tableName = "find_car";
 
@@ -59,16 +79,9 @@ struct nameless_carpool::FindCar : public BaseTime {
   GET_NAMES()
 
 
-  std::optional<uint64_t>    id                         = std::nullopt; /* 外键 : 货物信息 ID */
   std::optional<std::string> start_point                = std::nullopt; /* 出发点信息 , 从 高德得到的数据 , 不想建表了  <{"adcode": "130128","district": "河北省石家庄市深泽县","location": "115.259604,38.216147","name": "小直要村",} */
   std::optional<std::string> end_point                  = std::nullopt; /* 终点信息 , 从 高德得到的数据 , 不想建表了  <{"adcode": "130128","district": "河北省石家庄市深泽县","location": "115.259604,38.216147","name": "小直要村",} */
   std::optional<std::string> way_of_using_car           = std::nullopt; /* 用车形式 拼车(carpool), 单程包车(one_way_charter), 全程包车(full_charter) */
-  std::optional<std::string> departure_time_range_start = std::nullopt; /* 发车时间范围起点 */
-  std::optional<std::string> departure_time_range_end   = std::nullopt; /* 发车时间范围终点 */
-  std::optional<std::string> pick_up_point              = std::nullopt; /* 接送点 附近(nearby), 上门(door to door) */
-  std::optional<uint8_t>     people_number              = std::nullopt; /* 跟车人数 */
-  std::optional<uint64_t>    goods_info_id              = std::nullopt; /* 外键 : 货物信息 ID */
-  std::optional<std::string> append_info                = std::nullopt; /* 附加信息 , 最多 255 个字  */
 
   NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(FindCar,
                                               id,
@@ -80,7 +93,14 @@ struct nameless_carpool::FindCar : public BaseTime {
                                               pick_up_point,
                                               people_number,
                                               goods_info_id,
-                                              append_info)
+                                              append_info,
+
+                                              create_time,
+                                              create_time_tz,
+                                              update_time,
+                                              update_time_tz,
+                                              del_time,
+                                              del_time_tz)
 
   /*  */
   bool inflate(const Names& names, const std::string& name, const mysqlx::Value& value);
@@ -102,7 +122,7 @@ struct nameless_carpool::FindCar : public BaseTime {
   }
 };
 /* 车找人 */
-struct nameless_carpool::FindCustomers : public BaseTime {
+struct nameless_carpool::FindCustomers : public BaseTime, public FindBase {
   struct Names : virtual BaseTimeNames {
     const std::string tableName = "find_customers";
 
@@ -135,31 +155,31 @@ struct nameless_carpool::FindCustomers : public BaseTime {
   };
   GET_NAMES()
 
-  std::optional<std::string> id                         = std::nullopt; /* 主键 id 自增 */
   std::optional<std::string> start_points_area_list     = std::nullopt; /* 出发点 jons 数组 */
   std::optional<std::string> end_points_area_list       = std::nullopt; /* 到达点 json 数组  */
   std::optional<std::string> car_supply_form            = std::nullopt; /* 供车形式 拼车(carpool), 单程包车(one_way_charter), 全程包车(full_charter) */
-  std::optional<std::string> departure_time_range_start = std::nullopt; /* 发车时间范围起点 */
-  std::optional<std::string> departure_time_range_end   = std::nullopt; /* 发车时间范围终点 */
-  std::optional<std::string> pick_up_point              = std::nullopt; /* 接送点 附近(nearby), 上门(door to door) */
-  std::optional<uint8_t>     people_number              = std::nullopt; /* 客容量 */
-  std::optional<uint64_t>    goods_info_id              = std::nullopt; /* 货容量 -> 外键 : 货物信息 ID */
   std::optional<uint64_t>    car_id                     = std::nullopt; /* 车辆信息 */
-  std::optional<std::string> append_info                = std::nullopt; /* 附加信息 , 最多 255 个字  */
 
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(FindCustomers,
-                                              id,
-                                              start_points_area_list,
-                                              end_points_area_list,
-                                              car_supply_form,
-                                              departure_time_range_start,
-                                              departure_time_range_end,
-                                              pick_up_point,
-                                              people_number,
-                                              goods_info_id,
-                                              car_id,
-                                              append_info)
+//  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(FindCustomers,
+//                                              id,
+//                                              start_points_area_list,
+//                                              end_points_area_list,
+//                                              car_supply_form,
+//                                              departure_time_range_start,
+//                                              departure_time_range_end,
+//                                              pick_up_point,
+//                                              people_number,
+//                                              goods_info_id,
+//                                              car_id,
+//                                              append_info,
+//
+//                                              create_time,
+//                                              create_time_tz,
+//                                              update_time,
+//                                              update_time_tz,
+//                                              del_time,
+//                                              del_time_tz)
 
   /*  */
   bool inflate(const Names& names, const std::string& name, const mysqlx::Value& value);
@@ -212,13 +232,20 @@ struct nameless_carpool::CarBindCustomers : public BaseTime {
   std::optional<uint8_t>  customers_response = std::nullopt; /* 乘客相应绑定 */
 
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(CarBindCustomers,
-                                              find_car_id,
-                                              find_customers_id,
-                                              car_request,
-                                              car_response,
-                                              customers_request,
-                                              customers_response)
+//  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(CarBindCustomers,
+//                                              find_car_id,
+//                                              find_customers_id,
+//                                              car_request,
+//                                              car_response,
+//                                              customers_request,
+//                                              customers_response,
+//
+//                                              create_time,
+//                                              create_time_tz,
+//                                              update_time,
+//                                              update_time_tz,
+//                                              del_time,
+//                                              del_time_tz)
 
   /*  */
   bool inflate(const Names& names, const std::string& name, const mysqlx::Value& value);
@@ -303,7 +330,14 @@ struct nameless_carpool::GoodsInfo : public BaseTime {
                                               weight_unit,
                                               number,
                                               tag,
-                                              desc)
+                                              desc,
+
+                                              create_time,
+                                              create_time_tz,
+                                              update_time,
+                                              update_time_tz,
+                                              del_time,
+                                              del_time_tz)
 
   /*  */
   bool inflate(const Names& names, const std::string& name, const mysqlx::Value& value);
@@ -388,22 +422,29 @@ struct nameless_carpool::Car : public BaseTime {
   std::optional<std::string> capacity_weight_unit = std::nullopt; /* 货重量单位:重量(KG/T) */
   std::optional<std::string> main_transport_type  = std::nullopt; /* 主力运输类型(goods/passenger) */
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Car,
-                                              id,
-                                              plate,
-                                              brand,
-                                              model,
-                                              age,
-                                              passenger_capacity,
-                                              size_length,
-                                              size_width,
-                                              size_height,
-                                              size_unity,
-                                              capacity_volume,
-                                              capacity_volume_unit,
-                                              capacity_weight,
-                                              capacity_weight_unit,
-                                              main_transport_type)
+//  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Car,
+//                                              id,
+//                                              plate,
+//                                              brand,
+//                                              model,
+//                                              age,
+//                                              passenger_capacity,
+//                                              size_length,
+//                                              size_width,
+//                                              size_height,
+//                                              size_unity,
+//                                              capacity_volume,
+//                                              capacity_volume_unit,
+//                                              capacity_weight,
+//                                              capacity_weight_unit,
+//                                              main_transport_type,
+//
+//                                              create_time,
+//                                              create_time_tz,
+//                                              update_time,
+//                                              update_time_tz,
+//                                              del_time,
+//                                              del_time_tz)
 
   /*  */
   bool inflate(const Names& names, const std::string& name, const mysqlx::Value& value);

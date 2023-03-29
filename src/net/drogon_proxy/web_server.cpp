@@ -22,7 +22,7 @@ namespace nameless_carpool {
   void WebServer::convert(const nameless_carpool::HttpResponse& inNamelessHttpResponse, const drogon::HttpResponsePtr& outDrogonHttpResponsePtr) {
     outDrogonHttpResponsePtr->setCustomStatusCode(inNamelessHttpResponse.getIntStatus(), inNamelessHttpResponse.getStatusNameView());
     for (auto& header :inNamelessHttpResponse.headers.items()) {
-      if (header.key().compare(httpHeaderNames.contentType) == 0) {
+      if (header.key().compare(HttpHeaderNames::instance().contentType) == 0) {
         outDrogonHttpResponsePtr->setContentTypeString(header.value().get<std::string>());
       } else outDrogonHttpResponsePtr->addHeader(header.key(), header.value());
     }

@@ -11,9 +11,9 @@
 #include <vector>
 
 #include "base_time.h"
-#include "src/utils/json/include_json.h"
 #include "src/db/sql_util.h"
-#include "enum_util.h"
+#include "src/utils/json/include_json.h"
+#include "src/utils/macro/enum_util.h"
 
 namespace nameless_carpool {
 
@@ -228,7 +228,7 @@ struct nameless_carpool::UserTel : public BaseTime {
   };
   GET_NAMES()
 
-  DEFINE_ENUM(Flag,   /* 成员字符长度不能超过 20 , 因为要转换成字符串存到数据库中 */
+  ENUM_UTIL_DEFINE_ENUM(Flag,   /* 成员字符长度不能超过 20 , 因为要转换成字符串存到数据库中 */
               login,  /* 标记此手机号作为登录账号 */
               connect /* 标记此手机号作为联系人号码 */
   )

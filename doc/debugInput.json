@@ -10,6 +10,44 @@
     ]
   },
   {
+    "desc": "人找车",
+    "desc2": ["findCar.goods_info_id 未设置"],
+    "method": "POST",
+    "headers": {
+      "time_zone": "Asia/Shanghai",
+      "token": "47b4ac7f-e720-4f49-b4f5-0e0a62305afd"
+    },
+    "uri": "/fcgi_test/nameless_carpool/people_find_car",
+    "body": {
+      "findCar": {
+        "start_point": {"adcode": "130128","district": "河北省石家庄市深泽县","location": "115.259604,38.216147","name": "小直要村"},
+        "end_point": {"adcode": "130128","district": "河北省石家庄市深泽县","location": "115.259604,38.216147","name": "小直要村"},
+        "way_of_using_car": "full_charter",
+        "departure_time_range_start": "2023-03-28 08:40:01",
+        "departure_time_range_end": "2023-03-30 08:40:01",
+        "pick_up_point": "nearby",
+        "people_number": 3,
+        "goods_info_id": 1,
+        "append_info": "附加信息"
+      },
+      "goodsInfo" : {
+        "size_length": 43,
+        "size_width": 31,
+        "size_height": 13,
+        "size_unity": "CM",
+        "volume": 17.4,
+        "volume_unit": "L",
+        "weight": null,
+        "weight_unit": null,
+        "number": 1,
+        "tag": [
+          "可登机"
+        ],
+        "desc": "16吋行李箱"
+      }
+    }
+  },
+  {
     "desc": "地点搜索提示",
     "desc2": ["高德开发文档 : https://lbs.amap.com/api/webservice/guide/api/inputtips/"],
     "method": "POST",

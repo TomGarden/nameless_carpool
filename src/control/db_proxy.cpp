@@ -214,12 +214,12 @@ namespace nameless_carpool {
       } else if (duringSamePlateformSession.size() == 1) {
         /* update token and return */
         sessionPtr = std::make_shared<Session>(*duringSamePlateformSession[0]);
-        const std::string& timeZone   = inRequest.headers[httpHeaderNames.timeZone].get<std::string>();
+        const std::string& timeZone   = inRequest.headers[HttpHeaderNames::instance().timeZone].get<std::string>();
         sessionPtr->resetToken(timeZone);
         db.update(*sessionPtr);
       } else /* if (duringSamePlateformSession.size() < 1) */ {
         /* insert token + userSession and return */
-        const std::string& timeZone   = inRequest.headers[httpHeaderNames.timeZone].get<std::string>();
+        const std::string& timeZone   = inRequest.headers[HttpHeaderNames::instance().timeZone].get<std::string>();
         sessionPtr = std::make_shared<Session>(Session::newObj(timeZone));  {
           sessionPtr->client_type = Session::ClientType().getClientType(inBody.client_type);
         }

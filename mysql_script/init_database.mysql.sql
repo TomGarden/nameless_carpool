@@ -245,6 +245,36 @@ CREATE TABLE IF NOT EXISTS `goods_info` (
   PRIMARY KEY (`id`)
 ) COMMENT '货物信息描述';
 
+INSERT INTO `nameless_carpool`.`goods_info` ( `id`, `size_length`, `size_width`, `size_height`, `size_unity`, `volume`,
+                                             `volume_unit`, `weight`, `weight_unit`, `number`, `tag`, `desc`, `create_time`,
+                                             `create_time_tz`, `update_time`, `update_time_tz`, `del_time`, `del_time_tz` )
+VALUES ('1', '43', '31', '13', 'CM', '17.4',  'L', NULL, NULL, '1', '["可登机"]', '16吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('2', '44', '34', '20', 'CM', '30.0',  'L', NULL, NULL, '1', '["可登机"]', '18吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('3', '50', '34', '20', 'CM', '34.0',  'L', NULL, NULL, '1', '["可登机"]', '20吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('4', '58', '39', '24', 'CM', '54.3',  'L', NULL, NULL, '1', NULL,        '22吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('5', '68', '42', '26', 'CM', '74.3',  'L', NULL, NULL, '1', NULL,        '24吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('6', '67', '45', '28', 'CM', '84.5',  'L', NULL, NULL, '1', NULL,        '26吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('7', '78', '47', '28', 'CM', '102.7', 'L', NULL, NULL, '1', NULL,        '28吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('8', '88', '53', '30', 'CM', '140.0', 'L', NULL, NULL, '1', NULL,        '32吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL)
+ON DUPLICATE KEY UPDATE  `size_length`    = VALUES(`size_length`   ),
+                         `size_width`     = VALUES(`size_width`    ),
+                         `size_height`    = VALUES(`size_height`   ),
+                         `size_unity`     = VALUES(`size_unity`    ),
+                         `volume`         = VALUES(`volume`        ),
+                         `volume_unit`    = VALUES(`volume_unit`   ),
+                         `weight`         = VALUES(`weight`        ),
+                         `weight_unit`    = VALUES(`weight_unit`   ),
+                         `number`         = VALUES(`number`        ),
+                         `tag`            = VALUES(`tag`           ),
+                         `desc`           = VALUES(`desc`          ),
+                         `create_time`    = VALUES(`create_time`   ),
+                         `create_time_tz` = VALUES(`create_time_tz`),
+                         `update_time`    = VALUES(`update_time`   ),
+                         `update_time_tz` = VALUES(`update_time_tz`),
+                         `del_time`       = VALUES(`del_time`      ),
+                         `del_time_tz`    = VALUES(`del_time_tz`   );
+
+
 CREATE TABLE IF NOT EXISTS `user_goods` (
   `user_id`             INTEGER UNSIGNED    NOT NULL                COMMENT '外键:用户基础信息 id',
   `goods_info_id`       INTEGER UNSIGNED    NOT NULL                COMMENT '外键 货物 id ',

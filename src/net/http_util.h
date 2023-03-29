@@ -22,6 +22,7 @@
 #include "src/utils/json/include_json.h"
 #include "src/utils/log_utils.h"
 #include "src/utils/tom_string_utils.h"
+#include "enum_util.h"
 
 extern int flag;
 
@@ -29,131 +30,41 @@ namespace nameless_carpool {
 
   extern std::string getHttpScheme() ;
 
-  struct HttpStatus {
 
-    /* 状态码一般信息参考 : https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Status
-   > 信息响应 (100–199)
-   > 成功响应 (200–299)
-   > 重定向消息 (300–399)
-   > 客户端错误响应 (400–499)
-   > 服务端错误响应 (500–599)
-*/
-    enum class Enum {
-      unsetErr            = -1,
+  /** 状态码一般信息参考 : https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Status
+   *> 信息响应 (100–199)
+   *> 成功响应 (200–299)
+   *> 重定向消息 (300–399)
+   *> 客户端错误响应 (400–499)
+   *> 服务端错误响应 (500–599)
+   */
+  ENUM_UTIL_3_FIELD_SPECIFY_ENUM_GENERATE_IN_STRUCT(
+      HttpStatus /*            */, std::string, str /*    */, std::string_view, str_view, std::string, desc,
+      unsetErr /*         */, -01, "unsetErr" /*         */, "unsetErr" /*            */, "未设置状态码",
+      success /*          */, 200, "success" /*          */, "success" /*             */, "解析完成",
+      badRequest /*       */, 400, "badRequest" /*       */, "badRequest" /*          */, "Bad Request : 被认为是客户端错误（例如，错误的请求语法、无效的请求消息帧或欺骗性的请求路由），服务器无法或不会处理请求。",
+      forbidden /*        */, 403, "forbidden" /*        */, "forbidden" /*           */, "Permission Denied",
+      requestUndefined /* */, 404, "requestUndefined" /* */, "requestUndefined" /*    */, "404 请求未定义",
+      requestHelp /*      */, 500, "requestHelp" /*      */, "requestHelp" /*         */, "查看帮助信息",
+      unknowErr /*        */, 501, "unknowErr" /*        */, "unknowErr" /*           */, "未知错误, 需要进一步跟进",
+      parsingFailed /*    */, 502, "parsingFailed" /*    */, "parsingFailed" /*       */, "服务端异常 , 解析失败",
+      wrongFormat /*      */, 503, "wrongFormat" /*      */, "wrongFormat" /*         */, "入参错误 , 入参格式错误",
+      argDefineMultiple /**/, 504, "argDefineMultiple" /**/, "argDefineMultiple" /*   */, "入参错误 , 属性多次定义",
+      serverLogicError /* */, 505, "serverLogicError" /* */, "serverLogicError" /*    */, "服务端内部逻辑错误")
 
-      success             = 200 ,
+  ENUM_UTIL_1_FIELD_DEF_ENUM_GENERATE_IN_STRUCT(
+      HttpMethod, std::string, name,
+      GET /*    */, "GET" /*    */, /* GET 方法请求一个指定资源的表示形式，使用 GET 的请求应该只被用于获取数据。 */
+      HEAD /*   */, "HEAD" /*   */, /* HEAD 方法请求一个与 GET 请求的响应相同的响应，但没有响应体。 */
+      POST /*   */, "POST" /*   */, /* POST 方法用于将实体提交到指定的资源，通常导致在服务器上的状态变化或副作用。 */
+      PUT /*    */, "PUT" /*    */, /* PUT 方法用请求有效载荷替换目标资源的所有当前表示。 */
+      DELETE /* */, "DELETE" /* */, /* DELETE 方法删除指定的资源。 */
+      CONNECT /**/, "CONNECT" /**/, /* CONNECT 方法建立一个到由目标资源标识的服务器的隧道。 */
+      OPTIONS /**/, "OPTIONS" /**/, /* OPTIONS 方法用于描述目标资源的通信选项。 */
+      TRACE /*  */, "TRACE" /*  */, /* TRACE 方法沿着到目标资源的路径执行一个消息环回测试。 */
+      PATCH /*  */, "PATCH" /*  */) /* PATCH 方法用于对资源应用部分修改。 */
 
-      badRequest          = 400,
-      forbidden           = 403,
-      requestUndefined    = 404 ,
-      requestHelp         = 500 ,
-      unknowErr           = 501 ,
-      parsingFailed       = 502 ,
-      wrongFormat         = 503 ,
-      argDefineMultiple   = 504 ,
-      serverLogicError    = 505 ,
-    };
 
-    std::string getName(Enum statusEnum) {
-      return std::string(getNameView(statusEnum));
-    }
-
-    std::string_view getNameView(Enum statusEnum) {
-      switch (statusEnum) {
-        case Enum::unsetErr: /*          */ return "unsetErr";
-        case Enum::success: /*           */ return "success";
-        case Enum::badRequest: /*        */ return "badRequest";
-        case Enum::forbidden: /*         */ return "forbidden";
-        case Enum::requestUndefined: /*  */ return "requestUndefined";
-        case Enum::requestHelp: /*       */ return "requestHelp";
-        case Enum::unknowErr: /*         */ return "unknowErr";
-        case Enum::parsingFailed: /*     */ return "parsingFailed";
-        case Enum::wrongFormat: /*       */ return "wrongFormat";
-        case Enum::argDefineMultiple: /* */ return "argDefineMultiple";
-        case Enum::serverLogicError: /*  */ return "serverLogicError";
-        default: return "NULL";
-      }
-    }
-
-    std::string getDesc(Enum statusEnum) {
-      switch (statusEnum) {
-        case Enum::unsetErr: /*          */ return "未设置状态码";
-        case Enum::success: /*           */ return "解析完成";
-        case Enum::badRequest: /*        */ return "Bad Request : 被认为是客户端错误（例如，错误的请求语法、无效的请求消息帧或欺骗性的请求路由），服务器无法或不会处理请求。";
-        case Enum::forbidden: /*         */ return "Permission Denied";
-        case Enum::requestUndefined: /*  */ return "404 请求未定义";
-        case Enum::requestHelp: /*       */ return "查看帮助信息";
-        case Enum::unknowErr: /*         */ return "未知错误, 需要进一步跟进";
-        case Enum::parsingFailed: /*     */ return "服务端异常 , 解析失败";
-        case Enum::wrongFormat: /*       */ return "入参错误 , 入参格式错误";
-        case Enum::argDefineMultiple: /* */ return "入参错误 , 属性多次定义";
-        case Enum::serverLogicError: /*  */ return "服务端内部逻辑错误";
-        default: return "NULL";
-      }
-    }
-
-  } ;
-  extern HttpStatus httpStatus;
-
-  enum class HttpMethodEnum {
-    /* https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Methods */
-    GET,         // GET 方法请求一个指定资源的表示形式，使用 GET 的请求应该只被用于获取数据。
-    HEAD,        // HEAD 方法请求一个与 GET 请求的响应相同的响应，但没有响应体。
-    POST,        // POST 方法用于将实体提交到指定的资源，通常导致在服务器上的状态变化或副作用。
-    PUT,         // PUT 方法用请求有效载荷替换目标资源的所有当前表示。
-    DELETE,      // DELETE 方法删除指定的资源。
-    CONNECT,     // CONNECT 方法建立一个到由目标资源标识的服务器的隧道。
-    OPTIONS,     // OPTIONS 方法用于描述目标资源的通信选项。
-    TRACE,       // TRACE 方法沿着到目标资源的路径执行一个消息环回测试。
-    PATCH,       // PATCH 方法用于对资源应用部分修改。
-  };
-
-  struct HttpMethodUtil {
-
-    const map<string, HttpMethodEnum> httpMethodFromName = {
-      { "GET"      ,   HttpMethodEnum::GET     },
-      { "HEAD"     ,   HttpMethodEnum::HEAD    },
-      { "POST"     ,   HttpMethodEnum::POST    },
-      { "PUT"      ,   HttpMethodEnum::PUT     },
-      { "DELETE"   ,   HttpMethodEnum::DELETE  },
-      { "CONNECT"  ,   HttpMethodEnum::CONNECT },
-      { "OPTIONS"  ,   HttpMethodEnum::OPTIONS },
-      { "TRACE"    ,   HttpMethodEnum::TRACE   },
-      { "PATCH"    ,   HttpMethodEnum::PATCH   },
-    };
-
-    const map<HttpMethodEnum, std::string> httpMethodToName = {
-      { HttpMethodEnum::GET      ,    "GET"      },
-      { HttpMethodEnum::HEAD     ,    "HEAD"     },
-      { HttpMethodEnum::POST     ,    "POST"     },
-      { HttpMethodEnum::PUT      ,    "PUT"      },
-      { HttpMethodEnum::DELETE   ,    "DELETE"   },
-      { HttpMethodEnum::CONNECT  ,    "CONNECT"  },
-      { HttpMethodEnum::OPTIONS  ,    "OPTIONS"  },
-      { HttpMethodEnum::TRACE    ,    "TRACE"    },
-      { HttpMethodEnum::PATCH    ,    "PATCH"    },
-    };
-
-    shared_ptr<HttpMethodEnum> getEnum(string str) {
-      std::transform(str.begin(), str.end(),str.begin(), ::toupper);
-      if(httpMethodFromName.count(str) > 0) {
-        return make_shared<HttpMethodEnum>(httpMethodFromName.at(str));
-      } else {
-        return nullptr;
-      }
-    }
-
-    std::string getName(HttpMethodEnum methodEnum) {
-      if(httpMethodToName.contains(methodEnum)) {
-        return httpMethodToName.at(methodEnum);
-      } else {
-        logError << "静态函数初始化阶段 , 无法获取 httpMethodToName 的有效值" << std::endl;
-        return "";
-      }
-    }
-
-  };
-  extern HttpMethodUtil httpMethodUtil;
 
   struct MediaType {
     /* 常见 media type https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types */
@@ -161,8 +72,11 @@ namespace nameless_carpool {
     const std::string json = "application/json";
     const std::string txt  = "text/plain";
 
+    static MediaType& instance() {
+      static MediaType instance;
+      return instance;
+    }
   };
-  extern MediaType mediaType;
 
   struct HttpHeaderNames {
     const std::string timeZone    = "time_zone";
@@ -170,8 +84,12 @@ namespace nameless_carpool {
     const std::string contentType = "Content-type";
     const std::string pid         = "PID";
     const std::string tid         = "Thread-id";
+
+    static HttpHeaderNames& instance() {
+      static HttpHeaderNames instance;
+      return instance;
+    }
   };
-  extern HttpHeaderNames httpHeaderNames;
 
   struct HttpContent {
     //map<string, std::string> headers;
@@ -289,9 +207,9 @@ namespace nameless_carpool {
     HttpStatus::Enum status = HttpStatus::Enum::unsetErr;
 
     void appendDefaultHeaders() {
-      if (!headers.contains(httpHeaderNames.contentType)) headers[httpHeaderNames.contentType] = mediaType.json + "; charset=utf-8";
-      if (!headers.contains(httpHeaderNames.pid)) headers[httpHeaderNames.pid] = std::to_string(getpid());
-      if (!headers.contains(httpHeaderNames.tid)) headers[httpHeaderNames.tid] = boost::str(boost::format("%1%") % std::this_thread::get_id());
+      if (!headers.contains(HttpHeaderNames::instance().contentType)) headers[HttpHeaderNames::instance().contentType] = MediaType::instance().json + "; charset=utf-8";
+      if (!headers.contains(HttpHeaderNames::instance().pid)) headers[HttpHeaderNames::instance().pid] = std::to_string(getpid());
+      if (!headers.contains(HttpHeaderNames::instance().tid)) headers[HttpHeaderNames::instance().tid] = boost::str(boost::format("%1%") % std::this_thread::get_id());
     }
 
     HttpResponse& setStatus(const HttpStatus::Enum& enumStatus) {
@@ -299,15 +217,15 @@ namespace nameless_carpool {
       return *this;
     }
     int getIntStatus() const { return static_cast<int>(status); }
-    std::string getStatusName() const { return httpStatus.getName(status); }
-    std::string_view getStatusNameView() const { return httpStatus.getNameView(status); }
+    std::string      getStatusName() const { return HttpStatus::enum_to_str(status); }
+    std::string_view getStatusNameView() const { return HttpStatus::enum_to_str_view(status); }
 
     std::string toString() {
       std::stringstream ss;
 
       const std::string formatEndLine = "\r\n";
 
-      /* 状态码 */ ss << "Status: " << httpStatus.getName(status) << formatEndLine;
+      /* 状态码 */ ss << "Status: " << HttpStatus::enum_to_str(status) << formatEndLine;
       /* header */ for (const auto& objPair : headers.items()) {
         ss << objPair.key() << ":" << objPair.value() << formatEndLine;
       }
@@ -364,7 +282,7 @@ namespace nameless_carpool {
       body   = ResponseBody{
           getIntStatus(),
           "",
-          httpStatus.getDesc(statusEnum),
+          HttpStatus::enum_to_desc(statusEnum),
           internalMsg,
           externalMsg};
 
@@ -380,9 +298,9 @@ namespace nameless_carpool {
     }
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(HttpResponse,
-                                   status,
-                                   headers,
-                                   body );
+                                                status,
+                                                headers,
+                                                body);
   };
 
 }

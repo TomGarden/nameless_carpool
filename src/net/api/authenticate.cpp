@@ -11,10 +11,10 @@
 #include "application.h"
 #include "input_tip.h"
 #include "net/model/authenticate.h"
+#include "find_xxx.h"
 
 namespace nameless_carpool {
 
-  extern HttpMethodUtil  httpMethodUtil;
   extern HttpHeaderNames httpHeaderNames;
 
   void AuthApi::requestVC(const HttpRequest& requestInput, HttpResponse& outResponse) {
@@ -35,11 +35,11 @@ namespace nameless_carpool {
       outResponse.inflateResponse(HttpStatus::Enum::badRequest, inlegalDesc);
       return;
     }
-    /* httpHeaderNames.timeZone 请求头 在 Api::optRequest 统一校验了 */
+    /* HttpHeaderNames::instance().timeZone 请求头 在 Api::optRequest 统一校验了 */
 
     std::string internalMsg;
     std::string externalMsg;
-    std::string timeZone = requestInput.headers[httpHeaderNames.timeZone].get<std::string>();
+    std::string timeZone = requestInput.headers[HttpHeaderNames::instance().timeZone].get<std::string>();
 
     const HttpStatus::Enum& result = DbProxy::getInstance().requestVerifyCode(
         body.phone.value(), timeZone, internalMsg, externalMsg);
@@ -80,22 +80,22 @@ namespace nameless_carpool {
 
 
     /* 先通过 token 判断是否已经登陆了 */
-    // if (requestInput.headers.contains(httpHeaderNames.token)) {
+    // if (requestInput.headers.contains(HttpHeaderNames::instance().token)) {
     // }
 
-    /* 后通过 手机号 查询用户名判断是否已经登陆了 
-    
-      查询对应手机号的验证码是否有效 , 验证码有效 , 
-    
+    /* 后通过 手机号 查询用户名判断是否已经登陆了
+
+      查询对应手机号的验证码是否有效 , 验证码有效 ,
+
     */
 
     // DbProxy::getInstance().
 
-    /* 
+    /*
     是否登录先通过 token 判断
 
-    1. 查询是否已经登陆 , 
-        已经登录应该更新 token 失效时间 , 并重新返回 token 
+    1. 查询是否已经登陆 ,
+        已经登录应该更新 token 失效时间 , 并重新返回 token
     2. 没有登录的情况下 , 需要创建登录信息 , 并返回 token
      */
   }
@@ -111,6 +111,16 @@ namespace nameless_carpool {
     nlohmann::json jObj = inputTip;
     aMap().doPositionInputTip(clearNull(jObj), outResponse);
   }
+
   bool AuthApi::tokenIsLegal(const std::string& inToken, std::string& outErrMsg) { return dbProxy().tokenIsLegal(inToken, outErrMsg); }
+
+  void AuthApi::postPeopleFindCar(const HttpRequest& requestInput, HttpResponse& outResponse) {
+    const body::FindCarBody& findCarBody = requestInput.body.get<body::FindCarBody>();
+    std::string              errMsg;
+    if (!findCarBody.isLegal(errMsg)) {
+      outResponse.inflateResponse(HttpStatus::Enum::badRequest, errMsg);
+      return;
+    }
+  }
 
 }  // namespace nameless_carpool
