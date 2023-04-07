@@ -3,6 +3,7 @@
 #include <string>
 
 #include "src/net/http_util.h"
+#include "include_db_model.h"
 
 /* 管理用户认证相关 api */
 namespace nameless_carpool {
@@ -52,7 +53,17 @@ class nameless_carpool::AuthApi {
    * @param outErrMsg       非法时 , 有意义
    * @return                true, 合法 ; false , 非法
    */
+  [[deprecated("暂时标记弃用 , 用同名函数取代本函数")]]
   bool tokenIsLegal(const std::string& inToken, std::string& outErrMsg);
+
+  /**
+   * * 判断 token 是否合法
+   * @param inToken
+   * @param outErrMsg       return false , 有意义
+   * @param outRequestBasic return true , 有意义
+   * @return                true, 合法 ; false , 非法
+   */
+  bool tokenIsLegal(const std::string& inToken, std::string& outErrMsg, std::shared_ptr<RequestBasicInfo> outRequestBasicPtr);
 
   /* 输入提示 */
   inline std::string inputPositionTip() { return getPostUri(uriPath().inputPositionTip); }
@@ -60,7 +71,8 @@ class nameless_carpool::AuthApi {
 
   /* 人找车 */
   inline std::string postPeopleFindCar() { return getPostUri(uriPath().peopleFindCar); }
-  void               postPeopleFindCar(const HttpRequest& requestInput, HttpResponse& outResponse);
+  void               postPeopleFindCar(const std::shared_ptr<RequestBasicInfo>& requestBasicPtr,
+                                       const HttpRequest& requestInput, HttpResponse& outResponse);
 };
 
 namespace nameless_carpool{

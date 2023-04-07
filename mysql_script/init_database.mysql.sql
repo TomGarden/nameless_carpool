@@ -209,7 +209,15 @@ CREATE TABLE IF NOT EXISTS `user_car` (
   `user_id`             INTEGER UNSIGNED    NOT NULL                COMMENT '外键:用户基础信息 id',
   `car_id`              INTEGER UNSIGNED    NOT NULL                COMMENT '外键 汽车 id ',
 
-  FOREIGN KEY (`user_id`)       REFERENCES `user`(`id`)       ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  `create_time`         DATETIME(6)         NOT NULL                COMMENT '创建时间',
+  `create_time_tz`      VARCHAR(255)        NOT NULL                COMMENT '时区',
+  `update_time`         DATETIME(6)         NOT NULL                COMMENT '更新时间',
+  `update_time_tz`      VARCHAR(255)        NOT NULL                COMMENT '时区',
+  `del_time`            DATETIME(6)             NULL                COMMENT '删除时间',
+  `del_time_tz`         VARCHAR(255)            NULL                COMMENT '时区',
+
+
+    FOREIGN KEY (`user_id`)       REFERENCES `user`(`id`)       ON UPDATE CASCADE  ON DELETE RESTRICT ,
   FOREIGN KEY (`car_id`)        REFERENCES `car`(`id`)        ON UPDATE CASCADE  ON DELETE RESTRICT ,
   PRIMARY KEY (`user_id` , `car_id`)
 ) COMMENT '关联表 : 用户 & 汽车';
@@ -279,6 +287,13 @@ CREATE TABLE IF NOT EXISTS `user_goods` (
   `user_id`             INTEGER UNSIGNED    NOT NULL                COMMENT '外键:用户基础信息 id',
   `goods_info_id`       INTEGER UNSIGNED    NOT NULL                COMMENT '外键 货物 id ',
 
+  `create_time`         DATETIME(6)         NOT NULL                COMMENT '创建时间',
+  `create_time_tz`      VARCHAR(255)        NOT NULL                COMMENT '时区',
+  `update_time`         DATETIME(6)         NOT NULL                COMMENT '更新时间',
+  `update_time_tz`      VARCHAR(255)        NOT NULL                COMMENT '时区',
+  `del_time`            DATETIME(6)             NULL                COMMENT '删除时间',
+  `del_time_tz`         VARCHAR(255)            NULL                COMMENT '时区',
+
   FOREIGN KEY (`user_id`)       REFERENCES `user`(`id`)       ON UPDATE CASCADE  ON DELETE RESTRICT ,
   FOREIGN KEY (`goods_info_id`) REFERENCES `goods_info`(`id`) ON UPDATE CASCADE  ON DELETE RESTRICT ,
   PRIMARY KEY (`user_id` , `goods_info_id`)
@@ -290,21 +305,23 @@ CREATE TABLE IF NOT EXISTS `user_goods` (
 
 CREATE TABLE IF NOT EXISTS `find_car` (
   `id`                            INTEGER UNSIGNED    NOT NULL  AUTO_INCREMENT  COMMENT '主键 id 自增',
---   `start_point_longitude`         DECIMAL(18,15)          NULL                  COMMENT '出发点 经度',
---   `start_point_latitude`          DECIMAL(18,15)          NULL                  COMMENT '出发点 纬度',
---   `start_point_area_id`           INTEGER                 NULL                  COMMENT '出发点地区 id ',
---   `end_point_longitude`           DECIMAL(18,15)          NULL                  COMMENT '终点 经度',
---   `end_point_latitude`            DECIMAL(18,15)          NULL                  COMMENT '终点 纬度',
---   `end_point_area_id`             INTEGER                 NULL                  COMMENT '终点地区 id ',
-  `start_point`                   JSON                    NULL                  COMMENT '出发点信息 , 从 高德得到的数据 , 不想建表了  <{"adcode": "130128","district": "河北省石家庄市深泽县","location": "115.259604,38.216147","name": "小直要村",}>',
-  `end_point`                     JSON                    NULL                  COMMENT '终点信息 , 从 高德得到的数据 , 不想建表了  <{"adcode": "130128","district": "河北省石家庄市深泽县","location": "115.259604,38.216147","name": "小直要村",}>',
-  `way_of_using_car`              VARCHAR(255)        NOT NULL                  COMMENT '用车形式 拼车(carpool), 单程包车(one_way_charter), 全程包车(full_charter)',
+
+  `start_point_longitude`         DECIMAL(18,15)          NULL                  COMMENT '出发点 经度',
+  `start_point_latitude`          DECIMAL(18,15)          NULL                  COMMENT '出发点 纬度',
+  `start_point_json`              JSON                    NULL                  COMMENT '出发点信息 , 从 高德得到的数据 , 不想建表了  <{"adcode": "130128","district": "河北省石家庄市深泽县","location": "115.259604,38.216147","name": "小直要村",}>',
+  `end_point_longitude`           DECIMAL(18,15)          NULL                  COMMENT '终点 经度',
+  `end_point_latitude`            DECIMAL(18,15)          NULL                  COMMENT '终点 纬度',
+  `end_point_json`                JSON                    NULL                  COMMENT '终点信息 , 从 高德得到的数据 , 不想建表了  <{"adcode": "130128","district": "河北省石家庄市深泽县","location": "115.259604,38.216147","name": "小直要村",}>',
+
+  `service_form`                  VARCHAR(255)        NOT NULL                  COMMENT '服务形式 : 拼车(carpool), 单程包车(one_way_charter), 全程包车(full_charter)',
   `departure_time_range_start`    DATETIME(6)         NOT NULL                  COMMENT '发车时间范围起点',
   `departure_time_range_end`      DATETIME(6)         NOT NULL                  COMMENT '发车时间范围终点',
   `pick_up_point`                 VARCHAR(20)         NOT NULL                  COMMENT '接送点 附近(nearby), 上门(door to door)',
+  `intent`                        VARCHAR(20)         NOT NULL                  COMMENT '运送意图 货物(goods), 乘客(people)',
   `people_number`                 TINYINT UNSIGNED    NOT NULL                  COMMENT '跟车人数',
   `goods_info_id`                 INTEGER UNSIGNED        NULL                  COMMENT '外键 : 货物信息 ID',
   `append_info`                   VARCHAR(255)            NULL                  COMMENT '附加信息 , 最多 255 个字 ',
+
 
   `create_time`                   DATETIME(6)         NOT NULL                  COMMENT '创建时间',
   `create_time_tz`                VARCHAR(255)        NOT NULL                  COMMENT '时区',
@@ -317,19 +334,42 @@ CREATE TABLE IF NOT EXISTS `find_car` (
   PRIMARY KEY (`id`)
 ) COMMENT '人找车表单';
 
+CREATE TABLE IF NOT EXISTS `user_find_car` (
+  `user_id`             INTEGER UNSIGNED    NOT NULL                COMMENT '外键:用户基础信息 id',
+  `find_car_id`         INTEGER UNSIGNED    NOT NULL                COMMENT '外键: 人找车表单 ID ',
+
+  `create_time`         DATETIME(6)         NOT NULL                COMMENT '创建时间',
+  `create_time_tz`      VARCHAR(255)        NOT NULL                COMMENT '时区',
+  `update_time`         DATETIME(6)         NOT NULL                COMMENT '更新时间',
+  `update_time_tz`      VARCHAR(255)        NOT NULL                COMMENT '时区',
+  `del_time`            DATETIME(6)             NULL                COMMENT '删除时间',
+  `del_time_tz`         VARCHAR(255)            NULL                COMMENT '时区',
+
+  FOREIGN KEY (`user_id`)       REFERENCES `user`(`id`)       ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  FOREIGN KEY (`find_car_id`)   REFERENCES `find_car`(`id`)   ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  PRIMARY KEY (`user_id` , `find_car_id`)
+) COMMENT '关联表 : 用户 & 人找车表单';
 
 CREATE TABLE IF NOT EXISTS `find_customers` (
   `id`                            INTEGER UNSIGNED    NOT NULL  AUTO_INCREMENT  COMMENT '主键 id 自增',
-  `start_points_area_list`        JSON                    NULL                  COMMENT '出发点 jons 数组',
-  `end_points_area_list`          JSON                    NULL                  COMMENT '到达点 json 数组 ',
-  `car_supply_form`               VARCHAR(20)         NOT NULL                  COMMENT '供车形式 拼车(carpool), 单程包车(one_way_charter), 全程包车(full_charter)',
+
+  `start_point_longitude`         DECIMAL(18,15)          NULL                  COMMENT '出发点 经度',
+  `start_point_latitude`          DECIMAL(18,15)          NULL                  COMMENT '出发点 纬度',
+  `start_point_json`              JSON                    NULL                  COMMENT '出发点信息 , 从 高德得到的数据 , 不想建表了  <{"adcode": "130128","district": "河北省石家庄市深泽县","location": "115.259604,38.216147","name": "小直要村",}>',
+  `end_point_longitude`           DECIMAL(18,15)          NULL                  COMMENT '终点 经度',
+  `end_point_latitude`            DECIMAL(18,15)          NULL                  COMMENT '终点 纬度',
+  `end_point_json`                JSON                    NULL                  COMMENT '终点信息 , 从 高德得到的数据 , 不想建表了  <{"adcode": "130128","district": "河北省石家庄市深泽县","location": "115.259604,38.216147","name": "小直要村",}>',
+
+  `service_form`                  VARCHAR(255)        NOT NULL                  COMMENT '服务形式 : 拼车(carpool), 单程包车(one_way_charter), 全程包车(full_charter)',
   `departure_time_range_start`    DATETIME(6)         NOT NULL                  COMMENT '发车时间范围起点',
   `departure_time_range_end`      DATETIME(6)         NOT NULL                  COMMENT '发车时间范围终点',
   `pick_up_point`                 VARCHAR(20)         NOT NULL                  COMMENT '接送点 附近(nearby), 上门(door to door)',
+  `intent`                        VARCHAR(20)         NOT NULL                  COMMENT '运送意图 货物(goods), 乘客(people)',
   `people_number`                 TINYINT UNSIGNED    NOT NULL                  COMMENT '客容量',
   `goods_info_id`                 INTEGER UNSIGNED        NULL                  COMMENT '货容量 -> 外键 : 货物信息 ID',
-  `car_id`                        INTEGER UNSIGNED    NOT NULL                  COMMENT '车辆信息',
   `append_info`                   VARCHAR(255)            NULL                  COMMENT '附加信息 , 最多 255 个字 ',
+
+  `car_id`                        INTEGER UNSIGNED    NOT NULL                  COMMENT '车辆信息',
 
   `create_time`                   DATETIME(6)         NOT NULL                  COMMENT '创建时间',
   `create_time_tz`                VARCHAR(255)        NOT NULL                  COMMENT '时区',
@@ -342,6 +382,22 @@ CREATE TABLE IF NOT EXISTS `find_customers` (
   FOREIGN KEY (`car_id`)                    REFERENCES `car`(`id`)        ON UPDATE CASCADE  ON DELETE RESTRICT ,
   PRIMARY KEY (`id`)
 ) COMMENT '车找人表单';
+
+CREATE TABLE IF NOT EXISTS `user_find_customers` (
+  `user_id`                   INTEGER UNSIGNED    NOT NULL          COMMENT '外键:用户基础信息 id',
+  `find_customers_id`         INTEGER UNSIGNED    NOT NULL          COMMENT '外键: 车找人表单 ID ',
+
+  `create_time`         DATETIME(6)         NOT NULL                COMMENT '创建时间',
+  `create_time_tz`      VARCHAR(255)        NOT NULL                COMMENT '时区',
+  `update_time`         DATETIME(6)         NOT NULL                COMMENT '更新时间',
+  `update_time_tz`      VARCHAR(255)        NOT NULL                COMMENT '时区',
+  `del_time`            DATETIME(6)             NULL                COMMENT '删除时间',
+  `del_time_tz`         VARCHAR(255)            NULL                COMMENT '时区',
+
+  FOREIGN KEY (`user_id`)             REFERENCES `user`(`id`)             ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  FOREIGN KEY (`find_customers_id`)   REFERENCES `find_customers`(`id`)   ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  PRIMARY KEY (`user_id` , `find_customers_id`)
+) COMMENT '关联表 : 用户 & 车找人表单';
 
 
 CREATE TABLE IF NOT EXISTS `car_bind_customers` (

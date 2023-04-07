@@ -3,13 +3,23 @@
 #include "src/net/model/response_body.h"
 #include "src/net/http_util.h"
 #include "src/utils/constant.h"
+#include "include_db_model.h"
 
 namespace nameless_carpool {
 
+  void Api::optRequestTry(const HttpRequest& requestInput, HttpResponse& responseOutput) {
+    try {
+      optRequest(requestInput, responseOutput);
+    } catch (const std::exception& objException) {
+      logError << objException.what() << logEndl;
+    }
+  }
+
   void Api::optRequest(const HttpRequest& requestInput, HttpResponse& responseOutput) {
     const std::string& methodUri = requestInput.methodUri();
+    std::shared_ptr<RequestBasicInfo> requestBasicPtr = std::make_shared<RequestBasicInfo>();
 
-    { /* 请求合法性校验 , 通过条件 : 时区信息存在 */
+    /* 请求合法性校验 , 通过条件 : 时区信息存在 */ {
       if (!requestInput.headers.contains(HttpHeaderNames::instance().timeZone)) { /* 请求头非法 */
         std::string internalMsg = constantStr.headerMissErr + HttpHeaderNames::instance().timeZone;
         responseOutput.inflateResponse(HttpStatus::Enum::badRequest, internalMsg);
@@ -25,9 +35,9 @@ namespace nameless_carpool {
           return;
         }
       } else { /* 其余都是有 token 的 , 需要校验 token 合法性 */
-        const std::string& strToken = requestInput.headers[HttpHeaderNames::instance().token];
+        const std::string& strToken = requestInput.getToken();
         std::string internalMsg;
-        bool legal = authApi().tokenIsLegal(strToken, internalMsg);
+        bool legal = authApi().tokenIsLegal(strToken, internalMsg, requestBasicPtr);
         if(!legal) {
           responseOutput.inflateResponse(HttpStatus::Enum::forbidden, WITH_LINE_INFO(internalMsg));
           return;
@@ -35,16 +45,17 @@ namespace nameless_carpool {
       }
     }
 
-    #define IF_CHECK_URI(call)       if (methodUri == call()) call(requestInput, responseOutput);
-    #define ELSE_IF_CHECK_URI(call)  else if (methodUri == call()) call(requestInput, responseOutput);
+    #define IF_CHECK_URI(call)                       if (methodUri == call()) call(requestInput, responseOutput);
+    #define ELSE_IF_CHECK_URI(call)                  else if (methodUri == call()) call(requestInput, responseOutput);
+    #define ELSE_IF_CHECK_URI_WITH_BASIC_INFO(call)  else if (methodUri == call()) call(requestBasicPtr, requestInput, responseOutput);
 
     IF_CHECK_URI(authApi().login)
     ELSE_IF_CHECK_URI(authApi().requestVC)
     ELSE_IF_CHECK_URI(authApi().inputPositionTip)
-    ELSE_IF_CHECK_URI(authApi().postPeopleFindCar)
+    ELSE_IF_CHECK_URI_WITH_BASIC_INFO(authApi().postPeopleFindCar)
     else Api::unknownRequest(requestInput, responseOutput);
 
-    responseOutput.body = clearNull(responseOutput.body);
+    clearNull(responseOutput.body);
     responseOutput.appendDefaultHeaders();
   }
 

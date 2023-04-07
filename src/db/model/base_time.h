@@ -1,13 +1,15 @@
 #pragma once
 
 #include <time.h>
-#include <string>
-#include <optional> 
 
+#include <optional>
+#include <string>
+
+#include "common.h"
+#include "include_json.h"
 #include "src/db/model/base_model.h"
 #include "src/db/sql_util.h"
-#include "include_json.h"
-
+#include "for_model.h"
 
 
 
@@ -20,19 +22,12 @@ namespace nameless_carpool {
       return false;                                         \
     }
 
-  #define GET_NAMES() \
-    static Names& names() { static Names names; return names; }
-
 
   struct BaseTime;
   struct BaseTimeNames;
 }
 
 struct nameless_carpool::BaseTimeNames : virtual BaseNames {
-  using const_string = const std::string;
-
-  // [[deprecated("ANCHOR - 目前看这个变量并非必须, 待到认识到必须时删除此弃用标识")]]   
-  // const std::string className        =  "BaseTime"         ; 
 
   const std::string create_time      =  "create_time"      ;
   const std::string create_time_tz   =  "create_time_tz"   ;
@@ -64,14 +59,24 @@ struct nameless_carpool::BaseTimeNames : virtual BaseNames {
                                    del_time,
                                    del_time_tz});
   }
+
+  /**
+   * 获取要忽略的 create_xxx 和 del_xxx 们
+   * @return
+   */
+  virtual const std::vector<std::string> getIgnoreCDColumn() {
+    return {
+      create_time,
+          create_time_tz,
+          del_time,
+          del_time_tz,
+    };
+  }
 };
 
 /** 基本时间信息 */
 struct nameless_carpool::BaseTime : public BaseModel {
-  // BaseTime();
-  // BaseTime(const BaseTime& obj);
-  // BaseTime(const BaseTime&& obj);
-  // ~BaseTime() = default;
+
   std::optional<std::string>    create_time      = std::nullopt;        /*  */
   std::optional<std::string>    create_time_tz   = std::nullopt;        /*  */
   std::optional<std::string>    update_time      = std::nullopt;        /*  */
@@ -79,16 +84,30 @@ struct nameless_carpool::BaseTime : public BaseModel {
   std::optional<std::string>    del_time         = std::nullopt;        /*  */
   std::optional<std::string>    del_time_tz      = std::nullopt;        /*  */
 
+  inline void renewUpdateTime(const std::string& tz) {
+    update_time_tz = tz;
+    update_time = Common::Date::newInstance(tz).formatStr<std::chrono::microseconds>();
+  }
+
+  inline void initCreateTime(const std::string& tz) {
+    create_time_tz = tz;
+    create_time = Common::Date::newInstance(tz).formatStr<std::chrono::microseconds>();
+  }
+
+  inline void initCreateAndUpdateTime(const std::string& tz) {
+    create_time_tz = update_time_tz = tz;
+    create_time = update_time = Common::Date::newInstance(tz).formatStr<std::chrono::microseconds>();
+  }
 
   /* 此数据是否是已经标记为删除的数据 */
-  const bool inline isDelete() { return (del_time != std::nullopt || del_time_tz != std::nullopt); }
+  bool inline isDelete() { return (del_time != std::nullopt || del_time_tz != std::nullopt); }
 
 
 
   /* 构造插入 sql 子串 : 获取所有成员 '值' , 或者 NULL , 用于 insert 语句 ; 获取的值被单引号包围 */
-  const std::string insertAllFieldSql(const std::vector<std::optional<std::string>> inStrVector) const;
+  std::string insertAllFieldSql(const std::vector<std::optional<std::string>> inStrVector) const;
   /* 预期 入参是已经 被 '' 包围的字符串们 */
-  const std::string insertAllFieldSqlWithoutApostrophe(const std::vector<std::string> inStrVector) const;
+  std::string insertAllFieldSqlWithoutApostrophe(const std::vector<std::string> inStrVector) const;
 
   /** 把 value 中的值 , 通过名称筛选后 设置到成员变量
    * @param {const ModelNames&} names  表头名称列表 , 用于从 value 中判断当前是那一列
@@ -96,7 +115,7 @@ struct nameless_carpool::BaseTime : public BaseModel {
    * @param {Value&} value    保存了从数据库中取出的列值
    * @return {*}  true , 填充成功 ; false 填充失败有异常
    */
-  const bool inflate(const BaseTimeNames& names, const std::string& name, const mysqlx::Value& value) {
+  bool inflate(const BaseTimeNames& names, const std::string& name, const mysqlx::Value& value) {
     if /*  */ (name.compare(names.BaseTimeNames::create_time) == 0) {
       this->BaseTime::create_time = SqlUtil::getOptionalDate(value);
     } else if (name.compare(names.BaseTimeNames::create_time_tz) == 0) {
@@ -116,6 +135,17 @@ struct nameless_carpool::BaseTime : public BaseModel {
     return true;
   }
 
+  /**
+   * 过滤 nullopt key 组成列表返回
+   * @param inMap
+   * @return
+   */
+  std::vector<std::string> subUnPrimaryValEmptyCheck(const std::map<std::string,std::optional<std::any>>& inMap) ;
+
+  inline std::string subUnPrimaryValEmptyDesc(const std::map<std::string, std::optional<std::any>>& inMap) {
+    nlohmann::json emptyItems = subUnPrimaryValEmptyCheck(inMap);
+    return "存在无效入参:" + emptyItems.dump();
+  }
 
   /* ANCHOR - 只获取当前子类的 un primary key , 归并的动作交给 BaseTime::getUnPrimaryKeyValVector 完成 */
   virtual std::vector<std::optional<std::string>> getSubUnPrimaryKeyValVector() const { return {}; }
@@ -130,4 +160,7 @@ struct nameless_carpool::BaseTime : public BaseModel {
                                    del_time,
                                    del_time_tz});
   }
+
+
+  virtual ~BaseTime() = default;
 };

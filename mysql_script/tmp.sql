@@ -1,17 +1,62 @@
 
+SELECT LAST_INSERT_ID() AS 'FLAG';
+
+SET @FLAG = (SELECT LAST_INSERT_ID());
+SET @FLAG = (123);
+SELECT @FLAG;
+
+
+
+
+SELECT
+	store_id,
+	lng,
+	lat,
+	ROUND(
+		6378.138 * 2 * ASIN(
+			SQRT(
+				POW(
+					SIN((
+							22.299439 * PI()/ 180-lat * PI()/ 180 
+							)/ 2 
+					),
+					2 
+					)+ COS( 22.299439 * PI()/ 180 )* COS( lat * PI()/ 180 )* POW(
+					SIN((
+							114.173881 * PI()/ 180-lng * PI()/ 180 
+							)/ 2 
+					),
+					2 
+				)))* 1000 
+	) AS juli 
+FROM
+	store_info 
+ORDER BY
+	juli DESC 
+	LIMIT 316
+
+SELECT * 
+FROM `user` 
+WHERE `user`.`id` IN (
+	SELECT `user_session`.`user_id` 
+	FROM `user_session` 
+	WHERE `user_session`.`session_id` = '9'
+);
+
+
 
 
 INSERT INTO `nameless_carpool`.`goods_info` ( `id`, `size_length`, `size_width`, `size_height`, `size_unity`, `volume`,
                                              `volume_unit`, `weight`, `weight_unit`, `number`, `tag`, `desc`, `create_time`,
                                              `create_time_tz`, `update_time`, `update_time_tz`, `del_time`, `del_time_tz` )
-VALUES ('1', '43', '31', '13', 'CM', '17.4',  'L', NULL, NULL, '1', '["可登机"]', '16吋行李箱', '2023-03-28 10:42:56', 'Asia/Shanghai', '2023-03-28 10:42:56', 'Asia/Shanghai', NULL, NULL),
-       ('2', '44', '34', '20', 'CM', '30.0',  'L', NULL, NULL, '1', '["可登机"]', '18吋行李箱', '2023-03-28 10:42:56', 'Asia/Shanghai', '2023-03-28 10:42:56', 'Asia/Shanghai', NULL, NULL),
-       ('3', '50', '34', '20', 'CM', '34.0',  'L', NULL, NULL, '1', '["可登机"]', '20吋行李箱', '2023-03-28 10:42:56', 'Asia/Shanghai', '2023-03-28 10:42:56', 'Asia/Shanghai', NULL, NULL),
-       ('4', '58', '39', '24', 'CM', '54.3',  'L', NULL, NULL, '1', NULL,        '22吋行李箱', '2023-03-28 10:42:56', 'Asia/Shanghai', '2023-03-28 10:42:56', 'Asia/Shanghai', NULL, NULL),
-       ('5', '68', '42', '26', 'CM', '74.3',  'L', NULL, NULL, '1', NULL,        '24吋行李箱', '2023-03-28 10:42:56', 'Asia/Shanghai', '2023-03-28 10:42:56', 'Asia/Shanghai', NULL, NULL),
-       ('6', '67', '45', '28', 'CM', '84.5',  'L', NULL, NULL, '1', NULL,        '26吋行李箱', '2023-03-28 10:42:56', 'Asia/Shanghai', '2023-03-28 10:42:56', 'Asia/Shanghai', NULL, NULL),
-       ('7', '78', '47', '28', 'CM', '102.7', 'L', NULL, NULL, '1', NULL,        '28吋行李箱', '2023-03-28 10:42:56', 'Asia/Shanghai', '2023-03-28 10:42:56', 'Asia/Shanghai', NULL, NULL),
-       ('8', '88', '53', '30', 'CM', '140.0', 'L', NULL, NULL, '1', NULL,        '32吋行李箱', '2023-03-28 10:42:56', 'Asia/Shanghai', '2023-03-28 10:42:56', 'Asia/Shanghai', NULL, NULL)
+VALUES ('1', '43', '31', '13', 'CM', '17.4',  'L', NULL, NULL, '1', '["可登机"]', '16吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('2', '44', '34', '20', 'CM', '30.0',  'L', NULL, NULL, '1', '["可登机"]', '18吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('3', '50', '34', '20', 'CM', '34.0',  'L', NULL, NULL, '1', '["可登机"]', '20吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('4', '58', '39', '24', 'CM', '54.3',  'L', NULL, NULL, '1', NULL,        '22吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('5', '68', '42', '26', 'CM', '74.3',  'L', NULL, NULL, '1', NULL,        '24吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('6', '67', '45', '28', 'CM', '84.5',  'L', NULL, NULL, '1', NULL,        '26吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('7', '78', '47', '28', 'CM', '102.7', 'L', NULL, NULL, '1', NULL,        '28吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL),
+       ('8', '88', '53', '30', 'CM', '140.0', 'L', NULL, NULL, '1', NULL,        '32吋行李箱', CURRENT_DATE(), 'Asia/Shanghai', CURRENT_DATE(), 'Asia/Shanghai', NULL, NULL)
 ON DUPLICATE KEY UPDATE  `size_length`    = VALUES(`size_length`   ),
                          `size_width`     = VALUES(`size_width`    ),
                          `size_height`    = VALUES(`size_height`   ),

@@ -26,7 +26,7 @@ using namespace nameless_carpool;
 
 /** 真正处理 request 请求 */
 void optRequest(const HttpRequest& requestInput, HttpResponse& responseOutput) {
-  Api::optRequest(requestInput, responseOutput);
+  Api::optRequestTry(requestInput, responseOutput);
 }
 
 /* 操作本地数据 ,

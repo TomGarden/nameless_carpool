@@ -8,15 +8,11 @@
 #include "include_json.h"
 #include "struct_field_name.h"
 
-namespace nameless_carpool {
+namespace nameless_carpool::body {
 
-  namespace body{
+  struct FindCarBody;
 
-    struct FindCarBody ;
-
-  }
-
-}  // namespace nameless_carpool
+}  // namespace nameless_carpool::body
 
 struct nameless_carpool::body::FindCarBody{
   std::optional<FindCar>   findCar   = std::nullopt;

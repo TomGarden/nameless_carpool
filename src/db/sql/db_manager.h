@@ -2,6 +2,7 @@
 
 #include <boost/format.hpp>
 #include <boost/format/format_fwd.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <cstdint>
 #include <initializer_list>
 #include <memory>
@@ -29,7 +30,7 @@ class nameless_carpool::DbManager {
  private:
   mysqlx::Client client = mysqlx::Client(mysqlx::SessionOption::USER, "root",
                                          mysqlx::SessionOption::PWD, "root",
-                                         mysqlx::SessionOption::HOST, "172.17.0.3",
+                                         mysqlx::SessionOption::HOST, "172.17.0.2",
                                          mysqlx::SessionOption::PORT, 33060,
                                          mysqlx::SessionOption::DB, SqlUtil::dbName);
 
@@ -43,15 +44,20 @@ class nameless_carpool::DbManager {
   DbManager& operator=(const DbManager&& dbManager) = delete; /* 移动赋值 */
   //~DbManager();                                                /* 析   构 */
 
-  static DbManager& getInstance();
-  static mysqlx::Client&    getClient();
+  static DbManager&      getInstance();
+  static mysqlx::Client& getClient();
 
 
  public: /* executeSql */
-  std::string             getSqlResultWarning(mysqlx::SqlResult* sqlResult);
-  mysqlx::SqlResult       executeSql(const std::string& sqlTmp);
-  mysqlx::SqlResult       executeSql(const std::stringstream& sqlTmp);
-  mysqlx::SqlResult       executeTransactionSql(const std::vector<std::string>& sqlVector);
+  std::string                                getSqlResultWarning(mysqlx::SqlResult* sqlResult);
+  std::map<const std::string, mysqlx::Value> getSqlRowMap(const mysqlx::Columns& columns, mysqlx::Row row);
+  mysqlx::SqlResult                          executeSql(mysqlx::Session&& session, const std::string& sqlTmp, bool closeSession);
+  mysqlx::SqlResult                          executeSql(mysqlx::Session& session, const std::string& sqlTmp, bool closeSession);
+  mysqlx::SqlResult                          executeSqlUnCloseSession(mysqlx::Session& session, const std::string& sqlTmp);
+  mysqlx::SqlResult                          executeSql(const std::string& sqlTmp);
+  mysqlx::SqlResult                          executeSql(const std::stringstream& sqlTmp);
+  void                                       executeTransactionSql(const std::function<void(mysqlx::Session& session)>& func);
+  mysqlx::SqlResult                          executeTransactionSql(const std::vector<std::string>& sqlVector);
 
  public: /* model operate util */
 
@@ -101,8 +107,7 @@ class nameless_carpool::DbManager {
         const std::string& columnName = indexNameMap[columnIndex];
 
         /* ANCHOR - 这个 inflate 预计手动生成 */
-        if (model.inflate(modeNames, columnName, value)) model; /* empty */
-        else throwUnknowColumn(columnName);
+        if (!model.inflate(modeNames, columnName, value)) throwUnknowColumn(columnName);
       } /* endfor , 制造一个 model */
 
       result.push_back(model);
@@ -114,17 +119,20 @@ class nameless_carpool::DbManager {
   /** @description: 用于针对特定的数据类型生成 select 语句的 select from 字句 , were 字句需要手动填充
    * @param {typename ModelNames} 描述某个确切的数据类型对应的字段描述类型
    * @param {const ModelNames& modelNames} 
-   * @param {const std::string& whereStr} 
+   * @param {const std::string& whereStr}
+   * @param endWithSemicolon 组织的 sql 语句是否携带末尾的分号 , 默认 true
    * @return {*}
    */
   inline std::string queryModelSql(const std::vector<std::string>& modelNames,
                                    const std::string&              tableName,
-                                   const std::string&              whereStatements) {
+                                   const std::string&              whereStatements,
+                                   const bool                      endWithSemicolon = true) {
     std::stringstream sqlTmp;
 
     sqlTmp << " SELECT " << SqlUtil::allFieldSql(modelNames) 
-           << " FROM   " << SqlUtil::getDbAndTablename(tableName) << " \n"
-           << " WHERE  " << whereStatements << " ; ";
+           << " FROM   " << SqlUtil::getDbAndTableName(tableName) << " \n"
+           << " WHERE  " << whereStatements ;
+    if (endWithSemicolon) sqlTmp << " ; ";
     return sqlTmp.str();
   }
 
@@ -142,7 +150,22 @@ class nameless_carpool::DbManager {
     if (sqlResult.hasData()) result = getModelVector<Model>(sqlResult); 
 
     return result;
+  }
 
+  template <typename Model>
+  std::vector<Model> query(mysqlx::Session& session, const std::string& whereStatements, bool closeSession) {
+
+    const typename Model::Names& modelNames = getModelNames<Model>();
+
+    std::string sqlStr = queryModelSql(modelNames.getColumnNameVector(), modelNames.tableName, whereStatements);
+
+    mysqlx::SqlResult sqlResult = executeSql(session, sqlStr, closeSession);
+
+    std::vector<Model> result;
+
+    if (sqlResult.hasData()) result = getModelVector<Model>(sqlResult);
+
+    return result;
   }
 
   template <typename Model>
@@ -209,13 +232,13 @@ class nameless_carpool::DbManager {
       --                         ;
      */
 
-    if (modelVector.size() < 1) return "";
+    if (modelVector.empty()) return "";
 
     const typename Model::Names& modelName = getModelNames<Model>();
     std::stringstream sqlTmp;
 
     sqlTmp
-        << " INSERT INTO " << SqlUtil::getDbAndTablename(modelName.tableName) << " ( \n"
+        << " INSERT INTO " << SqlUtil::getDbAndTableName(modelName.tableName) << " ( \n"
         << SqlUtil::allFieldSql(modelName.getColumnNameVector()) << " )\n"
         << " VALUES \n";
 
@@ -226,6 +249,81 @@ class nameless_carpool::DbManager {
       sqlTmp << " \t(\n" << model.BaseTime::insertAllFieldSql(model.getColumnValVector()) << " \t) ";
 
       if (modelIter + 1 == modelVector.cend()) {
+        sqlTmp << ';';
+      } else {
+        sqlTmp << ",\n";
+      }
+    } /* for 循环结束 */
+
+    return sqlTmp.str();
+  }
+
+  /**
+   * 构造插入对象 SQL , 从同名参数扩展而来 , 主要用于应对 , 插入值的时候值需要通过 sql 指令 \@val 指定的情况
+   * @tparam Model
+   * @param modelName
+   * @param modelColumnValVector
+   * @return
+   */
+  template <typename Model>
+  std::string insertModelSqlByVector(const std::vector<std::vector<std::optional<std::string>>>& modelColumnValVector) {
+    /*
+      -- INSERT INTO `nameless_carpool`.`telephone` (
+      --                   `id`                  ,
+      --                   `number`              ,
+      --                   `verify_code`        ,
+      --                   `vc_update_time`      ,
+      --                   `vc_update_time_tz`   ,
+      --                   `create_time`         ,
+      --                   `create_time_tz`      ,
+      --                   `update_time`         ,
+      --                   `update_time_tz`      ,
+      --                   `del_time`            ,
+      --                   `del_time_tz`         )
+      --             VALUES (
+      --                         NULL            ,
+      --                         '17611111111'   ,
+      --                         @sql_variable  ,
+      --                         '2022-09-22 19:28:00.123456'    ,
+      --                         'Asia/Shanghai'             ,
+      --                         '2022-09-22 19:28:00.123456'    ,
+      --                         'Asia/Shanghai'             ,
+      --                         '2022-09-22 19:28:00.123456'    ,
+      --                         'Asia/Shanghai'             ,
+      --                         NULL            ,
+      --                         NULL            ),
+      --                   (
+      --                         NULL            ,
+      --                         '17622222222'   ,
+      --                         '======'  ,
+      --                         '2022-09-22 19:59:35.123456'    ,
+      --                         'Asia/Shanghai'             ,
+      --                         '2022-09-22 19:59:35.123456'    ,
+      --                         'Asia/Shanghai'             ,
+      --                         '2022-09-22 19:59:35.123456'    ,
+      --                         'Asia/Shanghai'             ,
+      --                         NULL            ,
+      --                         NULL            )
+      --                         ;
+     */
+
+    if (modelColumnValVector.empty()) return "";
+
+    const typename Model::Names& modelName = Model::names();
+    BaseTime                     baseTime;
+    std::stringstream            sqlTmp;
+
+    sqlTmp
+        << " INSERT INTO " << SqlUtil::getDbAndTableName(modelName.tableName) << " ( \n"
+        << SqlUtil::allFieldSql(modelName.getColumnNameVector()) << " )\n"
+        << " VALUES \n";
+
+    for (std::vector<std::vector<std::optional<std::string>>>::const_iterator modelIter = modelColumnValVector.cbegin();
+         modelIter != modelColumnValVector.cend(); modelIter++) {
+      sqlTmp << " \t(\n"
+             << baseTime.insertAllFieldSql(*modelIter) << " \t) ";
+
+      if (modelIter + 1 == modelColumnValVector.cend()) {
         sqlTmp << ';';
       } else {
         sqlTmp << ",\n";
@@ -256,6 +354,9 @@ class nameless_carpool::DbManager {
 
   /*┌─────────────────────────────────────────────────────────────────────────────────────┐
   * │ update  : https://stackoverflow.com/a/75627308/7707781
+  * │ 目前 update 是更新所有字段的 , 对于更新部分字段的功能暂时没有支持 .
+  * │ 考虑一个情况 , 如果允许更新部分字段 , 客户端想删除某个model 中的某些字段的时候应该如何通过 json 表示呢 ?
+  * │ 也有办法 , 比如 , 分辨 json 字段存在与否以及 json 字段是否为 null , 来区分是忽略还是删除字段 .
   * └─────────────────────────────────────────────────────────────────────────────────────┘ */
   template <typename Model>
   std::string updateModelSql(const std::vector<Model>& modelVector) {
@@ -264,7 +365,7 @@ class nameless_carpool::DbManager {
     std::vector<std::string>     unPkNameVector = modelName.getUnPrimaryKeyNameVector();
     std::vector<std::string>     pkNameVector   = modelName.getPrimaryKeyNameVector();
 
-    std::string updatePrefix = " UPDATE " + SqlUtil::getDbAndTablename(modelName.getTableName()) + " \n SET \n";
+    std::string updatePrefix = " UPDATE " + SqlUtil::getDbAndTableName(modelName.getTableName()) + " \n SET \n";
 
     /* 预计存储 
         `字段名`                   = CASE `id`                                                            
@@ -347,7 +448,7 @@ class nameless_carpool::DbManager {
         columnNameStr << " \t\t\t END ";
 
         if (unPkNamePairItr + 1 != unPkNamePairVector.end() && unPkValItr + 1 != unPkValVector.cend()) {
-          columnNameStr << " , ";
+          columnNameStr << " , \n ";
         }
 
         ++unPkNamePairItr;
@@ -366,6 +467,56 @@ class nameless_carpool::DbManager {
   
     return sqlTmp.str();
   }
+
+  template <typename Model>
+  std::string updateSingleModelSql(
+      const Model&                 model,
+      const std::vector<std::string>&    ignoreColumn ) {
+    /*
+        UPDATE table_name
+        SET column1 = value1, column2 = value2, ...
+        WHERE condition;
+
+     * */
+
+    const typename Model::Names& modelName = Model::names();
+    std::stringstream sqlTmp;
+    sqlTmp << " UPDATE " + SqlUtil::getDbAndTableName(modelName.getTableName()) + " \n SET ";
+
+    const std::vector<std::string>&                pkNameVector   = modelName.getPrimaryKeyNameVector();
+    const std::vector<std::string>&                unPkNameVector = modelName.getUnPrimaryKeyNameVector();
+    const std::vector<std::optional<std::string>>& pkValVector    = model.getPrimaryKeyValVector();
+    const std::vector<std::optional<std::string>>& unPkValVector  = model.getUnPrimaryKeyValVector();
+
+    debugAssertTrue(pkNameVector.size() == pkValVector.size() &&
+                    unPkNameVector.size() == unPkValVector.size() &&
+                    pkNameVector.size() > 0);
+
+    auto pkSize   = pkValVector.size();
+    auto unPkSize = unPkValVector.size();
+
+    for (int index = 0; index < unPkSize; ++index) {
+      if (Container::contains(ignoreColumn,unPkNameVector[index])) continue;
+
+      sqlTmp << "\n\t" << SqlUtil::backticks(unPkNameVector[index]) << " = "
+             << SqlUtil::nullOrApostrophe(unPkValVector[index]);
+      sqlTmp << " ,";
+    }
+    sqlTmp.seekp(-1, sqlTmp.cur);
+    sqlTmp << " ";
+    sqlTmp.seekp(0, sqlTmp.end);
+
+    sqlTmp << "\nWHERE ";
+    for (int index = 0; index < pkSize; ++index) {
+      sqlTmp << SqlUtil::backticks(pkNameVector[index]) << " = " << SqlUtil::nullOrApostrophe(pkValVector[index]);
+      if (index + 1 != pkSize) sqlTmp << " AND ";
+      else sqlTmp << " ; ";
+    }
+
+    return sqlTmp.str();
+  }
+
+
 
   template <typename Model>
   void update(const std::vector<Model>& modelVector) {
@@ -424,13 +575,13 @@ class nameless_carpool::DbManager {
     const typename Model::Names&    modelName  = getModelNames<Model>();
     const std::vector<std::string>& unPkVector = modelName.getUnPrimaryKeyNameVector();
     // const std::vector<std::string>& pkVector   = modelName.getPrimaryKeyNameVector();
-    const std::vector<std::string>& colunmNameVector = modelName.getColumnNameVector();
+    const std::vector<std::string>& columnNameVector = modelName.getColumnNameVector();
 
     std::stringstream sqlTmp;
-    sqlTmp << "INSERT INTO" << getDbAndTablename(modelName.tableName) << " ( \n";
-    for (auto colunmNameItr = colunmNameVector.cbegin(); colunmNameItr != colunmNameVector.cend(); colunmNameItr++) {
-      if (colunmNameItr + 1 != colunmNameVector.cend()) sqlTmp << SqlUtil::backticks(*colunmNameItr) << " , \n";
-      else sqlTmp << SqlUtil::backticks(*colunmNameItr) << "  \n\t\t\t)";
+    sqlTmp << "INSERT INTO" << SqlUtil::getDbAndTableName(modelName.tableName) << " ( \n";
+    for (auto columnNameItr = columnNameVector.cbegin(); columnNameItr != columnNameVector.cend(); columnNameItr++) {
+      if (columnNameItr + 1 != columnNameVector.cend()) sqlTmp << SqlUtil::backticks(*columnNameItr) << " , \n";
+      else sqlTmp << SqlUtil::backticks(*columnNameItr) << "  \n\t\t\t)";
     }
     sqlTmp << "VALUES \n";
     for (auto modelItr = modelVector.cbegin(); modelItr != modelVector.cend(); modelItr++) {
@@ -440,7 +591,7 @@ class nameless_carpool::DbManager {
     sqlTmp << "ON DUPLICATE KEY UPDATE \n";
     for (auto columnNameItr = unPkVector.cbegin(); columnNameItr != unPkVector.cend(); columnNameItr++) {
       sqlTmp << boost::format("`%1%` = VALUES(`%1%`)") % (*columnNameItr);
-      if (columnNameItr + 1 != modelVector.cend()) sqlTmp << ", \n";
+      if (columnNameItr + 1 != unPkVector.cend()) sqlTmp << ", \n";
       else sqlTmp << "; ";
     }
 
@@ -481,7 +632,7 @@ class nameless_carpool::DbManager {
     // const std::vector<std::string>& colunmNameVector = modelName.getColumnNameVector();
     std::stringstream sqlTmp;
     /* sub sql : DELETE FROM */
-    sqlTmp << " DELETE FROM " << SqlUtil::getDbAndTablename(modelName.tableName) << "\n WHERE (";
+    sqlTmp << " DELETE FROM " << SqlUtil::getDbAndTableName(modelName.tableName) << "\n WHERE (";
     /* sub sql : WHERE */
     for (auto primaryKeyItr = pkVector.cbegin(); primaryKeyItr != pkVector.cend(); primaryKeyItr++) {
       sqlTmp << SqlUtil::backticks(*primaryKeyItr);
@@ -588,10 +739,12 @@ class nameless_carpool::DbManager {
     const User::Names& modelNames = User::names();
 
     if (isDel.value()) {
-      auto delSql = boost::format("  AND  ( %1% IS NOT NULL  OR  %2% IS NOT NULL )") % SqlUtil::backticks(modelNames.del_time) % SqlUtil::backticks(modelNames.del_time_tz);
+      auto delSql = boost::format("  AND  ( %1% IS NOT NULL  OR  %2% IS NOT NULL )") %
+                    SqlUtil::backticks(modelNames.del_time) % SqlUtil::backticks(modelNames.del_time_tz);
       return boost::str(delSql);
     } else {
-      auto unDelSql = boost::format("  AND  ( %1% IS NULL  AND  %2% IS NULL )") % SqlUtil::backticks(modelNames.del_time) % SqlUtil::backticks(modelNames.del_time_tz);
+      auto unDelSql = boost::format("  AND  ( %1% IS NULL  AND  %2% IS NULL )") %
+                      SqlUtil::backticks(modelNames.del_time) % SqlUtil::backticks(modelNames.del_time_tz);
       return boost::str(unDelSql);
     }
   }
@@ -633,6 +786,7 @@ class nameless_carpool::DbManager {
  public: /* other insert opt */
   void insert(const Telephone& telephone, User& user, const UserTel& userTel);
   void insert(Session& session, UserSession& userSession);
+//  void insert(Session& session, UserSession& userSession);
 
  public:  /* 测试函数 */
   void testSqlResult(mysqlx::SqlResult& sqlResult) ;
@@ -642,6 +796,7 @@ class nameless_carpool::DbManager {
 
 
 namespace nameless_carpool {
-  inline DbManager& dbManager() { DbManager::getInstance(); }
-  inline DbManager& db() { DbManager::getInstance(); }
+  inline DbManager&      dbManager() { return DbManager::getInstance(); }
+  inline DbManager&      db() { return DbManager::getInstance(); }
+  inline mysqlx::Client& dbClient() { return DbManager::getInstance().getClient(); }
 }

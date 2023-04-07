@@ -39,4 +39,10 @@ namespace nlohmann {
 
 namespace nameless_carpool {
   nlohmann::json& clearNull(nlohmann::json& jObj);
+
+  template<typename T>
+  nlohmann::json& getJsonWithoutNull(T& obj) {
+    nlohmann::json jObj = obj;
+    return clearNull(jObj);
+  }
 }

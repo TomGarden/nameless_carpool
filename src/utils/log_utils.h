@@ -94,6 +94,21 @@ namespace nameless_carpool {
   /* https://github.com/boostorg/stacktrace */
   extern inline std::string getStackTrace() { return to_string(boost::stacktrace::stacktrace()); }
 
+
+  /** flag 非 true 就抛异常
+   * @param flag false 时候 , msg 被抛出
+   * @param msg
+   */
+  inline void debugAssertTrue(bool flag , const std::string& msg = WITH_LINE_INFO("未知异常")) {
+    #ifdef DEBUG_MODEL
+      if(!flag) logFatal << msg << logEndl ;
+    #else
+      return;
+    #endif
+  }
+
+  inline void debugAssertTrue(const std::string& msg, bool flag) { debugAssertTrue(flag, msg); }
+
   /* Log 装饰 并 流转发 
   // [[deprecated("输出 std::endl 有异常 , 不明白什么原因")]]
   */

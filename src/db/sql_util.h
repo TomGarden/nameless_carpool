@@ -9,6 +9,7 @@
 #include "libs/mysql_connector_arm_static/include/mysqlx/devapi/document.h"
 #include "src/utils/log_utils.h"
 #include "src/utils/tom_string_utils.h"
+#include "include_json.h"
 
 namespace nameless_carpool {
   namespace SqlUtil {
@@ -49,27 +50,16 @@ namespace nameless_carpool {
     /** @return `str` */
     inline std::string backticks(const std::string& str) { return ("`" + str + "`"); }
 
-    /** @return NULL or 'str' */
+    /** @return NULL or 'str' or @sql_variable */
     inline std::string nullOrApostrophe(const std::string& str) {
-      std::string result;
-      if (str.empty()) {
-        result = "NULL";
-      } else {
-        result = ("'" + str + "'");
-      }
-      return result;
+      if (str.empty())/*              */return "NULL";
+      else if(str.starts_with('@'))/**/return str;
+      else/*                          */return ("'" + str + "'");
     }
 
     /** @return NULL or 'str' */
     inline std::string nullOrApostrophe(const std::optional<std::string>& optStr) {
       return nullOrApostrophe(optStr.value_or(""));
-      std::string result = optStr.value_or("");
-      if (result.empty()) {
-        result = "NULL";
-      } else {
-        result = ("'" + result + "'");
-      }
-      return result;
     }
 
     inline std::vector<std::string> nullOrApostrophe(const std::vector<std::optional<std::string>>& optVector) {
@@ -103,7 +93,7 @@ namespace nameless_carpool {
     /** @return 'str' */
     std::string apostrophe(const std::string& str);
 
-    std::string getDbAndTablename(const std::string& tableName, const std::string& dbName = SqlUtil::dbName);
+    std::string getDbAndTableName(const std::string& tableName, const std::string& dbName = SqlUtil::dbName);
 
 
     /*┌─────────────────────────────────────────────────────────────────────────────────────┐
@@ -127,6 +117,10 @@ namespace nameless_carpool {
       if(std::is_same<Type, uint8_t>::value) {
         auto tmp = static_cast<uint8_t>(value.get<unsigned int>());
         return *reinterpret_cast<Type*>(&tmp);
+      } else if (std::is_same<Type, nlohmann::json>::value) {
+        const std::string& jsonStr = value.get<std::string>();
+        nlohmann::json jsonObj = jsonStr;
+        return *reinterpret_cast<Type*>(&jsonObj);
       }
       return value.get<Type>(); /* int , unsigned , int64_t , uint64_t , float , double , bool , string */
     }

@@ -55,7 +55,7 @@ namespace nameless_carpool {
   //│              Sql 封装
   //└─────────────────────────────────────────────────────────────────────────────────────┘
   std::string DbManager::getSqlResultWarning(mysqlx::SqlResult* sqlResult) {
-    std::stringstream errorSs;
+    std::stringstream warningSs;
     {
       std::vector<mysqlx::Warning> warns = sqlResult->getWarnings();
 
@@ -71,55 +71,83 @@ namespace nameless_carpool {
         } /* switch end */
 
         const std::string& mysqlWarning = boost::str(boost::format("[%1%](%2%):%3%\n") % level % warning.getCode() % warning.getMessage());
-        errorSs << mysqlWarning;
+        warningSs << mysqlWarning;
 
       } /* switch end */
     }   /* for end */
 
-    return errorSs.str();
+    return warningSs.str();
   }
 
-  mysqlx::SqlResult DbManager::executeSql(const std::string& sqlTmp) {
+  std::map<const std::string, mysqlx::Value> DbManager::getSqlRowMap(const mysqlx::Columns& columns, mysqlx::Row row){
+    std::map<const std::string, mysqlx::Value> result = {};
+    auto begin = columns.begin();
+    auto end   = columns.end();
+    auto index = 0;
+    while (begin != end) {
+      const std::string& colunmName = columns[index].getColumnName();
+      result[columns[index].getColumnName()] = row.get(index);
+
+      index++;
+      begin++;
+    }
+
+    return result;
+  }
+
+  mysqlx::SqlResult DbManager::executeSql(mysqlx::Session&& session, const std::string& sqlTmp, bool closeSession) {
     logInfo << sqlTmp << std::endl;
 
     /* 分开函数逐个调用 , 不会导致中间对象被回收 */
-    mysqlx::Client&      client       = DbManager::getClient();
-    mysqlx::Session      session      = client.getSession(); /* 目前的逻辑每一个 sql 语句的执行都会创建一个会话 */
     mysqlx::SqlStatement sqlStatement = session.sql(sqlTmp);
     mysqlx::SqlResult    sqlResult    = sqlStatement.execute();
-    session.close();
+    if (closeSession) session.close();
 
     const std::string& sqlResultWarning = getSqlResultWarning(&sqlResult);
     if (!sqlResultWarning.empty()) logWarning << sqlResultWarning << std::endl;
 
     return sqlResult;
   }
+  mysqlx::SqlResult DbManager::executeSql(mysqlx::Session& session, const std::string& sqlTmp, bool closeSession) {
+    return executeSql(std::move(session),sqlTmp,closeSession);
+  }
+  mysqlx::SqlResult DbManager::executeSqlUnCloseSession(mysqlx::Session& session, const std::string& sqlTmp) {
+    return executeSql(std::move(session), sqlTmp, false);
+  }
+  mysqlx::SqlResult DbManager::executeSql(const std::string& sqlTmp) {
+    return executeSql(dbClient().getSession(), sqlTmp, true);
+  }
   mysqlx::SqlResult DbManager::executeSql(const std::stringstream& sqlTmp) { return executeSql(sqlTmp.str()); }
-  mysqlx::SqlResult DbManager::executeTransactionSql(const std::vector<std::string>& sqlVector) {
+  void DbManager::executeTransactionSql(const std::function<void(mysqlx::Session& session)>& func) {
     /* 分开函数逐个调用 , 不会导致中间对象被回收 */
-    mysqlx::Client&      client       = DbManager::getClient();
-    mysqlx::Session      session      = client.getSession(); /* 目前的逻辑每一个 sql 语句的执行都会创建一个会话 */
-    mysqlx::SqlResult    sqlResult;
+    mysqlx::Session session = dbClient().getSession(); /* 目前的逻辑每一个 sql 语句的执行都会创建一个会话 */
     try {
       logInfo << "session.startTransaction();***********************************" << std::endl;
       session.startTransaction();
-      for (const std::string& sqlItem : sqlVector) {
-        if (!sqlItem.empty()) {
-          logInfo << sqlItem << std::endl;
-          sqlResult                           = session.sql(sqlItem).execute();
-          const std::string& sqlResultWarning = getSqlResultWarning(&sqlResult);
-          if (!sqlResultWarning.empty()) logWarning << sqlResultWarning << std::endl;
-        } else {
-          logInfo << " jump one empty sql " << std::endl;
-        }
-      }
+      func(session);
       session.commit();
       logInfo << "session.commit();*********************************************" << std::endl;
-    } catch (mysqlx::Error& mysqlError) {
-      logDebug << mysqlError.what() << std::endl;
+    } catch (const mysqlx::Error& mysqlError) {
       session.rollback();
+      logDebug << mysqlError.what() << std::endl;
+    } catch (const std::exception& stdException){
+      session.rollback();
+      logDebug << stdException.what() << std::endl;
     }
     session.close();
+  }
+  mysqlx::SqlResult DbManager::executeTransactionSql(const std::vector<std::string>& sqlVector) {
+    mysqlx::SqlResult    sqlResult;
+    executeTransactionSql([&sqlVector, &sqlResult](mysqlx::Session& session) -> mysqlx::SqlResult {
+      for (const std::string& sqlItem : sqlVector) {
+        if (!sqlItem.empty()) sqlResult = db().executeSqlUnCloseSession(session, sqlItem);
+        else {
+          logInfo << " jump one empty sql " << std::endl;
+          break;
+        }
+      }
+      throw std::logic_error(" 不接受空 sql ");
+    });
     return sqlResult;
   }
 
@@ -163,10 +191,8 @@ namespace nameless_carpool {
 
   void DbManager::testMultipleThread() {
 
-    /* 分开函数逐个调用 , 不会导致中间对象被回收 */
-    mysqlx::Client& client = DbManager::getClient();
     /* 目前的逻辑每一个 sql 语句的执行都会创建一个会话 */
-    mysqlx::Session session = client.getSession();
+    mysqlx::Session session = dbClient().getSession();
 
 
     auto oneCall = [&](const std::string flag, const bool toSleepOne, const bool toSleepTwo) {
@@ -231,7 +257,7 @@ namespace nameless_carpool {
   //│                other insert opt 手写的 sql 语句
   //└─────────────────────────────────────────────────────────────────────────────────────┘
   void DbManager::insert(const Telephone& telephone, User& user, const UserTel& userTel) {
-    int index = Containter::indexOf(UserTel::names().getColumnNameVector(), UserTel::names().user_id);
+    int index = Container::indexOf(UserTel::names().getColumnNameVector(), UserTel::names().user_id);
     if (index < 0) throw std::logic_error("BaseMode , BaseModelNames , 的 getColumnXxxVector 获取的值应该是一一对应的 ; 需要进一步校验此处逻辑");
 
     const std::string insertUserSql    = insertModelSql<User>({user});
@@ -241,7 +267,7 @@ namespace nameless_carpool {
       columnValVector[index] = lastInsertUserId;
       std::stringstream sqlTmp;
       sqlTmp /* INSERT INTO user_tel */
-          << " INSERT INTO " << SqlUtil::getDbAndTablename(UserTel::names().tableName) << " ( \n"
+          << " INSERT INTO " << SqlUtil::getDbAndTableName(UserTel::names().tableName) << " ( \n"
           << SqlUtil::allFieldSql(UserTel::names().getColumnNameVector()) << " )\n"
           << " VALUES \n"
           << " \t(\n" << userTel.BaseTime::insertAllFieldSqlWithoutApostrophe(columnValVector) << " \t) "
@@ -261,7 +287,7 @@ namespace nameless_carpool {
 
   void DbManager::insert(Session& session, UserSession& userSession) {
 
-    int index = Containter::indexOf(UserSession::names().getColumnNameVector(), UserSession::names().session_id);
+    int index = Container::indexOf(UserSession::names().getColumnNameVector(), UserSession::names().session_id);
     if (index < 0) throw std::logic_error("BaseMode , BaseModelNames , 的 getColumnXxxVector 获取的值应该是一一对应的 ; 需要进一步校验此处逻辑");
 
 
@@ -274,7 +300,7 @@ namespace nameless_carpool {
       columnValVector[index] = lastInsertSessionId;
       std::stringstream sqlTmp;
       sqlTmp /* INSERT INTO user_session */
-          << " INSERT INTO " << SqlUtil::getDbAndTablename(modelName.tableName) << " ( \n"
+          << " INSERT INTO " << SqlUtil::getDbAndTableName(modelName.tableName) << " ( \n"
           << SqlUtil::allFieldSql(modelName.getColumnNameVector()) << " )\n"
           << " VALUES \n"
           << " \t(\n" << model.BaseTime::insertAllFieldSqlWithoutApostrophe(columnValVector) << " \t) "

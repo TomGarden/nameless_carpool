@@ -114,13 +114,21 @@ namespace nameless_carpool {
 
   bool AuthApi::tokenIsLegal(const std::string& inToken, std::string& outErrMsg) { return dbProxy().tokenIsLegal(inToken, outErrMsg); }
 
-  void AuthApi::postPeopleFindCar(const HttpRequest& requestInput, HttpResponse& outResponse) {
-    const body::FindCarBody& findCarBody = requestInput.body.get<body::FindCarBody>();
+  bool AuthApi::tokenIsLegal(const std::string& inToken, std::string& outErrMsg, std::shared_ptr<RequestBasicInfo> outRequestBasicPtr) {
+    return dbProxy().tokenIsLegal(inToken, outErrMsg, outRequestBasicPtr);
+  }
+
+  void AuthApi::postPeopleFindCar(const std::shared_ptr<RequestBasicInfo>& requestBasicPtr,
+                                  const HttpRequest& requestInput, HttpResponse& outResponse) {
+    body::FindCarBody findCarBody = requestInput.body.get<body::FindCarBody>();
     std::string              errMsg;
     if (!findCarBody.isLegal(errMsg)) {
       outResponse.inflateResponse(HttpStatus::Enum::badRequest, errMsg);
       return;
     }
+
+    /* 确保数据合法后才做进一步逻辑处理 */
+    dbProxy().postPeopleFindCar(requestInput, requestBasicPtr, findCarBody, outResponse.clear());
   }
 
 }  // namespace nameless_carpool

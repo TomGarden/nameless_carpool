@@ -3,18 +3,19 @@
 #include <string>
 #include <optional>
 #include "src/utils/json/include_json.h"
+#include "for_model.h"
 
 namespace nameless_carpool {
   /** 对 http 请求体的 抽象表达 */
   struct ResponseBody {
-
     struct Names {
-      static inline std::string status() { return "status"; }
-      static inline std::string data() { return "data"; }
-      static inline std::string statusDesc() { return "statusDesc"; }
-      static inline std::string internalMsg() { return "internalMsg"; }
-      static inline std::string externalMsg() { return "externalMsg"; }
+      const std::string status      = "status";
+      const std::string data        = "data";
+      const std::string statusDesc  = "statusDesc";
+      const std::string internalMsg = "internalMsg";
+      const std::string externalMsg = "externalMsg";
     };
+    GET_NAMES()
 
 
     std::optional<int>         status;      /* 状态码 */

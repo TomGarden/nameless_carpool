@@ -25,7 +25,7 @@ namespace nameless_carpool {
       return ("'" + str + "'");
     }
 
-    std::string getDbAndTablename(const std::string& tableName, const std::string& dbName) {
+    std::string getDbAndTableName(const std::string& tableName, const std::string& dbName) {
       return backticks(dbName) + "." + backticks(tableName);
     }
 

@@ -45,7 +45,7 @@ namespace nameless_carpool {
       }
       logWarning << "☞☞☞☞  http request convert done" << logEndl;
 
-      if (httpResponse.isEmpty()) Api::optRequest(httpRequest, httpResponse);
+      if (httpResponse.isEmpty()) Api::optRequestTry(httpRequest, httpResponse);
 
       logWarning << "☞☞☞☞  httpResponse generate done " << logEndl;
       auto resp = drogon::HttpResponse::newHttpResponse();

@@ -28,7 +28,7 @@ namespace nameless_carpool/* ::BaseTime */ {
   //   this->del_time_tz    = std::move(obj.del_time_tz);
   // }
 
-  const std::string BaseTime::insertAllFieldSql(const std::vector<std::optional<std::string>> inStrVector) const {
+  std::string BaseTime::insertAllFieldSql(const std::vector<std::optional<std::string>> inStrVector) const {
     std::stringstream sqlTmp;
     for (const std::optional<std::string>& optionalStr : inStrVector) {
       sqlTmp << " \t \t " << SqlUtil::nullOrApostrophe(optionalStr) << " ,\n";
@@ -37,10 +37,18 @@ namespace nameless_carpool/* ::BaseTime */ {
     return result.erase(result.size() - 2, 1);
   }
 
-  const std::string BaseTime::insertAllFieldSqlWithoutApostrophe(const std::vector<std::string> inStrVector) const {
+  std::string BaseTime::insertAllFieldSqlWithoutApostrophe(const std::vector<std::string> inStrVector) const {
     std::stringstream sqlTmp;
     for (const std::string& optionalStr : inStrVector) sqlTmp << " \t \t " << optionalStr << " ,\n";
     std::string result = sqlTmp.str();
     return result.erase(result.size() - 2, 1);
+  }
+  std::vector<std::string> BaseTime::subUnPrimaryValEmptyCheck(const std::map<std::string, std::optional<std::any>>& inMap) {
+    std::vector<std::string> result = {};
+    for (const auto& pair :inMap) {
+      if (!pair.second.has_value()) result.push_back(pair.first);
+    }
+
+    return result;
   }
 }

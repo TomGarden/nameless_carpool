@@ -20,17 +20,29 @@
     "uri": "/fcgi_test/nameless_carpool/people_find_car",
     "body": {
       "findCar": {
-        "start_point": {"adcode": "130128","district": "河北省石家庄市深泽县","location": "115.259604,38.216147","name": "小直要村"},
-        "end_point": {"adcode": "130128","district": "河北省石家庄市深泽县","location": "115.259604,38.216147","name": "小直要村"},
-        "way_of_using_car": "full_charter",
+        "start_point_json": {
+          "address": "白庄乡长安路",
+          "adcode": "130128",
+          "district": "河北省石家庄市深泽县",
+          "location": "115.259604,38.216147",
+          "name": "小直要村"
+        },
+        "end_point_json": {
+          "adcode": "130128",
+          "district": "河北省石家庄市深泽县",
+          "location": "115.259604,38.216147",
+          "name": "小直要村"
+        },
+        "service_form": "full_charter",
         "departure_time_range_start": "2023-03-28 08:40:01",
         "departure_time_range_end": "2023-03-30 08:40:01",
         "pick_up_point": "nearby",
+        "intent": "people",
         "people_number": 3,
         "goods_info_id": 1,
-        "append_info": "附加信息"
+        "append_info": "我是附加信息"
       },
-      "goodsInfo" : {
+      "goodsInfo": {
         "size_length": 43,
         "size_width": 31,
         "size_height": 13,
@@ -45,6 +57,70 @@
         ],
         "desc": "16吋行李箱"
       }
+    },
+    "example_response": {
+      "data": {
+        "count": "5",
+        "info": "OK",
+        "infocode": "10000",
+        "status": "1",
+        "tips": [
+          {
+            "adcode": "130128",
+            "address": [],
+            "city": [],
+            "district": "河北省石家庄市深泽县",
+            "id": "B013705T6T",
+            "location": "115.259604,38.216147",
+            "name": "小直要村",
+            "typecode": "190108"
+          },
+          {
+            "adcode": "130128",
+            "address": [],
+            "city": [],
+            "district": "河北省石家庄市深泽县",
+            "id": "B0HK1OF8JJ",
+            "location": "115.259063,38.216349",
+            "name": "小直要",
+            "typecode": "190109"
+          },
+          {
+            "adcode": "130128",
+            "address": "康宁街与庆和胡同交叉口东南方向50米",
+            "city": [],
+            "district": "河北省石家庄市深泽县",
+            "id": "B0FFKM0L21",
+            "location": "115.262351,38.217799",
+            "name": "小直要小学",
+            "typecode": "141203"
+          },
+          {
+            "adcode": "130128",
+            "address": "朝阳街与长安路交叉口西南40米",
+            "city": [],
+            "district": "河北省石家庄市深泽县",
+            "id": "B0HK1OF8IZ",
+            "location": "115.258495,38.215577",
+            "name": "小直要村民委员会",
+            "typecode": "130106"
+          },
+          {
+            "adcode": "130128",
+            "address": "白庄乡长安路",
+            "city": [],
+            "district": "河北省石家庄市深泽县",
+            "id": "B0I0AH5AUM",
+            "location": "115.258719,38.215765",
+            "name": "小直要国大便利店",
+            "typecode": "060000"
+          }
+        ]
+      },
+      "externalMsg": "",
+      "internalMsg": "",
+      "status": 200,
+      "statusDesc": "解析完成"
     }
   },
   {

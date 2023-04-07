@@ -1656,7 +1656,7 @@ namespace nameless_carpool {
 }  // namespace nameless_carpool
 
 
-
+/* test code */
 namespace nameless_carpool {
   ENUM_UTIL_1_FIELD_DEF_ENUM_GENERATE(
       AnimalWithDefVal__,

@@ -23,6 +23,7 @@
 #include "src/utils/log_utils.h"
 #include "src/utils/tom_string_utils.h"
 #include "enum_util.h"
+#include "include_db_model.h"
 
 extern int flag;
 
@@ -120,6 +121,11 @@ namespace nameless_carpool {
       body = nlohmann::json::parse(str);
       return *this;
     }
+
+    template <typename T>
+    inline T           getHeader(const std::string& key) const { return headers[key].get<T>(); }
+    inline std::string getTimeZone() const { return getHeader<std::string>(HttpHeaderNames::instance().timeZone); }
+    inline std::string getToken() const { return getHeader<std::string>(HttpHeaderNames::instance().token); }
 
     virtual HttpContent& clear() {
       headers.clear();
@@ -289,11 +295,11 @@ namespace nameless_carpool {
       return *this;
     }
     HttpResponse& inflateBodyData(const std::string& bodyData) {
-      body[ResponseBody::Names::data()] = bodyData;
+      body[ResponseBody::names().data] = bodyData;
       return *this;
     }
     HttpResponse& inflateBodyData(const nlohmann::json& bodyData) {
-      body[ResponseBody::Names::data()] = bodyData;
+      body[ResponseBody::names().data] = bodyData;
       return *this;
     }
 

@@ -15,19 +15,21 @@ namespace nameless_carpool {
     const void* ptr = nullptr;
 
     // user_info
-    if /**/ (std::is_same<User /*            */, Model>::value) ptr = &User::names();
-    else if (std::is_same<WcUser /*          */, Model>::value) ptr = &WcUser::names();
-    else if (std::is_same<Telephone /*       */, Model>::value) ptr = &Telephone::names();
-    else if (std::is_same<UserTel /*         */, Model>::value) ptr = &UserTel::names();
-    else if (std::is_same<Session /*         */, Model>::value) ptr = &Session::names();
-    else if (std::is_same<UserSession /*     */, Model>::value) ptr = &UserSession::names();
+    if /**/ (std::is_same<User /*             */, Model>::value) ptr = &User::names();
+    else if (std::is_same<WcUser /*           */, Model>::value) ptr = &WcUser::names();
+    else if (std::is_same<Telephone /*        */, Model>::value) ptr = &Telephone::names();
+    else if (std::is_same<UserTel /*          */, Model>::value) ptr = &UserTel::names();
+    else if (std::is_same<Session /*          */, Model>::value) ptr = &Session::names();
+    else if (std::is_same<UserSession /*      */, Model>::value) ptr = &UserSession::names();
 
     // travel_info
-    else if (std::is_same<FindCar /*         */, Model>::value) ptr = &FindCar::names();
-    else if (std::is_same<FindCustomers /*   */, Model>::value) ptr = &FindCustomers::names();
-    else if (std::is_same<CarBindCustomers /**/, Model>::value) ptr = &CarBindCustomers::names();
-    else if (std::is_same<GoodsInfo /*       */, Model>::value) ptr = &GoodsInfo::names();
-    else if (std::is_same<Car /*             */, Model>::value) ptr = &Car::names();
+    else if (std::is_same<FindCar /*          */, Model>::value) ptr = &FindCar::names();
+    else if (std::is_same<UserFindCar /*      */, Model>::value) ptr = &UserFindCar::names();
+    else if (std::is_same<FindCustomers /*    */, Model>::value) ptr = &FindCustomers::names();
+    else if (std::is_same<UserFindCustomers /**/, Model>::value) ptr = &UserFindCustomers::names();
+    else if (std::is_same<CarBindCustomers /* */, Model>::value) ptr = &CarBindCustomers::names();
+    else if (std::is_same<GoodsInfo /*        */, Model>::value) ptr = &GoodsInfo::names();
+    else if (std::is_same<Car /*              */, Model>::value) ptr = &Car::names();
 
     else throw std::runtime_error("not implement");
 
@@ -55,3 +57,13 @@ namespace nameless_carpool {
     return result;
   }
 };  // namespace nameless_carpool
+
+namespace nameless_carpool {
+  struct RequestBasicInfo;
+}
+
+/** 进行一个 HTTP 请求的基本信息 , 通过 token 获取这一切信息 */
+struct nameless_carpool::RequestBasicInfo {
+  std::optional<User>        user        = std::nullopt;
+  std::optional<Session>     session     = std::nullopt;
+};

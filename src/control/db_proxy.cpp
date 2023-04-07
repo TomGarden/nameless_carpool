@@ -18,6 +18,7 @@
 #include "src/utils/json/include_json.h"
 #include "src/utils/log_utils.h"
 #include "src/net/http_util.h"
+#include "container.h"
 
 namespace nameless_carpool {
 
@@ -258,9 +259,10 @@ namespace nameless_carpool {
   }
 
   bool DbProxy::tokenIsLegal(const string& inToken, string& outErrMsg) {
-    const std::string&              whereSessionStr = db().where(SqlUtil::backticks(Session::names().token), SqlUtil::nullOrApostrophe(inToken), false);
-    std::vector<Session>            sessionVector   = db().query<Session>(whereSessionStr);
-    std::vector<Session>::size_type size            = sessionVector.size();
+    const std::string& whereSessionStr = db().where(
+        SqlUtil::backticks(Session::names().token), SqlUtil::nullOrApostrophe(inToken), false);
+    std::vector<Session>            sessionVector = db().query<Session>(whereSessionStr);
+    std::vector<Session>::size_type size          = sessionVector.size();
 
     bool result = false;
     if(size > 1) {
@@ -278,4 +280,178 @@ namespace nameless_carpool {
 
     return result;
   }
+
+  bool DbProxy::tokenIsLegal(const std::string& inToken, std::string& outErrMsg, std::shared_ptr<RequestBasicInfo> outRequestBasicPtr) {
+    /* 通过 token 获取 session ; 如果如果合法会跳出逻辑块 */ {
+      const std::string& whereSessionStr = db().where(
+          SqlUtil::backticks(Session::names().token), SqlUtil::nullOrApostrophe(inToken), false);
+      std::vector<Session>            sessionVector = db().query<Session>(whereSessionStr);
+      std::vector<Session>::size_type size          = sessionVector.size();
+
+
+      if (size > 1) {
+        outErrMsg = boost::str(boost::format("token 校验异常 ; 服务端异常 ; 预期通过 token 只能得到一条 session , 实际得到了 : %1% 条") % size);
+        return false;
+      } else if (size < 1) {
+        outErrMsg = "非法 token";
+        return false;
+      } else if (sessionVector[0].tokenIsExpired()) {
+        outErrMsg = "token 已过期";
+        return false;
+      } else {
+        outRequestBasicPtr->session = sessionVector[0];
+      }
+    }
+
+    /* 通过合法的 session 获取 user */ {
+      const std::string& queryUserSessionSql = db().queryModelSql(
+          {UserSession::names().user_id},
+          UserSession::names().tableName,
+          db().where(
+              SqlUtil::backticks(UserSession::names().session_id),
+              SqlUtil::nullOrApostrophe(outRequestBasicPtr->session->id),
+              false),
+          false);
+      std::stringstream strStream;
+      strStream << SqlUtil::backticks(User::names().id) << " IN ( " << queryUserSessionSql << " ) " << db().andDelFilter(false);
+
+      std::vector<User> userVector = db().query<User>(strStream.str());
+      std::vector<User>::size_type size = userVector.size();
+
+      if (size != 1) {
+        outErrMsg = boost::str(boost::format("token 校验异常 ; 服务端异常 ; 预期通过 token 只能得到一条 user , 实际得到了 : %1% 条") % size);
+        return false;
+      } else {
+        outRequestBasicPtr->user = userVector[0];
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * 目前所有的 return 都是 true
+   * @param requestInput
+   * @param requestBasicPtr
+   * @param findCarBody
+   * @param outResponse
+   * @return
+   */
+  bool DbProxy::postPeopleFindCar(const HttpRequest&                       requestInput,
+                                  const std::shared_ptr<RequestBasicInfo>& requestBasicPtr,
+                                  body::FindCarBody&                       findCarBody,
+                                  HttpResponse&                            outResponse) {
+
+    nlohmann::json responseBodyData;
+
+    std::vector<std::string> sqlVector;
+
+    auto optGoodsInfo = [&](mysqlx::Session& session) {
+      if(findCarBody.goodsInfo->id.has_value()) {
+        if(!findCarBody.goodsInfo->isPresetItem()) {
+          findCarBody.goodsInfo->renewUpdateTime(requestInput.getTimeZone());
+
+          const std::string& updateGoodsInfo = db().updateSingleModelSql<GoodsInfo>(findCarBody.goodsInfo.value(), GoodsInfo::names().getIgnoreCDColumn());
+          db().executeSqlUnCloseSession(session, updateGoodsInfo);
+
+          findCarBody.findCar->goods_info_id = findCarBody.goodsInfo->id;
+        }
+      } else /* if(!findCarBody.goodsInfo->id.has_value()) */ {
+        findCarBody.goodsInfo->initCreateAndUpdateTime(requestInput.getTimeZone());
+
+        const std::string& insertGoodsInfo = db().insertModelSql<GoodsInfo>({*findCarBody.goodsInfo});
+        db().executeSqlUnCloseSession(session, insertGoodsInfo);
+
+        mysqlx::SqlResult  sqlResult             = db().executeSqlUnCloseSession(session, " SELECT LAST_INSERT_ID() ; ");
+        debugAssertTrue(sqlResult.count() == 1);
+        findCarBody.findCar->goods_info_id = findCarBody.goodsInfo->id = sqlResult.fetchOne().get(0).get<uint64_t>();
+      }
+    };
+
+    if(findCarBody.findCar->id.has_value() ) {
+      /*
+          if(findCarBody.goodsInfo->id.has_value()) {
+            1. 用户应该存在 这个 userFindCar 记录 , 否则可以算作越权
+            2. update goodsInfo
+            3. update findCar
+
+          } else if(!findCarBody.goodsInfo->id.has_value()) {
+            1. 用户应该存在 这个 userFindCar 记录 , 否则可以算作越权
+            2. insert goodsInfo
+            3. update findCar
+          }
+       * */
+      db().executeTransactionSql([&](mysqlx::Session& session) -> void {
+        /* 判断 findCar 是否在用户名 */ {
+          const UserFindCar::Names& userFindCarNames      = UserFindCar::names();
+          const std::string&        queryUserFindCarWhere = boost::str(
+              boost::format(" %1% = %2% AND %3% = %4% %5% ") %
+              SqlUtil::backticks(userFindCarNames.user_id) % SqlUtil::nullOrApostrophe(requestBasicPtr->user->id) %
+              SqlUtil::backticks(userFindCarNames.find_car_id) % SqlUtil::nullOrApostrophe(findCarBody.findCar->id) %
+              db().andDelFilter(false));
+
+          const std::vector<UserFindCar>& userFindCarVector = db().query<UserFindCar>(session, queryUserFindCarWhere, false);
+          if (userFindCarVector.empty()) {
+            outResponse.inflateResponse(HttpStatus::forbidden, " findCar id 不在用户名下 ");
+            return;
+          } else if (userFindCarVector.size() != 1) {
+            outResponse.inflateResponse(HttpStatus::serverLogicError, " UserFindCar 个数大于 1 ");
+            return;
+          }
+        }
+        /* insert or update GoodsInfo */ optGoodsInfo(session);
+        /* update FindCar */ {
+          findCarBody.findCar->renewUpdateTime(requestInput.getTimeZone());
+          const std::string& insertOrUpdateFindCar = db().updateSingleModelSql<FindCar>(findCarBody.findCar.value(), FindCar::names().getIgnoreCDColumn());
+          db().executeSqlUnCloseSession(session, insertOrUpdateFindCar);
+        }
+      });
+
+    } else /* ( !findCarBody.findCar->id.has_value() ) */ {
+
+      /*
+          if (findCarBody.goodsInfo->id.has_value()) {
+              1. update GoodsInfo
+              2. insert findCar
+              3. insert UserFindCar
+
+          } else if (!findCarBody.goodsInfo->id.has_value()) {
+              1. insert GoodsInfo
+              2. insert findCar
+              3. insert UserFindCar
+          }
+      */
+      db().executeTransactionSql([&](mysqlx::Session& session) -> void {
+        /* insert or update GoodsInfo */ optGoodsInfo(session);
+        /* insert FindCar */ {
+          findCarBody.findCar->initCreateAndUpdateTime(requestInput.getTimeZone());
+          const std::string& insertFindCar = db().insertModelSql<FindCar>({*findCarBody.findCar});
+          db().executeSqlUnCloseSession(session, insertFindCar);
+
+          mysqlx::SqlResult  sqlResult             = db().executeSqlUnCloseSession(session, " SELECT LAST_INSERT_ID() ; ");
+          debugAssertTrue(sqlResult.count() == 1);
+          findCarBody.findCar->id = sqlResult.fetchOne().get(0).get<uint64_t>();
+        }
+        /* insert UserFindCar */ {
+          UserFindCar userFindCar; {
+            userFindCar.user_id = requestBasicPtr->user->id;
+            userFindCar.find_car_id = findCarBody.findCar->id;
+            userFindCar.initCreateAndUpdateTime(requestInput.getTimeZone());
+          }
+          const std::string& insertUserFindCar = db().insertModelSql<UserFindCar>({userFindCar});
+          db().executeSqlUnCloseSession(session,insertUserFindCar);
+        }
+      });
+    }
+
+    if(!outResponse.isEmpty()) return false;
+
+    responseBodyData[GoodsInfo::names().tableName] = findCarBody.goodsInfo;
+    responseBodyData[FindCar::names().tableName]   = findCarBody.findCar;
+    outResponse.inflateResponse(HttpStatus::success);
+    outResponse.inflateBodyData(responseBodyData);
+    return true;
+
+  }
+
 }  // namespace nameless_carpool

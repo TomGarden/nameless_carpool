@@ -59,6 +59,19 @@ struct nameless_carpool::InputTipRequest {
 };
 
 struct nameless_carpool::InputTipItem {
+  /*
+    {
+      "id": "B0I0AH5AUM",
+      "name": "小直要国大便利店",
+      "district": "河北省石家庄市深泽县",
+      "location": "115.258719,38.215765",
+      "adcode": "130128",
+      "city": [],
+      "typecode": "060000"
+      "address": "白庄乡长安路",
+    }
+   * */
+
   std::optional<std::string> id       = std::nullopt;
   std::optional<std::string> name     = std::nullopt;
   std::optional<std::string> district = std::nullopt;

@@ -5,6 +5,7 @@
 #include <initializer_list>
 #include <stdexcept>
 
+#include "container.h"
 #include "libs/mysql_connector_arm_static/include/mysqlx/devapi/result.h"
 #include "src/db/sql_util.h"
 
@@ -23,10 +24,6 @@ namespace nameless_carpool {
 
 /* 数据库 数据模型 基类 */
 struct nameless_carpool::BaseModel {
-  // BaseModel()                      = default;
-  // BaseModel(const BaseModel& obj)  = default;
-  // BaseModel(const BaseModel&& obj) = default;
-  // ~BaseModel()                     = default;
 
   static inline std::optional<std::string> numOptionToStrOption(const std::optional<std::string>& inStrOptional) { return inStrOptional; }
   template <typename T>
@@ -48,10 +45,10 @@ struct nameless_carpool::BaseModel {
   */
 
   /* ANCHOR -> 获取主键值组成的列表 */
-  virtual const std::vector<std::optional<std::string>> getPrimaryKeyValVector() const = 0;
+  virtual const std::vector<std::optional<std::string>> getPrimaryKeyValVector() const { throw std::logic_error("Not implement"); };
   /* ANCHOR - 获取非主键值组成的列表 */
-  virtual const std::vector<std::optional<std::string>> getUnPrimaryKeyValVector() const = 0;
-  
+  virtual const std::vector<std::optional<std::string>> getUnPrimaryKeyValVector() const { throw std::logic_error("Not implement"); };
+
   /*        - 获取主键值 , 只有主键唯一的时候有效 , 主键非唯一的情况下 crash */
   virtual const std::optional<std::string> getPrimaryKeyVal() const {
     const std::vector<std::optional<std::string>>& pkValVector = getPrimaryKeyValVector();
@@ -61,12 +58,32 @@ struct nameless_carpool::BaseModel {
     return pkValVector[0];
   };
   /*        -> 获取所有列值组成的列表 */
-  virtual const std::vector<std::optional<std::string>> getColumnValVector() const {
+  virtual std::vector<std::optional<std::string>> getColumnValVector() const {
     return SqlUtil::merge({getPrimaryKeyValVector(), getUnPrimaryKeyValVector()});
   }
 
+  /**
+   *         -> 获取所有列值组成的列表
+   * @param replace  用 replace 中的值替换结果中的值后再返回
+   * @return
+   */
+  template <typename Model>
+  std::vector<std::optional<std::string>> getColumnValVector(const std::map<std::string, std::optional<std::string>>& replace) const {
+    const typename Model::Names&            modelNames        = Model::names();
+    std::vector<std::string>                modelColumnNames  = modelNames.getColumnNameVector();
+    std::vector<std::optional<std::string>> modelColumnValues = SqlUtil::merge({getPrimaryKeyValVector(), getUnPrimaryKeyValVector()});
+    std::map<std::string,std::optional<std::string>> result;
+    debugAssertTrue(modelColumnValues.size() == modelColumnNames.size(), "预期 modelColumnValues.size() == modelColumnNames.size() , 实际不相等");
+    for (auto item :replace) {
+      int index                = Container::indexOf(modelColumnNames, item.first);
+      debugAssertTrue(index < 0, "预期是其中一个索引 , 实际不是");
+      modelColumnValues[index] = item.second;
+    }
+    return modelColumnValues;
+  }
+
   /* 构造插入 sql 子串 : 获取所有成员 '值' , 或者 NULL , 用于 insert 语句 ; 获取的值被单引号包围 */
-  inline const std::string insertColunmNamesSql(const std::vector<std::optional<std::string>> inStrVector) const {
+  inline const std::string insertColumnNamesSql(const std::vector<std::optional<std::string>> inStrVector) const {
     std::stringstream sqlTmp;
     for (const std::optional<std::string>& optionalStr : inStrVector) {
       sqlTmp << " \t \t " << SqlUtil::nullOrApostrophe(optionalStr) << " ,\n";
