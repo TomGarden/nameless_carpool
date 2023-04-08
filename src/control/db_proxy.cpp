@@ -346,25 +346,57 @@ namespace nameless_carpool {
 
     std::vector<std::string> sqlVector;
 
+    auto getLastInsertId = [](mysqlx::Session& session) -> uint64_t {
+      mysqlx::SqlResult sqlResult = db().executeSqlUnCloseSession(session, " SELECT LAST_INSERT_ID() ; ");
+      debugAssertTrue(sqlResult.count() == 1);
+      return sqlResult.fetchOne().get(0).get<uint64_t>();
+    };
+
     auto optGoodsInfo = [&](mysqlx::Session& session) {
       if(findCarBody.goodsInfo->id.has_value()) {
         if(!findCarBody.goodsInfo->isPresetItem()) {
-          findCarBody.goodsInfo->renewUpdateTime(requestInput.getTimeZone());
+          /* 判断用户名下是否存在该货物 */ {
+            const UserGoodsInfo::Names& userGoodsInfoNames = UserGoodsInfo::names();
+            const std::string&        queryUserGoodsInfoWhere = boost::str(
+                boost::format(" %1% = %2% AND %3% = %4% %5% ") %
+                SqlUtil::backticks(userGoodsInfoNames.user_id) % SqlUtil::nullOrApostrophe(requestBasicPtr->user->id) %
+                SqlUtil::backticks(userGoodsInfoNames.goods_info_id) % SqlUtil::nullOrApostrophe(findCarBody.goodsInfo->id) %
+                db().andDelFilter(false));
 
-          const std::string& updateGoodsInfo = db().updateSingleModelSql<GoodsInfo>(findCarBody.goodsInfo.value(), GoodsInfo::names().getIgnoreCDColumn());
-          db().executeSqlUnCloseSession(session, updateGoodsInfo);
+            const std::vector<UserGoodsInfo>& userGoodsInfoVector = db().query<UserGoodsInfo>(session, queryUserGoodsInfoWhere, false);
+            if (userGoodsInfoVector.empty()) {
+              outResponse.inflateResponse(HttpStatus::forbidden, " GoodsInfo id 不在用户名下 ");
+              return;
+            } else if (userGoodsInfoVector.size() != 1) {
+              outResponse.inflateResponse(HttpStatus::serverLogicError, " UserGoodsInfo 个数大于 1 ");
+              return;
+            }
+          }
+          /* 更新货物信息 */ {
+            findCarBody.goodsInfo->renewUpdateTime(requestInput.getTimeZone());
 
-          findCarBody.findCar->goods_info_id = findCarBody.goodsInfo->id;
+            const std::string& updateGoodsInfo = db().updateSingleModelSql<GoodsInfo>(findCarBody.goodsInfo.value(), GoodsInfo::names().getIgnoreCDColumn());
+            db().executeSqlUnCloseSession(session, updateGoodsInfo);
+
+            findCarBody.findCar->goods_info_id = findCarBody.goodsInfo->id;
+          }
         }
       } else /* if(!findCarBody.goodsInfo->id.has_value()) */ {
-        findCarBody.goodsInfo->initCreateAndUpdateTime(requestInput.getTimeZone());
-
-        const std::string& insertGoodsInfo = db().insertModelSql<GoodsInfo>({*findCarBody.goodsInfo});
-        db().executeSqlUnCloseSession(session, insertGoodsInfo);
-
-        mysqlx::SqlResult  sqlResult             = db().executeSqlUnCloseSession(session, " SELECT LAST_INSERT_ID() ; ");
-        debugAssertTrue(sqlResult.count() == 1);
-        findCarBody.findCar->goods_info_id = findCarBody.goodsInfo->id = sqlResult.fetchOne().get(0).get<uint64_t>();
+        /* insert goods info */ {
+          findCarBody.goodsInfo->initCreateAndUpdateTime(requestInput.getTimeZone());
+          const std::string& insertGoodsInfo = db().insertModelSql<GoodsInfo>({*findCarBody.goodsInfo});
+          db().executeSqlUnCloseSession(session, insertGoodsInfo);
+          findCarBody.findCar->goods_info_id = findCarBody.goodsInfo->id = getLastInsertId(session);
+        }
+        /* insert user goods info */ {
+          UserGoodsInfo userGoodsInfo;{
+            userGoodsInfo.user_id = requestBasicPtr->user->id;
+            userGoodsInfo.goods_info_id = findCarBody.goodsInfo->id;
+            userGoodsInfo.initCreateAndUpdateTime(requestInput.getTimeZone());
+          }
+          const std::string& insertUserGoodsInfo = db().insertModelSql<UserGoodsInfo>({userGoodsInfo});
+          db().executeSqlUnCloseSession(session,insertUserGoodsInfo);
+        }
       }
     };
 
@@ -399,7 +431,10 @@ namespace nameless_carpool {
             return;
           }
         }
-        /* insert or update GoodsInfo */ optGoodsInfo(session);
+        /* insert or update GoodsInfo */ {
+          optGoodsInfo(session);
+          if (!outResponse.isEmpty()) return;
+        }
         /* update FindCar */ {
           findCarBody.findCar->renewUpdateTime(requestInput.getTimeZone());
           const std::string& insertOrUpdateFindCar = db().updateSingleModelSql<FindCar>(findCarBody.findCar.value(), FindCar::names().getIgnoreCDColumn());
@@ -422,15 +457,16 @@ namespace nameless_carpool {
           }
       */
       db().executeTransactionSql([&](mysqlx::Session& session) -> void {
-        /* insert or update GoodsInfo */ optGoodsInfo(session);
+        /* insert or update GoodsInfo */ {
+          optGoodsInfo(session);
+          if (!outResponse.isEmpty()) return;
+        }
         /* insert FindCar */ {
           findCarBody.findCar->initCreateAndUpdateTime(requestInput.getTimeZone());
           const std::string& insertFindCar = db().insertModelSql<FindCar>({*findCarBody.findCar});
           db().executeSqlUnCloseSession(session, insertFindCar);
 
-          mysqlx::SqlResult  sqlResult             = db().executeSqlUnCloseSession(session, " SELECT LAST_INSERT_ID() ; ");
-          debugAssertTrue(sqlResult.count() == 1);
-          findCarBody.findCar->id = sqlResult.fetchOne().get(0).get<uint64_t>();
+          findCarBody.findCar->id = getLastInsertId(session);
         }
         /* insert UserFindCar */ {
           UserFindCar userFindCar; {

@@ -80,6 +80,14 @@ namespace nameless_carpool {
     return true;
   }
 
+  bool UserGoodsInfo::inflate(const UserGoodsInfo::Names& names, const std::string& name, const mysqlx::Value& value) {
+    if /**/ (name == names.user_id) this->user_id = SqlUtil::getOptional<uint64_t>(value);
+    else if (name == names.goods_info_id) this->goods_info_id = SqlUtil::getOptional<uint64_t>(value);
+    BASE_TIME_INFLATE
+
+    return true;
+  }
+
   bool Car::inflate(const Car::Names& names, const std::string& name, const mysqlx::Value& value) {
     if /**/ (name == names.id /*                  */) this->id /*                  */ = SqlUtil::getOptional<uint64_t>(value);
     else if (name == names.plate /*               */) this->plate /*               */ = SqlUtil::getOptional<std::string>(value);
@@ -101,4 +109,13 @@ namespace nameless_carpool {
 
     return true;
   }
+
+  bool UserCar::inflate(const UserCar::Names& names, const std::string& name, const mysqlx::Value& value) {
+    if /**/ (name == names.user_id) this->user_id = SqlUtil::getOptional<uint64_t>(value);
+    else if (name == names.car_id) this->car_id = SqlUtil::getOptional<uint64_t>(value);
+    BASE_TIME_INFLATE
+
+    return true;
+  }
+
 }  // namespace nameless_carpool

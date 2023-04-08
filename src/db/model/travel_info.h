@@ -19,7 +19,9 @@ namespace nameless_carpool {
   struct UserFindCustomers;
   struct CarBindCustomers;
   struct GoodsInfo;
+  struct UserGoodsInfo;
   struct Car;
+  struct UserCar;
 }  // namespace nameless_carpool
 
 struct nameless_carpool::FindBase: public BaseTime {
@@ -457,6 +459,35 @@ struct nameless_carpool::GoodsInfo : public BaseTime {
    * 我们预定义了几个标准行李箱, 这些数据也会下发到客户端供用户选择, 当数据被回传的时候需要确定是否预置数据 */
   bool inline isPresetItem() { return id.has_value() && id >= 1 && id <= 9; }
 };
+struct nameless_carpool::UserGoodsInfo : public BaseTime {
+  struct Names : virtual BaseTimeNames {
+    const std::string tableName = "user_goods_info";
+
+    const std::string user_id       = "user_id";
+    const std::string goods_info_id = "goods_info_id";
+
+    /* ANCHOR -> 返回表名称字段 */
+    virtual const std::string getTableName() const override { return tableName; }
+    /* ANCHOR -> 获取主键列名称组成的列表 , 主键可能不止一个 */
+    virtual const std::vector<std::string> getPrimaryKeyNameVector() const override { return {user_id, goods_info_id}; }
+    /* ANCHOR - 只获取当前子类的 un primary key , 归并的动作交给 BaseTimeNames::getUnPrimaryKeyNameVector 完成 */
+    virtual std::vector<std::string> getSubUnPrimaryKeyNameVector() const override { return {}; }
+  };
+  GET_NAMES()
+
+  std::optional<uint64_t> user_id     = std::nullopt;
+  std::optional<uint64_t> goods_info_id = std::nullopt;
+
+  /*  */
+  bool inflate(const Names& names, const std::string& name, const mysqlx::Value& value);
+
+  virtual const std::vector<std::optional<std::string>>
+  getPrimaryKeyValVector() const override { return {numOptionToStrOption({user_id, goods_info_id})}; };
+
+  /* ANCHOR - 只获取当前子类的 un primary key , 归并的动作交给 BaseTime::getUnPrimaryKeyValVector 完成 */
+  virtual std::vector<std::optional<std::string>>
+  getSubUnPrimaryKeyValVector() const override { return {}; }
+};
 /* 汽车信息 */
 struct nameless_carpool::Car : public BaseTime {
   struct Names : virtual BaseTimeNames {
@@ -567,4 +598,32 @@ struct nameless_carpool::Car : public BaseTime {
     };
   }
 };
+struct nameless_carpool::UserCar : public BaseTime {
+  struct Names : virtual BaseTimeNames {
+    const std::string tableName = "user_goods_info";
 
+    const std::string user_id       = "user_id";
+    const std::string car_id = "car_id";
+
+    /* ANCHOR -> 返回表名称字段 */
+    virtual const std::string getTableName() const override { return tableName; }
+    /* ANCHOR -> 获取主键列名称组成的列表 , 主键可能不止一个 */
+    virtual const std::vector<std::string> getPrimaryKeyNameVector() const override { return {user_id, car_id}; }
+    /* ANCHOR - 只获取当前子类的 un primary key , 归并的动作交给 BaseTimeNames::getUnPrimaryKeyNameVector 完成 */
+    virtual std::vector<std::string> getSubUnPrimaryKeyNameVector() const override { return {}; }
+  };
+  GET_NAMES()
+
+  std::optional<uint64_t> user_id     = std::nullopt;
+  std::optional<uint64_t> car_id = std::nullopt;
+
+  /*  */
+  bool inflate(const Names& names, const std::string& name, const mysqlx::Value& value);
+
+  virtual const std::vector<std::optional<std::string>>
+  getPrimaryKeyValVector() const override { return {numOptionToStrOption({user_id, car_id})}; };
+
+  /* ANCHOR - 只获取当前子类的 un primary key , 归并的动作交给 BaseTime::getUnPrimaryKeyValVector 完成 */
+  virtual std::vector<std::optional<std::string>>
+  getSubUnPrimaryKeyValVector() const override { return {}; }
+};

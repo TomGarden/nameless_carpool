@@ -283,7 +283,7 @@ ON DUPLICATE KEY UPDATE  `size_length`    = VALUES(`size_length`   ),
                          `del_time_tz`    = VALUES(`del_time_tz`   );
 
 
-CREATE TABLE IF NOT EXISTS `user_goods` (
+CREATE TABLE IF NOT EXISTS `user_goods_info` (
   `user_id`             INTEGER UNSIGNED    NOT NULL                COMMENT '外键:用户基础信息 id',
   `goods_info_id`       INTEGER UNSIGNED    NOT NULL                COMMENT '外键 货物 id ',
 
