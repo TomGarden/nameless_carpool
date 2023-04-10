@@ -6,6 +6,7 @@
 
 #include "base_time.h"
 #include "src/utils/macro/enum_util.h"
+#include "struct_field_name.h"
 
 
 namespace nameless_carpool {
@@ -153,6 +154,22 @@ struct nameless_carpool::FindCar : public FindBase {
     model.getUnPrimaryKeyValVector();
   }
 
+  DB_INSERT_UN_NULL_COLUMN_CHECK(service_form,
+                                 departure_time_range_start,
+                                 departure_time_range_end,
+                                 pick_up_point,
+                                 intent,
+                                 people_number,
+
+                                 create_time,
+                                 create_time_tz,
+                                 update_time,
+                                 update_time_tz)
+
+  DB_UPDATE_UN_NULL_COLUMN_CHECK(id,
+                                 update_time,
+                                 update_time_tz)
+
   NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(FindCar,
                                               id,
                                               start_point_longitude,
@@ -225,6 +242,21 @@ struct nameless_carpool::FindCustomers : public FindBase {
 
   std::optional<uint64_t>    car_id                     = std::nullopt; /* 车辆信息 */
 
+  DB_INSERT_UN_NULL_COLUMN_CHECK(service_form,
+                                 departure_time_range_start,
+                                 departure_time_range_end,
+                                 pick_up_point,
+                                 intent,
+                                 people_number,
+
+                                 create_time,
+                                 create_time_tz,
+                                 update_time,
+                                 update_time_tz)
+
+  DB_UPDATE_UN_NULL_COLUMN_CHECK(id,
+                                 update_time,
+                                 update_time_tz)
 
   NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(FindCustomers,
                                               id,
@@ -536,8 +568,8 @@ struct nameless_carpool::Car : public BaseTime {
   std::optional<std::string> plate                = std::nullopt; /* 车牌号 */
   std::optional<std::string> brand                = std::nullopt; /* 品牌 */
   std::optional<std::string> model                = std::nullopt; /* 型号 */
-  std::optional<uint>      age                  = std::nullopt; /* 车龄 */
-  std::optional<uint>      passenger_capacity   = std::nullopt; /* 客容量(不含司机) */
+  std::optional<uint>        age                  = std::nullopt; /* 车龄 */
+  std::optional<uint>        passenger_capacity   = std::nullopt; /* 客容量(不含司机) */
   std::optional<double>      size_length          = std::nullopt; /* 长 */
   std::optional<double>      size_width           = std::nullopt; /* 宽 */
   std::optional<double>      size_height          = std::nullopt; /* 高 */
@@ -548,29 +580,29 @@ struct nameless_carpool::Car : public BaseTime {
   std::optional<std::string> capacity_weight_unit = std::nullopt; /* 货重量单位:重量(KG/T) */
   std::optional<std::string> main_transport_type  = std::nullopt; /* 主力运输类型(goods/passenger) */
 
-//  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Car,
-//                                              id,
-//                                              plate,
-//                                              brand,
-//                                              model,
-//                                              age,
-//                                              passenger_capacity,
-//                                              size_length,
-//                                              size_width,
-//                                              size_height,
-//                                              size_unity,
-//                                              capacity_volume,
-//                                              capacity_volume_unit,
-//                                              capacity_weight,
-//                                              capacity_weight_unit,
-//                                              main_transport_type,
-//
-//                                              create_time,
-//                                              create_time_tz,
-//                                              update_time,
-//                                              update_time_tz,
-//                                              del_time,
-//                                              del_time_tz)
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Car,
+                                              id,
+                                              plate,
+                                              brand,
+                                              model,
+                                              age,
+                                              passenger_capacity,
+                                              size_length,
+                                              size_width,
+                                              size_height,
+                                              size_unity,
+                                              capacity_volume,
+                                              capacity_volume_unit,
+                                              capacity_weight,
+                                              capacity_weight_unit,
+                                              main_transport_type,
+
+                                              create_time,
+                                              create_time_tz,
+                                              update_time,
+                                              update_time_tz,
+                                              del_time,
+                                              del_time_tz)
 
   /*  */
   bool inflate(const Names& names, const std::string& name, const mysqlx::Value& value);
@@ -597,13 +629,24 @@ struct nameless_carpool::Car : public BaseTime {
         main_transport_type,
     };
   }
+
+  /** @return false , outMsg 有意义  */
+  DB_INSERT_UN_NULL_COLUMN_CHECK(passenger_capacity, main_transport_type,
+                                 create_time,
+                                 create_time_tz,
+                                 update_time,
+                                 update_time_tz)
+  /** @return false , outMsg 有意义  */
+  DB_UPDATE_UN_NULL_COLUMN_CHECK(id, passenger_capacity, main_transport_type,
+                                 update_time,
+                                 update_time_tz)
 };
 struct nameless_carpool::UserCar : public BaseTime {
   struct Names : virtual BaseTimeNames {
-    const std::string tableName = "user_goods_info";
+    const std::string tableName = "user_car";
 
-    const std::string user_id       = "user_id";
-    const std::string car_id = "car_id";
+    const std::string user_id = "user_id";
+    const std::string car_id  = "car_id";
 
     /* ANCHOR -> 返回表名称字段 */
     virtual const std::string getTableName() const override { return tableName; }

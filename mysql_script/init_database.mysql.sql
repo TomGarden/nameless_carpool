@@ -216,8 +216,7 @@ CREATE TABLE IF NOT EXISTS `user_car` (
   `del_time`            DATETIME(6)             NULL                COMMENT '删除时间',
   `del_time_tz`         VARCHAR(255)            NULL                COMMENT '时区',
 
-
-    FOREIGN KEY (`user_id`)       REFERENCES `user`(`id`)       ON UPDATE CASCADE  ON DELETE RESTRICT ,
+  FOREIGN KEY (`user_id`)       REFERENCES `user`(`id`)       ON UPDATE CASCADE  ON DELETE RESTRICT ,
   FOREIGN KEY (`car_id`)        REFERENCES `car`(`id`)        ON UPDATE CASCADE  ON DELETE RESTRICT ,
   PRIMARY KEY (`user_id` , `car_id`)
 ) COMMENT '关联表 : 用户 & 汽车';

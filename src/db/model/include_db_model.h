@@ -31,7 +31,7 @@ namespace nameless_carpool {
     else if (std::is_same<GoodsInfo /*        */, Model>::value) ptr = &GoodsInfo::names();
     else if (std::is_same<Car /*              */, Model>::value) ptr = &Car::names();
 
-    else throw std::runtime_error("not implement");
+    else throw std::runtime_error(WITH_LINE_INFO("not implement"));
 
     const ModelNames* result = reinterpret_cast<const ModelNames*>(ptr);
 
@@ -41,10 +41,9 @@ namespace nameless_carpool {
   /* BaseMode , BaseModelNames , 的 getColumnXxxVector 获取的值应该是一一对应的
    将此一一对应的值做成 pair 放到 vector */
   template <typename Model,
-            typename ModelNames = typename Model::Names,
             typename ResultItem = typename std::pair<std::string, std::optional<std::string>> /*  */>
   [[deprecated("ANCHOR - 此函数尚未真正使用 , 使用的时候移除此标记")]] inline std::vector<ResultItem> getColumnValNameMap(const Model& model) {
-    const std::vector<std::string>&                nameVector = getModelNames<Model>().getColumnNameVector();
+    const std::vector<std::string>&                nameVector = Model::names().getColumnNameVector();
     const std::vector<std::optional<std::string>>& valVector  = model.getColumnValVector();
     if (nameVector.size() != valVector.size()) throw std::logic_error(
         boost::format("不符合预期 , 两个向量长度不同是异常的 ; nameVector.size = %1% , valVector.size = %2% ") % nameVector.size() % valVector.size());

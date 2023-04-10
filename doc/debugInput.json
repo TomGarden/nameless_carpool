@@ -10,14 +10,127 @@
     ]
   },
   {
-    "desc": "人找车",
+    "desc": "车找X",
     "desc2": ["findCar.goods_info_id 未设置"],
     "method": "POST",
     "headers": {
       "time_zone": "Asia/Shanghai",
       "token": "47b4ac7f-e720-4f49-b4f5-0e0a62305afd"
     },
-    "uri": "/fcgi_test/nameless_carpool/people_find_car",
+    "uri": "/fcgi_test/nameless_carpool/find_customers",
+    "body": {
+      "findCustomers": {
+        "id":1,
+        "start_point_json": {
+          "adcode": "130128",
+          "district": "asdf",
+          "location": "115.259604,38.216147",
+          "name": "小直要村"
+        },
+        "end_point_json": {
+          "adcode": "130128",
+          "district": "河北省石家庄市深泽县",
+          "location": "115.259604,38.216147",
+          "name": "小直要村"
+        },
+        "service_form": "full_charter",
+        "departure_time_range_start": "2023-03-28 08:40:01",
+        "departure_time_range_end": "2023-03-30 08:40:01",
+        "pick_up_point": "nearby",
+        "intent": "people",
+        "people_number": 3,
+        "goods_info_id": 1,
+        "append_info": "我是附加信息蹦巴拉"
+      },
+      "goodsInfo": {
+        "id": 11,
+        "size_length": 43,
+        "size_width": 31,
+        "size_height": 13,
+        "size_unity": "CM",
+        "volume": 17.4,
+        "volume_unit": "L",
+        "weight": null,
+        "weight_unit": null,
+        "number": 1,
+        "tag": [
+          "可登机"
+        ],
+        "desc": "asdf"
+      },
+      "car":{
+        "id":2,
+        "passenger_capacity":6,
+        "main_transport_type":"passenger"
+      }
+    },
+    "example_response": {
+      "data": {
+        "car": {
+          "id": 2,
+          "main_transport_type": "passenger",
+          "passenger_capacity": 6,
+          "update_time": "2023-04-09 14:40:07.819574",
+          "update_time_tz": "Asia/Shanghai"
+        },
+        "find_customers": {
+          "append_info": "我是附加信息蹦巴拉",
+          "car_id": 2,
+          "departure_time_range_end": "2023-03-30 08:40:01",
+          "departure_time_range_start": "2023-03-28 08:40:01",
+          "end_point_json": {
+            "adcode": "130128",
+            "district": "河北省石家庄市深泽县",
+            "location": "115.259604,38.216147",
+            "name": "小直要村"
+          },
+          "goods_info_id": 11,
+          "id": 1,
+          "intent": "people",
+          "people_number": 3,
+          "pick_up_point": "nearby",
+          "service_form": "full_charter",
+          "start_point_json": {
+            "adcode": "130128",
+            "district": "asdf",
+            "location": "115.259604,38.216147",
+            "name": "小直要村"
+          },
+          "update_time": "2023-04-09 14:40:07.831102",
+          "update_time_tz": "Asia/Shanghai"
+        },
+        "goods_info": {
+          "desc": "asdf",
+          "id": 11,
+          "number": 1,
+          "size_height": 13.0,
+          "size_length": 43.0,
+          "size_unity": "CM",
+          "size_width": 31.0,
+          "tag": [
+            "可登机"
+          ],
+          "update_time": "2023-04-09 14:40:07.827462",
+          "update_time_tz": "Asia/Shanghai",
+          "volume": 17.4,
+          "volume_unit": "L"
+        }
+      },
+      "externalMsg": "",
+      "internalMsg": "",
+      "status": 200,
+      "statusDesc": "解析完成"
+    }
+  },
+  {
+    "desc": "X找车",
+    "desc2": ["findCar.goods_info_id 未设置"],
+    "method": "POST",
+    "headers": {
+      "time_zone": "Asia/Shanghai",
+      "token": "47b4ac7f-e720-4f49-b4f5-0e0a62305afd"
+    },
+    "uri": "/fcgi_test/nameless_carpool/find_car",
     "body": {
       "findCar": {
         "start_point_json": {

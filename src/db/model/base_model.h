@@ -45,16 +45,16 @@ struct nameless_carpool::BaseModel {
   */
 
   /* ANCHOR -> 获取主键值组成的列表 */
-  virtual const std::vector<std::optional<std::string>> getPrimaryKeyValVector() const { throw std::logic_error("Not implement"); };
+  virtual const std::vector<std::optional<std::string>> getPrimaryKeyValVector() const { throw std::logic_error(WITH_LINE_INFO("not implement")); };
   /* ANCHOR - 获取非主键值组成的列表 */
-  virtual const std::vector<std::optional<std::string>> getUnPrimaryKeyValVector() const { throw std::logic_error("Not implement"); };
+  virtual const std::vector<std::optional<std::string>> getUnPrimaryKeyValVector() const { throw std::logic_error(WITH_LINE_INFO("not implement")); };
 
   /*        - 获取主键值 , 只有主键唯一的时候有效 , 主键非唯一的情况下 crash */
   virtual const std::optional<std::string> getPrimaryKeyVal() const {
     const std::vector<std::optional<std::string>>& pkValVector = getPrimaryKeyValVector();
     int size = pkValVector.size();
     if (pkValVector.size() != 1) throw std::logic_error(
-        boost::str(boost::format("预期 size 为 1 , 实际为 %1% ") % size));
+        WITH_LINE_INFO(boost::str(boost::format("预期 size 为 1 , 实际为 %1% ") % size)));
     return pkValVector[0];
   };
   /*        -> 获取所有列值组成的列表 */

@@ -17,7 +17,7 @@ namespace nameless_carpool {
 
   void Api::optRequest(const HttpRequest& requestInput, HttpResponse& responseOutput) {
     const std::string& methodUri = requestInput.methodUri();
-    std::shared_ptr<RequestBasicInfo> requestBasicPtr = std::make_shared<RequestBasicInfo>();
+    RequestBasicInfo requestBasicPtr;
 
     /* 请求合法性校验 , 通过条件 : 时区信息存在 */ {
       if (!requestInput.headers.contains(HttpHeaderNames::instance().timeZone)) { /* 请求头非法 */
@@ -52,7 +52,8 @@ namespace nameless_carpool {
     IF_CHECK_URI(authApi().login)
     ELSE_IF_CHECK_URI(authApi().requestVC)
     ELSE_IF_CHECK_URI(authApi().inputPositionTip)
-    ELSE_IF_CHECK_URI_WITH_BASIC_INFO(authApi().postPeopleFindCar)
+    ELSE_IF_CHECK_URI_WITH_BASIC_INFO(authApi().postFindCar)
+    ELSE_IF_CHECK_URI_WITH_BASIC_INFO(authApi().postFindCustomers)
     else Api::unknownRequest(requestInput, responseOutput);
 
     clearNull(responseOutput.body);

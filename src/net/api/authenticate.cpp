@@ -114,21 +114,39 @@ namespace nameless_carpool {
 
   bool AuthApi::tokenIsLegal(const std::string& inToken, std::string& outErrMsg) { return dbProxy().tokenIsLegal(inToken, outErrMsg); }
 
-  bool AuthApi::tokenIsLegal(const std::string& inToken, std::string& outErrMsg, std::shared_ptr<RequestBasicInfo> outRequestBasicPtr) {
+  bool AuthApi::tokenIsLegal(const std::string& inToken, std::string& outErrMsg, RequestBasicInfo& outRequestBasicPtr) {
     return dbProxy().tokenIsLegal(inToken, outErrMsg, outRequestBasicPtr);
   }
 
-  void AuthApi::postPeopleFindCar(const std::shared_ptr<RequestBasicInfo>& requestBasicPtr,
-                                  const HttpRequest& requestInput, HttpResponse& outResponse) {
+  void AuthApi::postFindCar(const RequestBasicInfo& requestBasicPtr,
+                            const HttpRequest&      requestInput,
+                            HttpResponse&           outResponse) {
     body::FindCarBody findCarBody = requestInput.body.get<body::FindCarBody>();
-    std::string              errMsg;
-    if (!findCarBody.isLegal(errMsg)) {
-      outResponse.inflateResponse(HttpStatus::Enum::badRequest, errMsg);
-      return;
+    /* body 合法性校验 */ {
+      std::string errMsg;
+      if (!findCarBody.isLegal(errMsg)) {
+        outResponse.inflateResponse(HttpStatus::Enum::badRequest, errMsg);
+        return;
+      }
     }
 
     /* 确保数据合法后才做进一步逻辑处理 */
-    dbProxy().postPeopleFindCar(requestInput, requestBasicPtr, findCarBody, outResponse.clear());
+    dbProxy().postFindCar(requestInput, requestBasicPtr, findCarBody, outResponse.clear());
+  }
+
+  void AuthApi::postFindCustomers(const RequestBasicInfo& requestBasicPtr,
+                                  const HttpRequest&      requestInput,
+                                  HttpResponse&           outResponse) {
+    body::FindCustomersBody findBody = requestInput.body.get<body::FindCustomersBody>();
+    /* body 合法性校验 */ {
+      std::string errMsg;
+      if (!findBody.isLegal(errMsg)) {
+        outResponse.inflateResponse(HttpStatus::Enum::badRequest, errMsg);
+        return;
+      }
+    }
+
+    dbProxy().postFindCustomers(requestInput, requestBasicPtr, findBody, outResponse);
   }
 
 }  // namespace nameless_carpool

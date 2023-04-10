@@ -45,12 +45,17 @@ namespace nameless_carpool {
     /* 校验 token 是否合法 */
     bool tokenIsLegal(const std::string& inToken, std::string& outErrMsg) ;
     /* 校验 token 是否合法 */
-    bool tokenIsLegal(const std::string& inToken, std::string& outErrMsg, std::shared_ptr<RequestBasicInfo> outRequestBasicPtr);
-    /* 人找车信息提交 */
-    bool postPeopleFindCar(const HttpRequest&                       requestInput,
-                           const std::shared_ptr<RequestBasicInfo>& requestBasicPtr,
-                           body::FindCarBody&                 findCarBody,
-                           HttpResponse&                            outResponse);
+    bool tokenIsLegal(const std::string& inToken, std::string& outErrMsg, RequestBasicInfo& outRequestBasicPtr);
+    /* X找车信息提交 */
+    bool postFindCar(const HttpRequest&      requestInput,
+                     const RequestBasicInfo& requestBasicPtr,
+                     body::FindCarBody&      findCarBody,
+                     HttpResponse&           outResponse);
+    /* X找客信息提交 */
+    bool postFindCustomers(const HttpRequest&       requestInput,
+                           const RequestBasicInfo&  requestBasicPtr,
+                           body::FindCustomersBody& findBody,
+                           HttpResponse&            outResponse);
   };
 
   inline DbProxy& dbProxy() { return DbProxy::getInstance(); }

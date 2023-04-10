@@ -15,10 +15,11 @@ namespace nameless_carpool {
 
 struct nameless_carpool::UriPath {
   const std::string pathPrefix        = "/fcgi_test/nameless_carpool";       /* uri 统一前缀 */
-  const std::string requestVerifyCode = pathPrefix + "/request_verify_code"; /*请求验证码*/
-  const std::string login             = pathPrefix + "/login";               /*登录*/
-  const std::string inputPositionTip  = pathPrefix + "/input_position_tip";  /*地点输入提示*/
-  const std::string peopleFindCar     = pathPrefix + "/people_find_car";     /* 人找车 */
+  const std::string requestVerifyCode = pathPrefix + "/request_verify_code"; /* 请求验证码 */
+  const std::string login             = pathPrefix + "/login";               /* 登录 */
+  const std::string inputPositionTip  = pathPrefix + "/input_position_tip";  /* 地点输入提示 */
+  const std::string peopleFindCar     = pathPrefix + "/find_car";            /* X找车 */
+  const std::string carFindCustomers  = pathPrefix + "/find_customers";      /* X找人 */
 };
 
 class nameless_carpool::AuthApi {
@@ -63,15 +64,20 @@ class nameless_carpool::AuthApi {
    * @param outRequestBasic return true , 有意义
    * @return                true, 合法 ; false , 非法
    */
-  bool tokenIsLegal(const std::string& inToken, std::string& outErrMsg, std::shared_ptr<RequestBasicInfo> outRequestBasicPtr);
+  bool tokenIsLegal(const std::string& inToken, std::string& outErrMsg, RequestBasicInfo& outRequestBasicPtr);
 
   /* 输入提示 */
   inline std::string inputPositionTip() { return getPostUri(uriPath().inputPositionTip); }
   void               inputPositionTip(const HttpRequest& requestInput, HttpResponse& outResponse);
 
-  /* 人找车 */
-  inline std::string postPeopleFindCar() { return getPostUri(uriPath().peopleFindCar); }
-  void               postPeopleFindCar(const std::shared_ptr<RequestBasicInfo>& requestBasicPtr,
+  /* X找车 */
+  inline std::string postFindCar() { return getPostUri(uriPath().peopleFindCar); }
+  void               postFindCar(const RequestBasicInfo& requestBasicPtr,
+                                 const HttpRequest& requestInput, HttpResponse& outResponse);
+
+  /* X找人 */
+  inline std::string postFindCustomers() { return getPostUri(uriPath().carFindCustomers); }
+  void               postFindCustomers(const RequestBasicInfo& requestBasicPtr,
                                        const HttpRequest& requestInput, HttpResponse& outResponse);
 };
 

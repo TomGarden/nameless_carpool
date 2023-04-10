@@ -95,7 +95,7 @@ namespace nameless_carpool {
     return result;
   }
 
-  mysqlx::SqlResult DbManager::executeSql(mysqlx::Session&& session, const std::string& sqlTmp, bool closeSession) {
+  mysqlx::SqlResult DbManager::executeSql(mysqlx::Session& session, const std::string& sqlTmp, bool closeSession) {
     logInfo << sqlTmp << std::endl;
 
     /* 分开函数逐个调用 , 不会导致中间对象被回收 */
@@ -108,14 +108,12 @@ namespace nameless_carpool {
 
     return sqlResult;
   }
-  mysqlx::SqlResult DbManager::executeSql(mysqlx::Session& session, const std::string& sqlTmp, bool closeSession) {
-    return executeSql(std::move(session),sqlTmp,closeSession);
-  }
   mysqlx::SqlResult DbManager::executeSqlUnCloseSession(mysqlx::Session& session, const std::string& sqlTmp) {
-    return executeSql(std::move(session), sqlTmp, false);
+    return executeSql(session, sqlTmp, false);
   }
   mysqlx::SqlResult DbManager::executeSql(const std::string& sqlTmp) {
-    return executeSql(dbClient().getSession(), sqlTmp, true);
+    mysqlx::Session session = dbClient().getSession();
+    return executeSql(session, sqlTmp, true);
   }
   mysqlx::SqlResult DbManager::executeSql(const std::stringstream& sqlTmp) { return executeSql(sqlTmp.str()); }
   void DbManager::executeTransactionSql(const std::function<void(mysqlx::Session& session)>& func) {

@@ -38,7 +38,7 @@ namespace nameless_carpool {
       using ValueType  = mysqlx::Value::Type;
 
       auto throwLogicError = []()->std::string { 
-        throw std::logic_error("暂未兼容的类型"); 
+        throw std::logic_error(WITH_LINE_INFO("暂未兼容的类型"));
         return "";
       };
 

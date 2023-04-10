@@ -51,13 +51,30 @@ class nameless_carpool::DbManager {
  public: /* executeSql */
   std::string                                getSqlResultWarning(mysqlx::SqlResult* sqlResult);
   std::map<const std::string, mysqlx::Value> getSqlRowMap(const mysqlx::Columns& columns, mysqlx::Row row);
-  mysqlx::SqlResult                          executeSql(mysqlx::Session&& session, const std::string& sqlTmp, bool closeSession);
-  mysqlx::SqlResult                          executeSql(mysqlx::Session& session, const std::string& sqlTmp, bool closeSession);
-  mysqlx::SqlResult                          executeSqlUnCloseSession(mysqlx::Session& session, const std::string& sqlTmp);
-  mysqlx::SqlResult                          executeSql(const std::string& sqlTmp);
-  mysqlx::SqlResult                          executeSql(const std::stringstream& sqlTmp);
-  void                                       executeTransactionSql(const std::function<void(mysqlx::Session& session)>& func);
-  mysqlx::SqlResult                          executeTransactionSql(const std::vector<std::string>& sqlVector);
+  /**
+   * 执行 sql 语句
+   * @param session
+   * @param sqlTmp
+   * @param closeSession true, 执行 sql 完毕后 关闭 session ; false 反之 ;
+   * @return
+   */
+  mysqlx::SqlResult executeSql(mysqlx::Session& session, const std::string& sqlTmp, bool closeSession);
+  mysqlx::SqlResult executeSqlUnCloseSession(mysqlx::Session& session, const std::string& sqlTmp);
+  mysqlx::SqlResult executeSql(const std::string& sqlTmp);
+  mysqlx::SqlResult executeSql(const std::stringstream& sqlTmp);
+  void              executeTransactionSql(const std::function<void(mysqlx::Session& session)>& func);
+  mysqlx::SqlResult executeTransactionSql(const std::vector<std::string>& sqlVector);
+
+  /** 通过 session 获取最后一个插入动作的行 id ;
+   *  mysql 库本身提供了这个函数 , 我们过去使用的时候有问题 , 所以现在自己搞 .
+   * @param session
+   * @return
+   */
+  inline uint64_t getLastInsertIdNoCloseSession(mysqlx::Session& session) {
+    mysqlx::SqlResult sqlResult = executeSqlUnCloseSession(session, " SELECT LAST_INSERT_ID() ; ");
+    debugAssertTrue(sqlResult.count() == 1);
+    return sqlResult.fetchOne().get(0).get<uint64_t>();
+  }
 
  public: /* model operate util */
 
@@ -71,7 +88,7 @@ class nameless_carpool::DbManager {
   /* 按照 数据库对象 Columns 中各个列名出现的顺序 , 填充 map<index , columnName> */
   template <typename Model>
   std::map<int, std::string> getModelColumnNameMap(const mysqlx::Columns& columns) {
-    const std::vector<std::string>& nameVector = getModelNames<Model>().getColumnNameVector();
+    const std::vector<std::string>& nameVector = Model::names().getColumnNameVector();
     std::map<int, std::string>      indexNameMap;
 
     int index = 0;
@@ -94,7 +111,7 @@ class nameless_carpool::DbManager {
   std::vector<Model> getModelVector(mysqlx::SqlResult& sqlResult) {
     std::map<int, std::string> indexNameMap = getModelColumnNameMap<Model>(sqlResult.getColumns());
 
-    const ModeNames& modeNames = getModelNames<Model>();
+    const ModeNames& modeNames = Model::names();
 
     std::map<int, std::string>::size_type      columnCount      = indexNameMap.size();
     std::vector<Model> result;
@@ -139,7 +156,7 @@ class nameless_carpool::DbManager {
   template <typename Model>
   std::vector<Model> query(const std::string& whereStatements) {
 
-    const typename Model::Names& modelNames = getModelNames<Model>();
+    const typename Model::Names& modelNames = Model::names();
 
     std::string sqlStr = queryModelSql(modelNames.getColumnNameVector(), modelNames.tableName, whereStatements);
 
@@ -155,7 +172,7 @@ class nameless_carpool::DbManager {
   template <typename Model>
   std::vector<Model> query(mysqlx::Session& session, const std::string& whereStatements, bool closeSession) {
 
-    const typename Model::Names& modelNames = getModelNames<Model>();
+    const typename Model::Names& modelNames = Model::names();
 
     std::string sqlStr = queryModelSql(modelNames.getColumnNameVector(), modelNames.tableName, whereStatements);
 
@@ -234,7 +251,7 @@ class nameless_carpool::DbManager {
 
     if (modelVector.empty()) return "";
 
-    const typename Model::Names& modelName = getModelNames<Model>();
+    const typename Model::Names& modelName = Model::names();
     std::stringstream sqlTmp;
 
     sqlTmp
@@ -345,10 +362,23 @@ class nameless_carpool::DbManager {
   }
 
   template <typename Model>
-  uint64_t insert(const Model& model) {
+  inline uint64_t insert(const Model& model) {
     return insert(std::vector<Model>{model});
   }
 
+  template <typename Model>
+  mysqlx::SqlResult insert(mysqlx::Session& session, const std::vector<Model>& modelVector, bool closeSession) {
+    if (modelVector.size() < 1) throw std::logic_error("不接受空向量 , 需要开发者自行筛选后 再入参");
+
+    const std::string& sqlTmp    = insertModelSql(modelVector);
+    mysqlx::SqlResult     sqlResult = executeSql(session, sqlTmp, closeSession);
+
+    return sqlResult;
+  }
+  template <typename Model>
+  inline mysqlx::SqlResult insert(mysqlx::Session& session, const Model& model, bool closeSession) {
+    return insert(session, std::vector<Model>{model}, closeSession);
+  }
 
 
 
@@ -361,7 +391,7 @@ class nameless_carpool::DbManager {
   template <typename Model>
   std::string updateModelSql(const std::vector<Model>& modelVector) {
 
-    const typename Model::Names& modelName      = getModelNames<Model>();
+    const typename Model::Names& modelName      = Model::names();
     std::vector<std::string>     unPkNameVector = modelName.getUnPrimaryKeyNameVector();
     std::vector<std::string>     pkNameVector   = modelName.getPrimaryKeyNameVector();
 
@@ -572,7 +602,7 @@ class nameless_carpool::DbManager {
                                       `del_time_tz`    =VALUES(`del_time_tz`   );
     */
     if (modelVector.empty() == true) return "";
-    const typename Model::Names&    modelName  = getModelNames<Model>();
+    const typename Model::Names&    modelName  = Model::names();
     const std::vector<std::string>& unPkVector = modelName.getUnPrimaryKeyNameVector();
     // const std::vector<std::string>& pkVector   = modelName.getPrimaryKeyNameVector();
     const std::vector<std::string>& columnNameVector = modelName.getColumnNameVector();
@@ -626,7 +656,7 @@ class nameless_carpool::DbManager {
 
     if (pkValVectorVector.empty() == true) return "";
 
-    const typename Model::Names& modelName = getModelNames<Model>();
+    const typename Model::Names& modelName = Model::names();
     // const std::vector<std::string>& unPkVector       = modelName.getUnPrimaryKeyNameVector();
     const std::vector<std::string>& pkVector = modelName.getPrimaryKeyNameVector();
     // const std::vector<std::string>& colunmNameVector = modelName.getColumnNameVector();
