@@ -118,7 +118,7 @@ namespace nameless_carpool {
     return dbProxy().tokenIsLegal(inToken, outErrMsg, outRequestBasicPtr);
   }
 
-  void AuthApi::postFindCar(const RequestBasicInfo& requestBasicPtr,
+  void AuthApi::postXxFindCar(const RequestBasicInfo& requestBasic,
                             const HttpRequest&      requestInput,
                             HttpResponse&           outResponse) {
     body::FindCarBody findCarBody = requestInput.body.get<body::FindCarBody>();
@@ -131,10 +131,10 @@ namespace nameless_carpool {
     }
 
     /* 确保数据合法后才做进一步逻辑处理 */
-    dbProxy().postFindCar(requestInput, requestBasicPtr, findCarBody, outResponse.clear());
+    dbProxy().postFindCar(requestInput, requestBasic, findCarBody, outResponse.clear());
   }
 
-  void AuthApi::postFindCustomers(const RequestBasicInfo& requestBasicPtr,
+  void AuthApi::postCarFindXx(const RequestBasicInfo& requestBasic,
                                   const HttpRequest&      requestInput,
                                   HttpResponse&           outResponse) {
     body::FindCustomersBody findBody = requestInput.body.get<body::FindCustomersBody>();
@@ -146,7 +146,20 @@ namespace nameless_carpool {
       }
     }
 
-    dbProxy().postFindCustomers(requestInput, requestBasicPtr, findBody, outResponse);
+    dbProxy().postFindCustomers(requestInput, requestBasic, findBody, outResponse);
   }
+
+  /** X找车 页面发起搜索 */
+  void AuthApi::postSearchXxFindCar(const RequestBasicInfo& requestBasic,
+                                    const HttpRequest& requestInput, HttpResponse& outResponse) {
+    body::FindCarBody findCarBody = requestInput.body.get<body::FindCarBody>();
+    dbProxy().postSearchXxFindCar(requestInput, requestBasic, findCarBody, outResponse);
+  }
+
+  /** 车找X 页面发起搜索 */
+  void AuthApi::postSearchCarFindXx(const RequestBasicInfo& requestBasic,
+                                    const HttpRequest& requestInput, HttpResponse& outResponse) {
+  }
+
 
 }  // namespace nameless_carpool

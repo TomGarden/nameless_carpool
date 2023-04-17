@@ -18,8 +18,10 @@ struct nameless_carpool::UriPath {
   const std::string requestVerifyCode = pathPrefix + "/request_verify_code"; /* 请求验证码 */
   const std::string login             = pathPrefix + "/login";               /* 登录 */
   const std::string inputPositionTip  = pathPrefix + "/input_position_tip";  /* 地点输入提示 */
-  const std::string peopleFindCar     = pathPrefix + "/find_car";            /* X找车 */
-  const std::string carFindCustomers  = pathPrefix + "/find_customers";      /* X找人 */
+  const std::string xxFindCar         = pathPrefix + "/find_car";            /* X找车 */
+  const std::string carFindXx         = pathPrefix + "/find_customers";      /* 车找X */
+  const std::string searchXxFindCar   = pathPrefix + "/find_car";            /* 搜索 X找车 */
+  const std::string searchCarFindXx   = pathPrefix + "/find_customers";      /* 搜索 车找X */
 };
 
 class nameless_carpool::AuthApi {
@@ -71,14 +73,24 @@ class nameless_carpool::AuthApi {
   void               inputPositionTip(const HttpRequest& requestInput, HttpResponse& outResponse);
 
   /* X找车 */
-  inline std::string postFindCar() { return getPostUri(uriPath().peopleFindCar); }
-  void               postFindCar(const RequestBasicInfo& requestBasicPtr,
+  inline std::string postXxFindCar() { return getPostUri(uriPath().xxFindCar); }
+  void               postXxFindCar(const RequestBasicInfo& requestBasic,
                                  const HttpRequest& requestInput, HttpResponse& outResponse);
 
-  /* X找人 */
-  inline std::string postFindCustomers() { return getPostUri(uriPath().carFindCustomers); }
-  void               postFindCustomers(const RequestBasicInfo& requestBasicPtr,
-                                       const HttpRequest& requestInput, HttpResponse& outResponse);
+  /* 车找X */
+  inline std::string postCarFindXx() { return getPostUri(uriPath().carFindXx); }
+  void               postCarFindXx(const RequestBasicInfo& requestBasic,
+                                   const HttpRequest& requestInput, HttpResponse& outResponse);
+
+  /* 搜索 X找车 */
+  inline std::string postSearchXxFindCar() { return getPostUri(uriPath().searchXxFindCar); }
+  void               postSearchXxFindCar(const RequestBasicInfo& requestBasic,
+                                         const HttpRequest& requestInput, HttpResponse& outResponse);
+
+  /* 搜索 车找X */
+  inline std::string postSearchCarFindXx() { return getPostUri(uriPath().searchCarFindXx); }
+  void               postSearchCarFindXx(const RequestBasicInfo& requestBasic,
+                                         const HttpRequest& requestInput, HttpResponse& outResponse);
 };
 
 namespace nameless_carpool{

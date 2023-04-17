@@ -55,6 +55,7 @@ struct nameless_carpool::FindBase: public BaseTime {
     const std::string service_form               = "service_form";
     const std::string departure_time_range_start = "departure_time_range_start";
     const std::string departure_time_range_end   = "departure_time_range_end";
+    const std::string departure_time_range_tz    = "departure_time_range_tz";
     const std::string pick_up_point              = "pick_up_point";
     const std::string intent                     = "intent";
     const std::string people_number              = "people_number";
@@ -73,6 +74,7 @@ struct nameless_carpool::FindBase: public BaseTime {
           service_form,
           departure_time_range_start,
           departure_time_range_end,
+          departure_time_range_tz,
           pick_up_point,
           intent,
           people_number,
@@ -93,6 +95,7 @@ struct nameless_carpool::FindBase: public BaseTime {
   std::optional<std::string>    service_form               = std::nullopt; /* 服务形式 : 拼车(carpool), 单程包车(one_way_charter), 全程包车(full_charter) */
   std::optional<std::string>    departure_time_range_start = std::nullopt; /* 发车时间范围起点 */
   std::optional<std::string>    departure_time_range_end   = std::nullopt; /* 发车时间范围终点 */
+  std::optional<std::string>    departure_time_range_tz    = std::nullopt; /* 发车时间范围时区 */
   std::optional<std::string>    pick_up_point              = std::nullopt; /* 接送点 附近(nearby), 上门(door to door) */
   std::optional<std::string>    intent                     = std::nullopt; /* 运送意图 货物(goods), 乘客(people) */
   std::optional<uint>           people_number              = std::nullopt; /* 客容量 */
@@ -119,6 +122,7 @@ struct nameless_carpool::FindBase: public BaseTime {
         service_form,
         departure_time_range_start,
         departure_time_range_end,
+        departure_time_range_tz,
         pick_up_point,
         intent,
         numOptionToStrOption(people_number),
@@ -127,11 +131,14 @@ struct nameless_carpool::FindBase: public BaseTime {
     };
   }
 
-
-
   ~FindBase() override = default;
 
 
+  inline bool existStartPoint() { return start_point_longitude.has_value() && start_point_latitude.has_value(); }             /* 存在起点坐标 */
+  inline bool existEndPoint() { return end_point_longitude.has_value() && end_point_latitude.has_value(); }                   /* 存在终点坐标 */
+  inline bool existTwoPoint() { return existStartPoint() && existEndPoint(); }                                                /* 存在起始点坐标 */
+  inline bool existDepartureTime() { return departure_time_range_start.has_value() && departure_time_range_end.has_value(); } /* 存在出发时间 */
+  inline bool existServiceForm() { return service_form.has_value(); };                                                        /* 存在用车形式 */
 };
 
 /* 人找车 */
@@ -157,6 +164,7 @@ struct nameless_carpool::FindCar : public FindBase {
   DB_INSERT_UN_NULL_COLUMN_CHECK(service_form,
                                  departure_time_range_start,
                                  departure_time_range_end,
+                                 departure_time_range_tz,
                                  pick_up_point,
                                  intent,
                                  people_number,
@@ -181,6 +189,7 @@ struct nameless_carpool::FindCar : public FindBase {
                                               service_form,
                                               departure_time_range_start,
                                               departure_time_range_end,
+                                              departure_time_range_tz,
                                               pick_up_point,
                                               intent,
                                               people_number,
@@ -245,6 +254,7 @@ struct nameless_carpool::FindCustomers : public FindBase {
   DB_INSERT_UN_NULL_COLUMN_CHECK(service_form,
                                  departure_time_range_start,
                                  departure_time_range_end,
+                                 departure_time_range_tz,
                                  pick_up_point,
                                  intent,
                                  people_number,
@@ -269,6 +279,7 @@ struct nameless_carpool::FindCustomers : public FindBase {
                                               service_form,
                                               departure_time_range_start,
                                               departure_time_range_end,
+                                              departure_time_range_tz,
                                               pick_up_point,
                                               intent,
                                               people_number,

@@ -386,13 +386,13 @@ namespace nameless_carpool {
   /**
    * 目前所有的 return 都是 true
    * @param requestInput
-   * @param requestBasicPtr
+   * @param requestBasic
    * @param findCarBody
    * @param outResponse
    * @return
    */
   bool DbProxy::postFindCar(const HttpRequest&      requestInput,
-                            const RequestBasicInfo& requestBasicPtr,
+                            const RequestBasicInfo& requestBasic,
                             body::FindCarBody&      findCarBody,
                             HttpResponse&           outResponse) {
     nlohmann::json responseBodyData;
@@ -415,7 +415,7 @@ namespace nameless_carpool {
           const UserFindCar::Names& userFindCarNames      = UserFindCar::names();
           const std::string&        queryUserFindCarWhere = boost::str(
               boost::format(" %1% = %2% AND %3% = %4% %5% ") %
-              SqlUtil::backticks(userFindCarNames.user_id) % SqlUtil::nullOrApostrophe(requestBasicPtr.user->id) %
+              SqlUtil::backticks(userFindCarNames.user_id) % SqlUtil::nullOrApostrophe(requestBasic.user->id) %
               SqlUtil::backticks(userFindCarNames.find_car_id) % SqlUtil::nullOrApostrophe(findCarBody.findCar->id) %
               db().andDelFilter(false));
 
@@ -429,7 +429,7 @@ namespace nameless_carpool {
           }
         }
         /* insert or update GoodsInfo */ {
-          optGoodsInfo(requestInput, requestBasicPtr, session, *findCarBody.goodsInfo, outResponse);
+          optGoodsInfo(requestInput, requestBasic, session, *findCarBody.goodsInfo, outResponse);
           findCarBody.findCar->goods_info_id = findCarBody.goodsInfo->id;
           if (!outResponse.isEmpty()) return;
         }
@@ -460,7 +460,7 @@ namespace nameless_carpool {
       */
       db().executeTransactionSql([&](mysqlx::Session& session) -> void {
         /* insert or update GoodsInfo */ {
-          optGoodsInfo(requestInput, requestBasicPtr, session, *findCarBody.goodsInfo, outResponse);
+          optGoodsInfo(requestInput, requestBasic, session, *findCarBody.goodsInfo, outResponse);
           findCarBody.findCar->goods_info_id = findCarBody.goodsInfo->id;
           if (!outResponse.isEmpty()) return;
         }
@@ -476,7 +476,7 @@ namespace nameless_carpool {
         }
         /* insert UserFindCar */ {
           UserFindCar userFindCar; {
-            userFindCar.user_id     = requestBasicPtr.user->id;
+            userFindCar.user_id     = requestBasic.user->id;
             userFindCar.find_car_id = findCarBody.findCar->id;
             userFindCar.initCreateAndUpdateTime(requestInput.getTimeZone());
           }
@@ -496,7 +496,7 @@ namespace nameless_carpool {
   }
 
   bool DbProxy::postFindCustomers(const HttpRequest&       requestInput,
-                                  const RequestBasicInfo&  requestBasicPtr,
+                                  const RequestBasicInfo&  requestBasic,
                                   body::FindCustomersBody& findBody,
                                   HttpResponse&            outResponse) {
     nlohmann::json responseBodyData;
@@ -507,7 +507,7 @@ namespace nameless_carpool {
           const UserCar::Names& modelNames              = UserCar::names();
           const std::string&    queryUserCarWhere = boost::str(
               boost::format(" %1% = %2% AND %3% = %4% %5% ") %
-              SqlUtil::backticks(modelNames.user_id) % SqlUtil::nullOrApostrophe(requestBasicPtr.user->id) %
+              SqlUtil::backticks(modelNames.user_id) % SqlUtil::nullOrApostrophe(requestBasic.user->id) %
               SqlUtil::backticks(modelNames.car_id) % SqlUtil::nullOrApostrophe(findBody.car->id) %
               db().andDelFilter(false));
 
@@ -549,7 +549,7 @@ namespace nameless_carpool {
         }
         /* insert user car */ {
           UserCar userCar ;{
-            userCar.user_id = requestBasicPtr.user->id;
+            userCar.user_id = requestBasic.user->id;
             userCar.car_id = findBody.car->id;
             userCar.initCreateAndUpdateTime(requestInput.getTimeZone());
           }
@@ -564,7 +564,7 @@ namespace nameless_carpool {
           const UserFindCustomers::Names& userUserFindCustomersNames      = UserFindCustomers::names();
           const std::string&              queryUserFindCustomersWhere     = boost::str(
               boost::format(" %1% = %2% AND %3% = %4% %5% ") %
-              SqlUtil::backticks(userUserFindCustomersNames.user_id) % SqlUtil::nullOrApostrophe(requestBasicPtr.user->id) %
+              SqlUtil::backticks(userUserFindCustomersNames.user_id) % SqlUtil::nullOrApostrophe(requestBasic.user->id) %
               SqlUtil::backticks(userUserFindCustomersNames.find_customers_id) % SqlUtil::nullOrApostrophe(findBody.findCustomers->id) %
               db().andDelFilter(false));
 
@@ -582,7 +582,7 @@ namespace nameless_carpool {
           if (!outResponse.isEmpty()) return;
         }
         /* insert or update GoodsInfo */ {
-          optGoodsInfo(requestInput, requestBasicPtr, session, *findBody.goodsInfo, outResponse);
+          optGoodsInfo(requestInput, requestBasic, session, *findBody.goodsInfo, outResponse);
           if (!outResponse.isEmpty()) return;
           findBody.findCustomers->goods_info_id = findBody.goodsInfo->id;
         }
@@ -605,7 +605,7 @@ namespace nameless_carpool {
           if (!outResponse.isEmpty()) return;
         }
         /* insert or update GoodsInfo */ {
-          optGoodsInfo(requestInput, requestBasicPtr, session, *findBody.goodsInfo, outResponse);
+          optGoodsInfo(requestInput, requestBasic, session, *findBody.goodsInfo, outResponse);
           if (!outResponse.isEmpty()) return;
           findBody.findCustomers->goods_info_id = findBody.goodsInfo->id;
         }
@@ -622,7 +622,7 @@ namespace nameless_carpool {
         }
         /* insert user find customer */ {
           UserFindCustomers userFindCustomers; {
-            userFindCustomers.user_id = requestBasicPtr.user->id;
+            userFindCustomers.user_id = requestBasic.user->id;
             userFindCustomers.find_customers_id = findBody.findCustomers->id;
             userFindCustomers.initCreateAndUpdateTime(requestInput.getTimeZone());
           }
@@ -640,6 +640,108 @@ namespace nameless_carpool {
     outResponse.inflateResponse(HttpStatus::success);
     outResponse.inflateBodyData(responseBodyData);
     return true;
+  }
+
+  /* X找车信息提交 */
+  bool DbProxy::postSearchXxFindCar(const HttpRequest&      requestInput,
+                                    const RequestBasicInfo& requestBasic,
+                                    body::FindCarBody&      findCarBody,
+                                    HttpResponse&           outResponse) {
+    /* 1. 这会是多条件搜索
+     * 2. 排序方式是也是多条件的排序
+     *    > 这一步多个条件无法合理排序 , 我们需要将每个条件都抽象成具有一致评价方式的数字
+     *    > 比如所有条件都想办法转换成得到的数字越大 , 结果越优
+     * 3. 我们需要先把需要的数据搜索出来然后分页返回给客户端
+     *
+     *
+     * 1. 我们搜索 FindCustomers 需要增加额外字段
+     *    > 与搜索入参的直线距离参数  计算出数字  距离越小越优 , 如果为结果取反 , 则评价方式就是值越大结果越优
+     *    > 出发时间距离            计算出数字  这个数字本身计算的是合作双方的重叠时间 , 数字本身值越大结果越优
+     *    > 用车形式               匹配出结果  我们可以按逻辑, 匹配的给大值 , 不匹配的给小值 , 结论也是值越大越优
+     * 2. 上述的诸多条件我们确实还不会计算 , 我们试着将问题简化为我们有能力计算的问题
+     *    > 根据入参坐标和行内坐标计算坐标之间的距离 , 并按距离排序 .
+     *    > 出发时间重合秒数
+     *    > 用车形式是否匹配
+     * 3. 我们的搜索需要分页
+     * */
+
+    if(findCarBody.findCar.has_value()) {
+
+      if(!findCarBody.findCar->existTwoPoint()) {
+        /* 请求非法 , 查询请求必须携带起始点坐标才被认为有效 */
+        return false;
+      }
+
+      /* 现在我们假设所有条件都是完备的先写一个 sql 试试 , 后面再做拆分 */
+
+      /* 出发地经纬度 计算合作双方的出发点距离 distance_of_two_start */
+      if (findCarBody.findCar->start_point_longitude.has_value() &&
+          findCarBody.findCar->start_point_latitude.has_value()) {
+      }
+
+      /* 到达地经纬度  计算合作双方的到达点距离 distance_of_two_end */
+      if (findCarBody.findCar->end_point_longitude.has_value() &&
+          findCarBody.findCar->end_point_latitude.has_value()) {
+      }
+
+      /* 出发时间范围 计算出发时间是否有重合 */
+      if(findCarBody.findCar->departure_time_range_start.has_value() &&
+          findCarBody.findCar->departure_time_range_end.has_value()){
+      }
+
+      /* 用车形式 计算合作双方的用车供求形式是否匹配 */
+      if(findCarBody.findCar->service_form.has_value()) {
+
+      }
+
+    }
+
+    std::string tableCountSql = boost::str(boost::format("SELECT COUNT(*) FROM %1% ;") %
+                                           SqlUtil::getDbAndTableName(FindCustomers::names().tableName));
+
+    std::string querySql;
+    querySql =
+        " SELECT "
+        "\n\t" + SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().id) +
+        "\n\t" + SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().start_point_json) +
+        "\n\t" + SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().end_point_json) +
+        "\n\t" + SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().service_form) +
+        "\n\t" + SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().departure_time_range_start) +
+        "\n\t" + SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().departure_time_range_end) +
+        "\n\t" + SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().pick_up_point) +
+        "\n\t" + SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().people_number) +
+        "\n\t" + SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().append_info) +
+        boost::str(boost::format("\n\tCOORDINATE_DISTANCE_METER(%1%, %2%, %3%, %4%) AS distance_of_two_start") % /* 起点距离 */
+                   SqlUtil::nullOrApostrophe(findCarBody.findCar->start_point_longitude) %
+                   SqlUtil::nullOrApostrophe(findCarBody.findCar->start_point_latitude) %
+                   SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().start_point_longitude) %
+                   SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().start_point_latitude)) +
+        boost::str(boost::format("\n\tCOORDINATE_DISTANCE_METER(%1%, %2%, %3%, %4%) AS distance_of_two_end") % /* 终点距离 */
+                   SqlUtil::nullOrApostrophe(findCarBody.findCar->end_point_longitude) %
+                   SqlUtil::nullOrApostrophe(findCarBody.findCar->end_point_latitude) %
+                   SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().end_point_longitude) %
+                   SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().end_point_latitude)) +
+        boost::str(boost::format("\n\tCALCULATE_TIME_PERIOD_OVERLAP(%1%, %2%, %3%, %4%, %5%, %6%) AS time_period_overlap_second") % /* 出发时间重合秒数 */
+                   SqlUtil::nullOrApostrophe(findCarBody.findCar->departure_time_range_start) %
+                   SqlUtil::nullOrApostrophe(findCarBody.findCar->departure_time_range_end) %
+                   SqlUtil::nullOrApostrophe(findCarBody.findCar->departure_time_range_tz) %
+                   SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().departure_time_range_start) %
+                   SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().departure_time_range_end) %
+                   SqlUtil::tableColumn(FindCustomers::names().tableName, FindCustomers::names().departure_time_range_tz)) +
+        "\n FROM " + SqlUtil::getDbAndTableName(FindCustomers::names().tableName) +
+        "\n ORDER BY \n\t"
+        "CASE WHEN "
+
+
+
+        ;
+  }
+
+  /* 车找X信息提交 */
+  bool DbProxy::postSearchCarFindXx(const HttpRequest&       requestInput,
+                                    const RequestBasicInfo&  requestBasic,
+                                    body::FindCustomersBody& findBody,
+                                    HttpResponse&            outResponse) {
   }
 
 }  // namespace nameless_carpool

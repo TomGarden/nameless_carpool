@@ -1,12 +1,150 @@
 
-SELECT LAST_INSERT_ID() AS 'FLAG';
+SELECT @@GLOBAL.time_zone, @@SESSION.time_zone;
+SELECT UNIX_TIMESTAMP('2007-03-11 2:00:00') - UNIX_TIMESTAMP('2007-03-11 3:00:00');
+SELECT
+  CONVERT_TZ('2007-03-11 2:00:00','US/Eastern','US/Central') AS time1,
+  CONVERT_TZ('2007-03-11 3:00:00','US/Eastern','US/Central') AS time2,
+  CONVERT_TZ('2023-04-12 00:17:57','America/Los_Angeles','Asia/Shanghai') AS time3;
 
-SET @FLAG = (SELECT LAST_INSERT_ID());
-SET @FLAG = (123);
-SELECT @FLAG;
+DROP FUNCTION IF EXISTS RADIAN_TO_ANGLE_DEGREE;
+DROP FUNCTION IF EXISTS COORDINATE_DISTANCE_METER;
+DROP FUNCTION IF EXISTS COORDINATE_DISTANCE;
+DROP FUNCTION IF EXISTS TEST_ADD_FUN; 
+DROP FUNCTION IF EXISTS TOM_TEST_TEN_DIVIDED_BY_THREE; 
+
+/** 计算 两个经纬度之间的直线距离 , 测试函数创建 */
+
+DELIMITER //
+
+/** 将角度转换为弧度 */
+CREATE FUNCTION IF NOT EXISTS RADIAN_TO_ANGLE_DEGREE(radian DECIMAL(18,15))
+    RETURNS DECIMAL(31,30) DETERMINISTIC /* 因为入参是经纬度经纬度取值在 -180 ~ 180 之间 , 结果最多有一个整数位 */
+    RETURN radian * PI() / 180;
+
+/** 计算两个坐标点间距 */
+CREATE FUNCTION IF NOT EXISTS COORDINATE_DISTANCE_METER(lng_one DECIMAL(18,15), lat_one DECIMAL(18,15),
+														lng_two DECIMAL(18,15), lat_two DECIMAL(18,15) )
+    RETURNS DECIMAL(38,30) DETERMINISTIC /* 之所以是 38,30 , 因为地球上最远的两个顶点的距离(单位米) ≈ 20037508(八位数)  */
+		BEGIN
+		    SET @rad_lng_one = RADIAN_TO_ANGLE_DEGREE(lng_one); /* 两个经度 转弧度 */
+		    SET @rad_lng_two = RADIAN_TO_ANGLE_DEGREE(lng_two);
+		    
+		    SET @rad_lat_one = RADIAN_TO_ANGLE_DEGREE(lat_one); /* 两个纬度 转弧度*/
+		    SET @rad_lat_two = RADIAN_TO_ANGLE_DEGREE(lat_two);
+		    SET @rad_lng_diff = @rad_lng_one - @rad_lng_two;      /* 经 弧度 差值 */
+		    SET @rad_lat_diff = @rad_lat_one - @rad_lat_two;      /* 纬 弧度 差值 */
+            /* 两个经纬度坐标的直线距离 , 单位 米 */
+		    RETURN 2 * 6378137 * ASIN(
+                SQRT(
+                    POW( SIN(@rad_lat_diff / 2) , 2 ) +
+                    COS( @rad_lat_one ) * COS( @rad_lat_two ) * POW( SIN(@rad_lng_diff / 2) , 2 )
+                    )
+		        );
+		END//
+		
+DELIMITER ;
 
 
 
+SELECT COORDINATE_DISTANCE_METER(NULL , 90 , 39.959369 , 116.360280);
+SELECT COORDINATE_DISTANCE_METER(123.123456789123456789 , 1234.123456789123456789 , 39.959369 , 116.360280);
+
+
+SELECT COORDINATE_DISTANCE_METER(39.1,       116.2,     39.3,       116.4);
+SELECT 39.1 * PI() / 180;
+SELECT 116.2 * PI() / 180;
+SELECT 39.3 * PI() / 180;
+SELECT 116.4 * PI() / 180;
+SELECT 114.0709395212723 * PI() / 180;
+
+SELECT COORDINATE_DISTANCE_METER(39.966259 , 116.36824, 39.959369 , 116.360280);
+
+
+
+
+SELECT COORDINATE_DISTANCE_METER(112.74732 , 37.69508, 112.747148 , 37.697135) AS one ,   /* 228.86	0.22886	0.00014 */
+       COORDINATE_DISTANCE_METER(111.215876 , 28.381802,	111.215159 , 28.372567) AS two ,/* 1028.63	1.0286300000000002	0.00064 */
+       COORDINATE_DISTANCE_METER(115 , 31 , 116 , 31) AS three ,			/* 95252.49	95.25249000000001	0.05919 */
+       COORDINATE_DISTANCE_METER(112.73486 , 37.67425 , 112.735221 , 37.6739) AS four ,			/* 50.21	0.05021	0.00003 */
+       COORDINATE_DISTANCE_METER(0 , 90 , 0 , -90) AS five,
+       COORDINATE_DISTANCE_METER(180 , 90 , 180 , -90) AS six;
+
+
+/*  一些测试语句 */
+SELECT TIMESTAMPDIFF(SECOND,'2009-05-18 12:30:12','2023-05-18 12:30:11') > 0;
+
+
+
+/* 计算两个时间段之间有多少重合的 秒 */
+DELIMITER //
+CREATE FUNCTION IF NOT EXISTS CALCULATE_TIME_PERIOD_OVERLAP(
+        tpStartOne DATETIME(6), tpEndOne DATETIME(6), tzOne VARCHAR(255),
+        tpStartTwo DATETIME(6), tpEndTwo DATETIME(6), tzTwo VARCHAR(255) )
+    RETURNS BIGINT  /* 返回的以秒为单位的重复时间段 ,
+                            - 可能正数表示重合 ,
+                            - 可能负数表示距离 ,
+                            - 可能 NULL 表示入参非法 */
+    BEGIN
+        IF (tpEndOne < tpStartOne) THEN RETURN NULL; END IF;
+        IF (tpEndTwo < tpStartTwo) THEN RETURN NULL; END IF;
+
+        SET @to_tz = "Asia/Shanghai";
+        SET @start_one = UNIX_TIMESTAMP( CONVERT_TZ(tpStartOne, tzOne, @to_tz) );
+        SET @end_one   = UNIX_TIMESTAMP( CONVERT_TZ(tpEndOne,   tzOne, @to_tz) );
+        SET @start_two = UNIX_TIMESTAMP( CONVERT_TZ(tpStartTwo, tzTwo, @to_tz) );
+        SET @end_two   = UNIX_TIMESTAMP( CONVERT_TZ(tpEndTwo,   tzTwo, @to_tz) );
+
+        IF @start_one <= @start_two THEN
+            IF @end_one <= @start_two THEN RETURN @end_one - @start_two;  /* 负值 , 表示两个时间段间隔的秒数 */
+            ELSE                           RETURN @end_one - @start_two;  /* 正值 , 表示重合的秒数 */
+            END IF;
+        ELSE
+            IF @start_one <= @end_two THEN RETURN @end_two - @start_one;  /* 负值 , 表示两个时间段间隔的秒数 */
+            ELSE                           RETURN @end_two - @start_one;  /* 正值 , 表示重合的秒数 */
+            END IF;
+        END IF;
+    END//
+DELIMITER ;
+
+
+/** 根据计算结果 出发点距离,到达点距离,时间重合秒数,服务方式匹配度 几个入参返回数字 ; 返回值越大说明匹配度越高 */
+DELIMITER //
+
+CREATE FUNCTION IF NOT EXISTS CALUCLATE_SEARCH_X_FIND_X_SORT_VALUE()
+
+
+DELIMITER ;
+
+
+/** 计算 两个经纬度之间的直线距离 , 测试函数创建
+
+DELIMITER //
+DROP FUNCTION TEST_ADD_FUN;
+CREATE FUNCTION IF NOT EXISTS TEST_ADD_FUN(one DECIMAL(18,15), two DECIMAL(18,15))
+	RETURNS DECIMAL(18,15) DETERMINISTIC
+		BEGIN
+			SET @result = one + two;
+			RETURN @result;
+		END//
+
+
+CREATE FUNCTION IF NOT EXISTS COORDINATE_DISTANCE_METER(lng_one DECIMAL(18,15), lat_one DECIMAL(18,15),
+														lng_two DECIMAL(18,15), lat_two DECIMAL(18,15) )
+    RETURNS DECIMAL(18,15) DETERMINISTIC
+			BEGIN
+						SET @lon = TEST_ADD_FUN( lng_one , lng_two ) ; /* 巴拉巴拉 */
+						SET @LAT = TEST_ADD_FUN( lat_one , lat_two ) ; /* 巴拉巴拉 */
+						SET @RESULT = @lon + @LAT;
+			RETURN @RESULT;
+			END//
+
+DELIMITER ;
+
+SELECT COORDINATE_DISTANCE(1.1, 1.1, 2.2, 2.2);
+
+*/
+
+SELECT
 
 SELECT
 	store_id,
@@ -74,6 +212,69 @@ ON DUPLICATE KEY UPDATE  `size_length`    = VALUES(`size_length`   ),
                          `update_time_tz` = VALUES(`update_time_tz`),
                          `del_time`       = VALUES(`del_time`      ),
                          `del_time_tz`    = VALUES(`del_time_tz`   );
+
+
+
+SELECT `id`,`intent` FROM `nameless_carpool`.`find_customers`
+ORDER BY CASE WHEN `id` >= 6 THEN `id` END ASC ,
+         CASE WHEN `id` < 6  THEN `id` END DESC;
+
+
+
+SELECT `id`,`intent` FROM `nameless_carpool`.`find_customers` ORDER BY  `intent`;
+
+/* 预期按照给定的这个顺序排列 */
+SELECT `intent` FROM `nameless_carpool`.`find_customers`
+ORDER BY FIELD(`intent`, 'people', 'goods', 'one', 'two', 'three', 'four');
+
+SELECT `intent` FROM `nameless_carpool`.`find_customers`
+ORDER BY FIELD(`intent`, 'people');
+
+SELECT `intent` FROM `nameless_carpool`.`find_customers`
+ORDER BY FIELD(`intent`, 'people') DESC;
+
+-- SELECT `intent` FROM `nameless_carpool`.`find_customers`
+-- ORDER BY FIELD(`intent`, 'people') DESC, PRIORITY;
+
+SELECT `intent` FROM `nameless_carpool`.`find_customers`
+ORDER BY FIELD(`intent`, 'people') ASC;
+
+
+
+INSERT INTO `nameless_carpool`.`find_customers` (
+    `id` ,
+    `start_point_longitude` ,
+    `start_point_latitude` ,
+    `start_point_json` ,
+    `end_point_longitude` ,
+    `end_point_latitude` ,
+    `end_point_json` ,
+    `service_form` ,
+    `departure_time_range_start` ,
+    `departure_time_range_end` ,
+    `pick_up_point` ,
+    `intent` ,
+    `people_number` ,
+    `goods_info_id` ,
+    `append_info` ,
+    `car_id` ,
+    `create_time` ,
+    `create_time_tz` ,
+    `update_time` ,
+    `update_time_tz` ,
+    `del_time` ,
+    `del_time_tz`
+)
+VALUES
+    ( NULL ,NULL ,NULL ,'{"adcode":"130128","district":"1河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,NULL ,NULL ,'{"adcode":"130128","district":"河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,'full_charter' ,'2023-03-28 08:40:01' ,'2023-03-30 08:40:01' ,'nearby' ,'goods' ,'3' ,'1' ,'我是附加信息蹦巴拉' ,'2' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,NULL ,NULL ) ,
+    ( NULL ,NULL ,NULL ,'{"adcode":"130128","district":"2河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,NULL ,NULL ,'{"adcode":"130128","district":"河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,'full_charter' ,'2023-03-28 08:40:01' ,'2023-03-30 08:40:01' ,'nearby' ,'goods' ,'3' ,'1' ,'我是附加信息蹦巴拉' ,'2' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,NULL ,NULL ) ,
+    ( NULL ,NULL ,NULL ,'{"adcode":"130128","district":"3河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,NULL ,NULL ,'{"adcode":"130128","district":"河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,'full_charter' ,'2023-03-28 08:40:01' ,'2023-03-30 08:40:01' ,'nearby' ,'one' ,'3' ,'1' ,'我是附加信息蹦巴拉' ,'2' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,NULL ,NULL ) ,
+    ( NULL ,NULL ,NULL ,'{"adcode":"130128","district":"4河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,NULL ,NULL ,'{"adcode":"130128","district":"河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,'full_charter' ,'2023-03-28 08:40:01' ,'2023-03-30 08:40:01' ,'nearby' ,'one' ,'3' ,'1' ,'我是附加信息蹦巴拉' ,'2' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,NULL ,NULL ) ,
+    ( NULL ,NULL ,NULL ,'{"adcode":"130128","district":"5河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,NULL ,NULL ,'{"adcode":"130128","district":"河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,'full_charter' ,'2023-03-28 08:40:01' ,'2023-03-30 08:40:01' ,'nearby' ,'two' ,'3' ,'1' ,'我是附加信息蹦巴拉' ,'2' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,NULL ,NULL ) ,
+    ( NULL ,NULL ,NULL ,'{"adcode":"130128","district":"6河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,NULL ,NULL ,'{"adcode":"130128","district":"河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,'full_charter' ,'2023-03-28 08:40:01' ,'2023-03-30 08:40:01' ,'nearby' ,'two' ,'3' ,'1' ,'我是附加信息蹦巴拉' ,'2' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,NULL ,NULL ) ,
+    ( NULL ,NULL ,NULL ,'{"adcode":"130128","district":"7河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,NULL ,NULL ,'{"adcode":"130128","district":"河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,'full_charter' ,'2023-03-28 08:40:01' ,'2023-03-30 08:40:01' ,'nearby' ,'three' ,'3' ,'1' ,'我是附加信息蹦巴拉' ,'2' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,NULL ,NULL ) ,
+    ( NULL ,NULL ,NULL ,'{"adcode":"130128","district":"8河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,NULL ,NULL ,'{"adcode":"130128","district":"河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,'full_charter' ,'2023-03-28 08:40:01' ,'2023-03-30 08:40:01' ,'nearby' ,'three' ,'3' ,'1' ,'我是附加信息蹦巴拉' ,'2' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,NULL ,NULL ) ,
+    ( NULL ,NULL ,NULL ,'{"adcode":"130128","district":"9河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,NULL ,NULL ,'{"adcode":"130128","district":"河北省石家庄市深泽县","location":"115.259604,38.216147","name":"小直要村"}' ,'full_charter' ,'2023-03-28 08:40:01' ,'2023-03-30 08:40:01' ,'nearby' ,'four' ,'3' ,'1' ,'我是附加信息蹦巴拉' ,'2' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,'2023-04-09 14:33:23.546241' ,'Asia/Shanghai' ,NULL ,NULL ) ;
 
 
 -- 更新表的某一列列名

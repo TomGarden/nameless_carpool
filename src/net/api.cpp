@@ -52,8 +52,10 @@ namespace nameless_carpool {
     IF_CHECK_URI(authApi().login)
     ELSE_IF_CHECK_URI(authApi().requestVC)
     ELSE_IF_CHECK_URI(authApi().inputPositionTip)
-    ELSE_IF_CHECK_URI_WITH_BASIC_INFO(authApi().postFindCar)
-    ELSE_IF_CHECK_URI_WITH_BASIC_INFO(authApi().postFindCustomers)
+    ELSE_IF_CHECK_URI_WITH_BASIC_INFO(authApi().postXxFindCar)
+    ELSE_IF_CHECK_URI_WITH_BASIC_INFO(authApi().postCarFindXx)
+    ELSE_IF_CHECK_URI_WITH_BASIC_INFO(authApi().postSearchXxFindCar)
+    ELSE_IF_CHECK_URI_WITH_BASIC_INFO(authApi().postSearchCarFindXx)
     else Api::unknownRequest(requestInput, responseOutput);
 
     clearNull(responseOutput.body);
